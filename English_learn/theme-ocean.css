@@ -1,0 +1,182 @@
+/* Word Garden Ocean Theme — based on #f1faee, #a8dadc, #457b9d, #1d3557 */
+:root{
+  --bg: #f1faee;   /* 霧白綠 */
+  --mint: #a8dadc; /* 薄荷藍綠（次要） */
+  --blue: #457b9d; /* 海藍（主色） */
+  --navy: #1d3557; /* 深海藍（重點/標題） */
+
+  --text: #0f172a;
+  --muted: #64748b;
+  --ring: rgba(69,123,157,.35);
+}
+
+/* Base */
+body{
+  background: var(--bg) !important;
+  color: var(--text);
+}
+
+/* Header gradient */
+header.bg-green-600{
+  background: linear-gradient(135deg, var(--navy), var(--blue)) !important;
+  color: #fff !important;
+  box-shadow: 0 12px 24px rgba(29,53,87,.25);
+}
+
+/* Chips (badges) */
+#masteredBadge,
+#dueCountBadge{
+  display:inline-block; padding:.25rem .5rem; border-radius:999px;
+  background:#fff; color: var(--navy); font-weight:600; border:1px solid rgba(29,53,87,.12);
+}
+
+/* Cards */
+.bg-white.rounded-xl.shadow.p-6{
+  border: 1px solid rgba(29,53,87,.06);
+  border-radius: 16px !important;
+  box-shadow: 0 10px 20px rgba(29,53,87,.06) !important;
+}
+
+/* Tabs */
+div.inline-flex.rounded-md.overflow-hidden.border > button{
+  padding:.4rem .7rem; font-size:.85rem; border:1px solid transparent;
+  border-right:1px solid rgba(29,53,87,.12);
+  background:#fff; color: var(--navy); transition:.2s ease;
+}
+div.inline-flex.rounded-md.overflow-hidden.border > button:last-child{ border-right:none; }
+#tabToday:hover,#tabDue:hover,#tabAll:hover{ background:#f8fafc; }
+/* active state uses existing bg-gray-100 toggled by JS */
+#tabToday.bg-gray-100,#tabDue.bg-gray-100,#tabAll.bg-gray-100{
+  background: var(--mint) !important; color:#083344 !important; border-color: rgba(8,51,68,.15) !important;
+}
+
+/* Primary action buttons */
+#analyzeBtn,#saveBtn,#customAnalyzeBtn,#customAddBtn,#qsStart,#startQuizBtn,#usageSaveBudget{
+  background: var(--blue) !important; color:#fff !important; border-radius:12px;
+  padding:.6rem 1rem; font-weight:600; box-shadow:0 3px 8px rgba(29,53,87,.15);
+}
+#analyzeBtn:hover,#saveBtn:hover,#customAnalyzeBtn:hover,#customAddBtn:hover,#qsStart:hover,#startQuizBtn:hover,#usageSaveBudget:hover{
+  filter: brightness(1.05);
+}
+
+/* Secondary / Ghost buttons */
+#ocrPickBtn,#ocrRunBtn,#allPrev,#allNext,#qsCancel,#usageReset{
+  background:#fff !important; color: var(--navy) !important; border:1px solid rgba(29,53,87,.15) !important;
+  border-radius:12px; padding:.5rem .9rem; font-weight:600;
+}
+#ocrPickBtn:hover,#ocrRunBtn:hover,#allPrev:hover,#allNext:hover,#qsCancel:hover,#usageReset:hover{
+  background:#f8fafc !important;
+}
+
+/* Usage modal main close */
+#usageClose2{
+  background:#0b1020 !important; color:#fff !important; border-radius:12px; padding:.5rem .9rem; font-weight:600;
+}
+
+/* Floating bar */
+#fabBar{
+  background: var(--blue) !important; color:#fff; border-radius:999px !important;
+  box-shadow: 0 12px 24px rgba(29,53,87,.28) !important;
+}
+#fabBar button{
+  background:#fff !important; color: var(--blue) !important; border-radius:12px; padding:.4rem .8rem; font-weight:700;
+}
+
+/* Undo toast */
+#undoToast{
+  background:#0b1020 !important; color:#fff; border-radius:14px !important; box-shadow:0 8px 24px rgba(2,6,23,.4) !important;
+}
+
+/* Quiz settings modal card */
+#quizSettings .rounded-xl{
+  border-radius:16px !important; box-shadow:0 24px 60px rgba(2,6,23,.35) !important;
+}
+
+/* Form focus ring */
+textarea, input, select{
+  border-radius:12px !important; border:1px solid rgba(29,53,87,.15);
+}
+textarea:focus, input:focus, select:focus{
+  outline:none; border-color: var(--blue) !important; box-shadow: 0 0 0 4px var(--ring) !important;
+}
+
+/* Speaker button (created by JS, has title="播放") */
+button[title="播放"]{
+  width:28px; height:28px; border-radius:9999px; display:grid; place-items:center;
+  border:1px solid rgba(29,53,87,.2); color:#5b7083; background:#fff; transition:.2s;
+}
+button[title="播放"]:hover{ color:#1e293b; border-color: rgba(29,53,87,.35); background:#f8fafc; }
+
+/* Small text muted */
+.text-gray-500{ color: var(--muted) !important; }
+
+/* Quiz mode picker：更明顯的 hover/focus 效果 */
+#quizModePicker .grid [data-mode]{
+  cursor: pointer;
+  border-width: 2px !important;
+  border-color: rgba(29,53,87,.18) !important; /* 初始淡藍邊 */
+  border-radius: 16px !important;
+  background: #fff !important;
+  transition: transform .15s ease, box-shadow .2s ease,
+              border-color .15s ease, background-color .15s ease;
+}
+
+#quizModePicker .grid [data-mode]:hover,
+#quizModePicker .grid [data-mode]:focus-visible{
+  background: linear-gradient(0deg, rgba(168,218,220,.28), #fff) !important; /* 薄荷藍綠罩層 */
+  border-color: var(--blue) !important;           /* #457b9d */
+  box-shadow: 0 10px 22px rgba(29,53,87,.18);     /* 更明顯陰影 */
+  transform: translateY(-2px);                    /* 微浮起 */
+  outline: none;
+}
+
+#quizModePicker .grid [data-mode]:active{
+  transform: translateY(0);
+  box-shadow: 0 6px 16px rgba(29,53,87,.16);
+  border-color: var(--navy) !important;           /* #1d3557 */
+}
+
+
+/* ── Quiz mode picker：更明顯但無漸層 ───────────────────────── */
+#quizModePicker .grid [data-mode]{
+  cursor: pointer;
+  border-width: 2px !important;
+  border-color: rgba(29,53,87,.18) !important;
+  border-radius: 16px !important;
+  background: #fff !important;
+  transition: transform .15s ease, box-shadow .2s ease,
+              border-color .15s ease, background-color .15s ease;
+}
+
+#quizModePicker .grid [data-mode]:hover,
+#quizModePicker .grid [data-mode]:focus-visible{
+  /* 取消任何漸層、改為實色淡底 + 明顯外圈 */
+  background: rgba(236, 242, 242, 0.16) !important; /* 薄荷藍綠的淡色鋪底 */
+  background-image: none !important;
+  border-color: var(--blue) !important;          /* #457b9d */
+  box-shadow:
+    0 0 0 4px rgba(69,123,157,.28),             /* 外圈 ring */
+    0 10px 22px rgba(29,53,87,.18);             /* 明顯陰影 */
+  transform: translateY(-2px) scale(1.01);       /* 微浮起 */
+  outline: none;
+}
+
+#quizModePicker .grid [data-mode]:active{
+  transform: translateY(-1px) scale(1.005);
+  box-shadow:
+    0 0 0 3px rgba(29,53,87,.30),
+    0 6px 16px rgba(29,53,87,.14);
+  border-color: var(--navy) !important;          /* #1d3557 */
+}
+
+/* 動作偏好：減少動態時，停用浮起效果 */
+@media (prefers-reduced-motion: reduce){
+  #quizModePicker .grid [data-mode]{
+    transition: box-shadow .2s ease, border-color .15s ease, background-color .15s ease;
+  }
+  #quizModePicker .grid [data-mode]:hover,
+  #quizModePicker .grid [data-mode]:focus-visible{
+    transform: none;
+  }
+}
+

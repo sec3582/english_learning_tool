@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>WordGarden 資料搬家到 Google Sheets</title>
+</head>
+<body>
+  <h2>WordGarden 資料搬家到 Google Sheets</h2>
+
+  <button id="signInBtn">1) 登入 Google</button>
+  <button id="migrateBtn" disabled>2) 開始搬家（寫入試算表）</button>
+
+  <pre id="log" style="white-space:pre-wrap;background:#111;color:#ddd;padding:12px;border-radius:8px;"></pre>
+
+  <!-- Google SDK -->
+  <script src="https://apis.google.com/js/api.js" defer></script>
+  <script src="https://accounts.google.com/gsi/client" defer></script>
+
+  <script src="./migrate.js"></script>
+</body>
+</html>
