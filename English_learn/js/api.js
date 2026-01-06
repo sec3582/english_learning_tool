@@ -1,115 +1,213 @@
-// js/api.js
-const GAS_URL = "https://script.google.com/macros/s/AKfycbzutX0-ktHxBftKRlP_1-nrOh-i0UoOYmVLT1EjuFHL8WC4V12iW7S1qrNten-EVyaGqA/exec";
+// js/api.js (GAS 版：前端不再直連 OpenAI)
 
+// 你的 GAS Web App /exec URL（你提供的這條）
+export const APPS_SCRIPT_URL =
+  "https://script.google.com/macros/s/AKfycbzutX0-ktHxBftKRlP_1-nrOh-i0UoOYmVLT1EjuFHL8WC4V12iW7S1qrNten-EVyaGqA/exec";
+
+// ====== 用量統計（本機 localStorage）======
 // 模型單價（USD / 百萬 tokens），可依實際調整
-const MODEL_PRICING = { "gpt-4o": { inPerM: 5, outPerM: 15 } };
+const MODEL_PRICING = {
+  "gpt-4o": { inPerM: 5, outPerM: 15 },
+};
 
-// ---- 用量儲存/讀取 ----
 function monthKey(d = new Date()) {
-  const y = d.getFullYear(); const m = String(d.getMonth() + 1).padStart(2, "0");
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
   return `${y}-${m}`;
 }
-function readUsageStore() { try { return JSON.parse(localStorage.getItem("apiUsage") || "{}"); } catch { return {}; } }
-function writeUsageStore(obj) { localStorage.setItem("apiUsage", JSON.stringify(obj)); }
-function addUsage(model, usage) {
-  const store = readUsageStore(); const key = monthKey();
-  const rec = store[key] || { totals: { prompt: 0, completion: 0, cost: 0 }, models: {} };
-  const byModel = rec.models[model] || { prompt: 0, completion: 0, cost: 0 };
-  const price = MODEL_PRICING[model] || { inPerM: 10, outPerM: 10 };
-  const p = usage?.prompt_tokens || 0, c = usage?.completion_tokens || 0;
-  const cost = (p * price.inPerM + c * price.outPerM) / 1_000_000;
-  byModel.prompt += p; byModel.completion += c; byModel.cost += cost;
-  rec.totals.prompt += p; rec.totals.completion += c; rec.totals.cost += cost;
-  rec.models[model] = byModel; store[key] = rec; writeUsageStore(store);
+
+function usageStoreKey() {
+  return `wordgarden_usage_${monthKey()}`;
 }
 
-async function callAppsScript(action, payload) {
-  const res = await fetch(APPS_SCRIPT_URL, {
-    method: "POST",
-    // ❌ 不要設 Content-Type: application/json
-    headers: {
-      "Content-Type": "text/plain;charset=utf-8"
-    },
-    body: JSON.stringify({ action, ...payload })
+function budgetStoreKey() {
+  return `wordgarden_budget_${monthKey()}`;
+}
+
+function readUsage_() {
+  try {
+    return JSON.parse(localStorage.getItem(usageStoreKey()) || "{}");
+  } catch {
+    return {};
+  }
+}
+
+function writeUsage_(obj) {
+  localStorage.setItem(usageStoreKey(), JSON.stringify(obj));
+}
+
+function addUsage(model, usage) {
+  if (!usage) return;
+
+  const inputTokens =
+    usage.prompt_tokens ??
+    usage.input_tokens ??
+    usage.promptTokens ??
+    usage.inputTokens ??
+    0;
+
+  const outputTokens =
+    usage.completion_tokens ??
+    usage.output_tokens ??
+    usage.completionTokens ??
+    usage.outputTokens ??
+    0;
+
+  const store = readUsage_();
+  const cur = store[model] || { input: 0, output: 0 };
+
+  cur.input += Number(inputTokens) || 0;
+  cur.output += Number(outputTokens) || 0;
+
+  store[model] = cur;
+  writeUsage_(store);
+}
+
+export function getUsageSummary() {
+  const store = readUsage_();
+
+  let totalUSD = 0;
+  const byModel = Object.entries(store).map(([model, v]) => {
+    const price = MODEL_PRICING[model] || MODEL_PRICING["gpt-4o"];
+    const inputUSD = (v.input / 1_000_000) * price.inPerM;
+    const outputUSD = (v.output / 1_000_000) * price.outPerM;
+    const sumUSD = inputUSD + outputUSD;
+    totalUSD += sumUSD;
+
+    return {
+      model,
+      input_tokens: v.input,
+      output_tokens: v.output,
+      cost_usd: sumUSD,
+    };
   });
 
+  return {
+    month: monthKey(),
+    total_usd: totalUSD,
+    byModel,
+  };
+}
+
+export function resetUsageMonth() {
+  localStorage.removeItem(usageStoreKey());
+}
+
+export function getUsageBudget() {
+  const raw = localStorage.getItem(budgetStoreKey());
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : 0;
+}
+
+export function setUsageBudget(v) {
+  const n = Number(v);
+  localStorage.setItem(budgetStoreKey(), String(Number.isFinite(n) ? n : 0));
+}
+
+// ====== GAS 呼叫 ======
+async function callAppsScript(action, payload = {}) {
+  const res = await fetch(APPS_SCRIPT_URL, {
+    method: "POST",
+    headers: {
+      // 讓 GAS 直接用 e.postData.contents 解析
+      "Content-Type": "text/plain;charset=utf-8",
+    },
+    body: JSON.stringify({ action, ...payload }),
+  });
+
+  // GAS 有時會回非 JSON（例如錯誤 HTML），這裡先拿文字再嘗試 parse
+  const text = await res.text();
+
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    throw new Error(`GAS 回傳非 JSON：\n${text.slice(0, 300)}`);
+  }
+
   if (!res.ok) {
-    throw new Error(`Apps Script 請求失敗：${res.status}`);
+    throw new Error(`GAS HTTP ${res.status}: ${data?.error || text}`);
   }
 
-  const data = await res.json();
   if (!data?.ok) {
-    throw new Error(data?.error || "Apps Script 回傳失敗");
+    throw new Error(data?.error || "GAS 回傳 ok=false");
   }
 
+  // 記錄用量（如果 GAS 有回 usage）
   if (data?.usage) addUsage(data.model || "gpt-4o", data.usage);
+
   return data;
 }
 
-
-export function getUsageSummary() {
-  const store = readUsageStore(); const rec = store[monthKey()] || { totals: { prompt: 0, completion: 0, cost: 0 }, models: {} };
-  return { cost: rec.totals.cost || 0, prompt_tokens: rec.totals.prompt || 0, completion_tokens: rec.totals.completion || 0, perModel: rec.models || {}, month: monthKey() };
-}
-export function resetUsageMonth(key = monthKey()) { const store = readUsageStore(); delete store[key]; writeUsageStore(store); }
-export function getUsageBudget() { const v = localStorage.getItem("apiUsageBudget"); return v ? Number(v) : null; }
-export function setUsageBudget(n) { if (n == null || isNaN(n)) localStorage.removeItem("apiUsageBudget"); else localStorage.setItem("apiUsageBudget", String(n)); }
-
-// ---- 文章 → AI 挑字 ----
-// ---- 文章 → AI 挑字 ----
-export async function analyzeArticle(text) {
-  const data = await callAppsScript("analyzeArticle", { text });
-  return data.content;
-}
-
-
-
+// ====== JSON 抽取（保留給 ui.js 用）======
 export function extractJSON(text) {
-  const fence = text.match(/```(?:json)?\s*([\s\S]*?)```/);
-  if (fence) text = fence[1].trim();
-  try { return JSON.parse(text); }
-  catch {
-    const arr = text.match(/\[\s*{[\s\S]*}\s*]/); if (arr) return JSON.parse(arr[0]);
-    const obj = text.match(/{\s*"word"[\s\S]*?}/); if (obj) return JSON.parse(obj[0]);
-    throw new Error("找不到有效的 JSON（請貼短一點的文章再試或稍後重試）");
+  // 嘗試抓到第一個 JSON array/object
+  const s = String(text || "");
+
+  // 先找 code fence
+  const fence = s.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (fence?.[1]) {
+    const inside = fence[1].trim();
+    try {
+      return JSON.parse(inside);
+    } catch {
+      // fallthrough
+    }
+  }
+
+  // 找第一個 [ ... ] 或 { ... }
+  const firstArr = s.indexOf("[");
+  const firstObj = s.indexOf("{");
+
+  let start = -1;
+  if (firstArr >= 0 && firstObj >= 0) start = Math.min(firstArr, firstObj);
+  else start = Math.max(firstArr, firstObj);
+
+  if (start < 0) throw new Error("找不到 JSON 起始符號");
+
+  // 粗略找結尾（最後一個 ] 或 }）
+  const endArr = s.lastIndexOf("]");
+  const endObj = s.lastIndexOf("}");
+  const end = Math.max(endArr, endObj);
+
+  if (end <= start) throw new Error("找不到 JSON 結尾符號");
+
+  const candidate = s.slice(start, end + 1);
+  return JSON.parse(candidate);
+}
+
+// （保留相容：你之前有 export 這個，但目前 ui.js 不一定用到）
+export function buildCustomWordPrompt(article, term) {
+  return `term=${term}\narticle=${article}`; // 只是佔位，實際 prompt 在 GAS 端
+}
+
+// ====== 主要 API：文章分析 ======
+export async function analyzeArticle(text) {
+  const data = await callAppsScript("analyzeArticle", { text: String(text || "") });
+
+  // GAS 回：{ ok:true, content:"(模型輸出文字)" }
+  const content = data.content || "";
+
+  // 期望 content 是 JSON 陣列字串；若不是就抽取
+  try {
+    return JSON.parse(content);
+  } catch {
+    return extractJSON(content);
   }
 }
 
-// ---- 自訂單字：依語境判讀 ----
-export function buildCustomWordPrompt(article, term) {
-  return `
-你是一位專業的英語語義判讀助手。請根據「文章內容」分析「查詢詞」在該文最可能的意思與詞性。
-若文章中沒有明確出現該詞，請給出最常見且符合一般學習者的解釋。
-請回傳「單一 JSON 物件」：
-\`\`\`json
-{
-  "word": "查詢詞原樣",
-  "pos": "詞性（noun, verb, adjective, adverb, phrasal verb, idiom...）",
-  "definition": "中文解釋（以該文語境為主，簡潔）",
-  "example_in_article": "從文章擷取或改寫成通順英句；若無可留空字串",
-  "example_in_article_zh": "上列英句的中文翻譯；若無可留空字串",
-  "example_ai": "再給一個簡短自造例句",
-  "example_ai_zh": "自造例句的中文翻譯",
-  "level": "CEFR 難度（A1~C2）"
-}
-\`\`\`
-
-【查詢詞】
-${term}
-
-【文章內容】
-${article || "(無，請給常見義)"}
-`;
-}
+// ====== 主要 API：查單字（自訂詞） ======
 export async function analyzeCustomWordAPI(article, term) {
-  const data = await callAppsScript("analyzeCustomWord", { article, term });
+  const data = await callAppsScript("analyzeCustomWord", {
+    article: String(article || ""),
+    term: String(term || ""),
+  });
+
   const content = data.content || "";
-  const fence = content.match(/```(?:json)?\s*([\s\S]*?)```/);
-  const pure = fence ? fence[1].trim() : content;
-  try { return JSON.parse(pure); }
-  catch { return extractJSON(content); }
+
+  try {
+    return JSON.parse(content);
+  } catch {
+    return extractJSON(content);
+  }
 }
-
-
-
-
