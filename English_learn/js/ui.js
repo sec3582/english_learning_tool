@@ -132,20 +132,30 @@ export async function handleAnalyzeClick() {
   const btn = document.getElementById("analyzeBtn");
   const text = document.getElementById("articleInput").value.trim();
   if (!text) return alert("請先貼上文章");
-  btn.disabled = true; const old = btn.textContent; btn.textContent = "分析中…";
+
+  btn.disabled = true;
+  const old = btn.textContent;
+  btn.textContent = "分析中…";
   document.getElementById("loading").classList.remove("hidden");
   document.getElementById("aiResult").classList.add("hidden");
+
   try {
     const raw = await analyzeArticle(text);
-    const words = extractJSON(raw);
+
+    // api.js 可能回傳：已解析好的陣列/物件，或是字串（模型輸出）
+    const words = Array.isArray(raw) ? raw : extractJSON(raw);
+
     renderWordSelection(words, text);
     refreshUsageUI();
   } catch (e) {
-    console.error(e); alert(e?.message || "AI 解析失敗，請稍後再試");
+    console.error(e);
+    alert(e?.message || "AI 解析失敗，請稍後再試");
   } finally {
     document.getElementById("loading").classList.add("hidden");
-    btn.disabled = false; btn.textContent = old;
+    btn.disabled = false;
+    btn.textContent = old;
   }
+}
 }
 
 /* ===== AI 建議列表（整潔版；喇叭在第一行右側） ===== */
