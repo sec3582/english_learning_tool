@@ -64,32 +64,46 @@ function addUsage(model, usage) {
 }
 
 export function getUsageSummary() {
+  // 回傳格式要和 ui.js 的 refreshUsageUI() 相容：
+  // { cost, prompt_tokens, completion_tokens, perModel }
   const store = readUsage_();
 
-  let totalUSD = 0;
-  const byModel = Object.entries(store).map(([model, v]) => {
-    const price = MODEL_PRICING[model] || MODEL_PRICING["gpt-4o"];
-    const inputUSD = (v.input / 1_000_000) * price.inPerM;
-    const outputUSD = (v.output / 1_000_000) * price.outPerM;
-    const sumUSD = inputUSD + outputUSD;
-    totalUSD += sumUSD;
+  let cost = 0;
+  let prompt_tokens = 0;
+  let completion_tokens = 0;
 
-    return {
-      model,
-      input_tokens: v.input,
-      output_tokens: v.output,
-      cost_usd: sumUSD,
+  const perModel = {};
+
+  for (const [model, v] of Object.entries(store)) {
+    const price = MODEL_PRICING[model] || MODEL_PRICING["gpt-4o"];
+    const inTok = Number(v?.input) || 0;
+    const outTok = Number(v?.output) || 0;
+
+    const inputUSD = (inTok / 1_000_000) * price.inPerM;
+    const outputUSD = (outTok / 1_000_000) * price.outPerM;
+    const sumUSD = inputUSD + outputUSD;
+
+    prompt_tokens += inTok;
+    completion_tokens += outTok;
+    cost += sumUSD;
+
+    perModel[model] = {
+      prompt: inTok,
+      completion: outTok,
+      cost: sumUSD,
     };
-  });
+  }
 
   return {
     month: monthKey(),
-    total_usd: totalUSD,
-    byModel,
+    cost,
+    prompt_tokens,
+    completion_tokens,
+    perModel,
   };
 }
 
-export function resetUsageMonth() {
+export function resetUsageMonth() {() {
   localStorage.removeItem(usageStoreKey());
 }
 
@@ -182,18 +196,24 @@ export function buildCustomWordPrompt(article, term) {
 }
 
 // ====== 主要 API：文章分析 ======
+function normalizeToJSON_(content) {
+  // 若 GAS 已回傳陣列/物件，就直接用（避免 JSON.parse([object Object])）
+  if (content && typeof content === "object") return content;
+
+  const s = String(content ?? "");
+
+  // 先嘗試直接 parse（純 JSON 字串）
+  try {
+    return JSON.parse(s);
+  } catch {
+    // 若夾雜文字/Code fence，抽取 JSON
+    return extractJSON(s);
+  }
+}
+
 export async function analyzeArticle(text) {
   const data = await callAppsScript("analyzeArticle", { text: String(text || "") });
-
-  // GAS 回：{ ok:true, content:"(模型輸出文字)" }
-  const content = data.content || "";
-
-  // 期望 content 是 JSON 陣列字串；若不是就抽取
-  try {
-    return JSON.parse(content);
-  } catch {
-    return extractJSON(content);
-  }
+  return normalizeToJSON_(data?.content);
 }
 
 // ====== 主要 API：查單字（自訂詞） ======
@@ -202,14 +222,5 @@ export async function analyzeCustomWordAPI(article, term) {
     article: String(article || ""),
     term: String(term || ""),
   });
-
-  const content = data.content || "";
-
-  try {
-    return JSON.parse(content);
-  } catch {
-    return extractJSON(content);
-  }
+  return normalizeToJSON_(data?.content);
 }
-
-
