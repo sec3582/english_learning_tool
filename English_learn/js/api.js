@@ -106,7 +106,7 @@ export function setUsageBudget(v) {
 
 // ====== GAS 呼叫 ======
 async function callAppsScript(action, payload = {}) {
-  const res = await fetch(APPS_SCRIPT_URL, {
+  const res = await fetch(GAS_URL, {
     method: "POST",
     headers: {
       // 讓 GAS 直接用 e.postData.contents 解析
@@ -211,3 +211,4 @@ export async function analyzeCustomWordAPI(article, term) {
     return extractJSON(content);
   }
 }
+
