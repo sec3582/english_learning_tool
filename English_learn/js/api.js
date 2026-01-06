@@ -1,5 +1,5 @@
 // js/api.js
-const GAS_URL = "https://script.google.com/macros/s/你的GAS_ID/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbzutX0-ktHxBftKRlP_1-nrOh-i0UoOYmVLT1EjuFHL8WC4V12iW7S1qrNten-EVyaGqA/exec";
 
 // 模型單價（USD / 百萬 tokens），可依實際調整
 const MODEL_PRICING = { "gpt-4o": { inPerM: 5, outPerM: 15 } };
@@ -109,6 +109,7 @@ export async function analyzeCustomWordAPI(article, term) {
   try { return JSON.parse(pure); }
   catch { return extractJSON(content); }
 }
+
 
 
 
