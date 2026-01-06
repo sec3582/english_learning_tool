@@ -1,5 +1,5 @@
 // js/api.js
-export const APPS_SCRIPT_URL = "https://word-garden-sync.liq9771.workers.dev";
+const GAS_URL = "https://script.google.com/macros/s/你的GAS_ID/exec";
 
 // 模型單價（USD / 百萬 tokens），可依實際調整
 const MODEL_PRICING = { "gpt-4o": { inPerM: 5, outPerM: 15 } };
@@ -109,5 +109,6 @@ export async function analyzeCustomWordAPI(article, term) {
   try { return JSON.parse(pure); }
   catch { return extractJSON(content); }
 }
+
 
 
