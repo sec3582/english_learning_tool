@@ -103,7 +103,7 @@ export function getUsageSummary() {
   };
 }
 
-export function resetUsageMonth() {() {
+export function resetUsageMonth() {
   localStorage.removeItem(usageStoreKey());
 }
 
