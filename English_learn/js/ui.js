@@ -3,7 +3,9 @@ import { analyzeArticle, extractJSON, getUsageSummary, getUsageBudget, setUsageB
 import { addWord, getAllWords, deleteWord, getTodayWords, getDueWords, getDueCount, saveAllWords, scheduleNext, ensureDueForAll, getMasteredCount, getDailyStats } from "./storage.js";
 import { speak, speakSequence } from "./speech.js";
 // 這行改成一起匯入 choice/dictation 以及評分/語音建議
-import { buildTypingQuestion, makeChoiceQuestion, makeDictationQuestion, grade, afterAnswerSpeech, pickExamplePair } from "./quiz.js";import { pushLocalStorageToSheets } from "./sheets_push.js";
+import { buildTypingQuestion, makeChoiceQuestion, makeDictationQuestion, grade, afterAnswerSpeech, pickExamplePair } from "./quiz.js";
+import { pushLocalStorageToSheets } from "./sheets_push.js";
+
 
 
 let lastDeleted = null;
@@ -398,10 +400,14 @@ function makeListItem(w, opts = {}) {
   const summary = document.createElement("button");
   summary.type = "button";
   summary.className = "w-full text-left flex items-center justify-between";
-  summary.innerHTML = `
-    <span><strong>${w.word}</strong> (${posAbbr(w.pos) || ""}) - ${w.definition || ""}</span>
-    <span class="text-gray-400">▸</span>
-  `;
+ summary.innerHTML = `
+  <span>
+    <strong>${escapeHTML(w.word)}</strong>
+    (${escapeHTML(posAbbr(w.pos) || "")}) - ${escapeHTML(w.definition || "")}
+  </span>
+  <span class="text-gray-400">▸</span>
+`;
+
 
   const details = document.createElement("div");
   details.className = "mt-2 pl-5 text-sm text-gray-700 hidden";
@@ -410,24 +416,23 @@ function makeListItem(w, opts = {}) {
   const exMake    = w.example2 || w.example_ai || "";
   const exZh      = w.example2_zh || w.example_ai_zh || "";
 
-  details.innerHTML = `
-    <div class="mt-1">
-      <button type="button" title="播放"
-        class="ml-3 px-3 py-1 text-sm font-semibold
-              bg-gray-600 text-white rounded-sm
-              hover:bg-gray-700 transition whitespace-nowrap">發音</button>
-              
-      </button>
-    </div>
-    ${exArticle ? `<div class="mt-1">文章例句：「${exArticle}」</div>` : ""}
-    ${exMake    ? `<div class="mt-1">造句：「${exMake}」</div>` : ""}
-    ${exZh      ? `<div class="mt-1">翻譯：${exZh}</div>` : ""}
-    ${w.level   ? `<div class="mt-1 text-gray-500">難度：${w.level}</div>` : ""}
-    <div class="mt-2 flex items-center gap-3">
-      ${opts.showReview ? `<button class="text-green-600 underline" data-act="review">複習完成</button>` : ""}
-      <button class="text-red-500" data-act="del">刪除</button>
-    </div>
-  `;
+details.innerHTML = `
+  <div class="mt-1">
+    <button type="button" title="播放"
+      class="ml-3 px-3 py-1 text-sm font-semibold
+            bg-gray-600 text-white rounded-sm
+            hover:bg-gray-700 transition whitespace-nowrap">發音</button>
+  </div>
+  ${exArticle ? `<div class="mt-1">文章例句：「${escapeHTML(exArticle)}」</div>` : ""}
+  ${exMake    ? `<div class="mt-1">造句：「${escapeHTML(exMake)}」</div>` : ""}
+  ${exZh      ? `<div class="mt-1">翻譯：${escapeHTML(exZh)}</div>` : ""}
+  ${w.level   ? `<div class="mt-1 text-gray-500">難度：${escapeHTML(w.level)}</div>` : ""}
+  <div class="mt-2 flex items-center gap-3">
+    ${opts.showReview ? `<button class="text-green-600 underline" data-act="review">複習完成</button>` : ""}
+    <button class="text-red-500" data-act="del">刪除</button>
+  </div>
+`;
+
 
   summary.addEventListener("click", () => {
     details.classList.toggle("hidden");
@@ -1032,3 +1037,4 @@ async function doOCR(file) {
     runBtn?.classList.remove("hidden");
   }
 }
+
