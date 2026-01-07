@@ -142,6 +142,8 @@ export async function handleAnalyzeClick() {
 
   try {
     const raw = await analyzeArticle(text);
+    console.log("raw typeof =", typeof raw);
+    console.log("raw =", raw);
     console.log("analyzeArticle raw type:", typeof raw, raw);
 
     const rawText = (typeof raw === "string") ? raw : JSON.stringify(raw);
@@ -1047,5 +1049,6 @@ async function doOCR(file) {
     runBtn?.classList.remove("hidden");
   }
 }
+
 
 
