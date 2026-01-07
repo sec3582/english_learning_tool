@@ -111,24 +111,19 @@ function bindEvents() {
   on("importJsonBtn", "click", UI.handleImportJsonClick);
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-  console.log("[WordGarden] ESM OK: /js/main.js loaded");
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("[WordGarden] DOM Ready");
 
-  try {
-    await initGSheetsAppend();   // ✅ 方案B：自動 append 初始化
-  } catch (e) {
-    console.error("[GSheetsAppend] init failed:", e);
-  }
+  // 1. 先執行 UI 綁定 (這樣按鈕才會有反應)
+  bindEvents(); 
 
-  try {
-  await initWordsAutoSync();
-  } catch (e) {
-    console.error("[WordsAutoSync] init failed:", e);
-  }
-
-
-  bindEvents();
-  UI.renderSidebarLists?.();
-  UI.switchSidebarTab?.("today");
-  UI.refreshUsageUI?.();
+  // 2. 非同步執行資料同步，不要用 await 擋住 UI
+  // 這樣就算 Google SDK 載入慢，網頁也不會白屏或卡死
+  bootstrapFromSheetsToLocalStorage().catch(err => {
+    console.warn("Google Sheets 引導失敗，可能未登入:", err);
+  });
+  
+  initGSheetsAppend();
+  initWordsAutoSync();
 });
+
