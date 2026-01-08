@@ -18,7 +18,7 @@ export function logReview(word, correct){
   writeJSON("reviewLogs", a);
 
   // ✅ 方案B：自動 append 到 Google Sheet（ReviewLogs）
-  //window.GSheetsAppend?.enqueueReview?.(word, !!correct);
+  window.GSheetsAppend?.enqueueReview?.(word, !!correct);
 }
 
 
@@ -164,4 +164,5 @@ export function getDailyStats(days = 14){
 
   return buckets; // 已按（舊→新）排序
 }
+
 
