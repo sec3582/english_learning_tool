@@ -542,11 +542,31 @@ function findCbByWord(word){ const v = (window.CSS && CSS.escape) ? CSS.escape(w
 
 /* ===== 測驗（集中：buildTypingQuestion 來自 quiz.js） ===== */
 export function startQuiz(){
-  const DESIRED = 15;
+const DESIRED = 15;
 
-  const due   = getDueWords().sort((a,b)=> new Date(a.dueAt||0) - new Date(b.dueAt||0));
-  const today = getTodayWords();
-  const all   = getAllWords();
+// Fisher–Yates shuffle
+const shuffle = (arr) => {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+};
+
+// 1) due 先照到期日排序（保留「優先複習」的概念）
+// 2) 但如果 due 很多，只取前面一段（例如 60 個）再 shuffle，避免永遠同 15 個
+const dueSorted = getDueWords().sort((a,b)=> new Date(a.dueAt||0) - new Date(b.dueAt||0));
+const duePool = shuffle(dueSorted.slice(0, Math.max(DESIRED * 4, 60)));
+
+// today / all 也洗牌，避免固定順序
+const todayPool = shuffle(getTodayWords().slice());
+const allPool   = shuffle(getAllWords().slice());
+
+// 後面 pushUnique(queue, pool) 請改用這三個 pool
+const due = duePool;
+const today = todayPool;
+const all = allPool;
+
 
   const seen = new Set();
   const pushUnique = (arr, pool) => {
@@ -1106,6 +1126,7 @@ document.addEventListener("DOMContentLoaded", ensureToTopButton);
 window.addEventListener("usage-updated", () => {
   try { refreshUsageUI(); } catch (e) { console.error(e); }
 });
+
 
 
 
