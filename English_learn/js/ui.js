@@ -751,10 +751,29 @@ export function submitQuizAnswer(asWrong = false) {
   }
 
   // 答後語音（若你選了不自動播放，afterAnswerSpeech 應回 []）
+// 答後語音：先用 quiz.js 的建議；若它回空陣列，就用 ui.js 的保底邏輯
   try {
     const seq = afterAnswerSpeech(mode, w, q, { audio: QUIZ_PREF.audio, showZh: !!QUIZ_PREF.showZh });
-    if (seq && seq.length) speakSequence(seq);
+  
+    if (seq && seq.length) {
+      speakSequence(seq);
+    } else {
+      // ✅ 保底：確保「只播單字」一定會播單字
+      const audioMode = (QUIZ_PREF.audio || "none");
+      if (audioMode !== "none") {
+        const texts = [];
+        if ((audioMode === "word" || audioMode === "both") && w?.word) texts.push(w.word);
+  
+        // 例句取你現有的挑選方式
+        const pair = pickExamplePair(w, { showZh: !!QUIZ_PREF.showZh });
+        const sentence = pair?.en || "";
+        if ((audioMode === "sentence" || audioMode === "both") && sentence) texts.push(sentence);
+  
+        if (texts.length) speakSequence(texts);
+      }
+    }
   } catch {}
+
 
   // 下一步 UI
   quizAwaitingNext = true;
@@ -1141,6 +1160,7 @@ document.addEventListener("DOMContentLoaded", ensureToTopButton);
 window.addEventListener("usage-updated", () => {
   try { refreshUsageUI(); } catch (e) { console.error(e); }
 });
+
 
 
 
