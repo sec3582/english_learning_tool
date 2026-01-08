@@ -567,14 +567,20 @@ export function startQuiz(){
   showQuizQuestion();
 
   if (!_quizEnterHandlerBound){
-    modal.addEventListener("keydown", (e)=> {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        if (quizAwaitingNext) nextQuizStep(); else submitQuizAnswer(false);
-      }
-    });
+    document.addEventListener("keydown", (e)=> {
+      if (e.key !== "Enter") return;
+  
+      const modal = document.getElementById("quizModal");
+      if (!modal || modal.classList.contains("hidden")) return; // 只在測驗視窗開啟時生效
+  
+      e.preventDefault();
+      if (quizAwaitingNext) nextQuizStep();
+      else submitQuizAnswer(false);
+    }, true);
+  
     _quizEnterHandlerBound = true;
   }
+
 }
 
 // js/ui.js ─ 取代原本的 showQuizQuestion()
@@ -1091,6 +1097,7 @@ document.addEventListener("DOMContentLoaded", ensureToTopButton);
 window.addEventListener("usage-updated", () => {
   try { refreshUsageUI(); } catch (e) { console.error(e); }
 });
+
 
 
 
