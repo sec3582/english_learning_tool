@@ -76,7 +76,9 @@ export function openQuizSettings() {
   radios.forEach(r => r.checked = (r.value === (QUIZ_PREF.audio || "none")));
   const cb = modal.querySelector("#qs_showZh");
   if (cb) cb.checked = !!QUIZ_PREF.showZh;
-  modal.classList.remove("hidden"); modal.classList.add("flex");
+  modal.style.display = ""; 
+  modal.classList.remove("hidden");
+  modal.classList.add("flex");
 }
 export function closeQuizSettings() {
   const modal = document.getElementById("quizSettings");
@@ -1097,6 +1099,7 @@ document.addEventListener("DOMContentLoaded", ensureToTopButton);
 window.addEventListener("usage-updated", () => {
   try { refreshUsageUI(); } catch (e) { console.error(e); }
 });
+
 
 
 
