@@ -1064,13 +1064,11 @@ async function doOCR(file) {
   }
 }
 
-window.addEventListener("usage-updated", () => {
-  try { refreshUsageUI(); } catch {}
-});
 
 window.addEventListener("usage-updated", () => {
   try { refreshUsageUI(); } catch (e) { console.error(e); }
 });
+
 
 
 
