@@ -82,6 +82,7 @@ export function closeQuizSettings() {
   const modal = document.getElementById("quizSettings");
   if (modal) { modal.classList.add("hidden"); modal.classList.remove("flex"); }
 }
+
 export function startQuizFromSettings() {
   const modal = document.getElementById("quizSettings");
   const sel = modal?.querySelector('input[name="qs_audio"]:checked');
@@ -89,10 +90,17 @@ export function startQuizFromSettings() {
   QUIZ_PREF.audio = sel ? sel.value : "none";
   QUIZ_PREF.showZh = cb ? !!cb.checked : true;
   localStorage.setItem("quizPref", JSON.stringify(QUIZ_PREF));
-  window.GSheetsAppend?.authInteractive?.().catch(() => {});
-  startQuiz?.();
 
+  // ✅ 先關掉設定視窗（讓畫面先更新）
+  closeQuizSettings();
+
+  // ✅ 授權放在這裡：不要 await（避免卡住 UI），讓它在背景完成
+  window.GSheetsAppend?.authInteractive?.().catch(() => {});
+
+  // ✅ 下一個 frame 再開始測驗，確保 modal 已消失
+  requestAnimationFrame(() => startQuiz?.());
 }
+
 
 /* ===== 題型選擇視窗 ===== */
 export function openQuizModePicker(){
@@ -1051,6 +1059,7 @@ async function doOCR(file) {
     runBtn?.classList.remove("hidden");
   }
 }
+
 
 
 
