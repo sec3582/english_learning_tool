@@ -701,39 +701,56 @@ function showQuizQuestion(){
 
 
 // js/ui.js ─ 取代原本的 submitQuizAnswer()
-export function submitQuizAnswer(asWrong = false){
+export function submitQuizAnswer(asWrong = false) {
   const w = quizQueue[quizIndex];
-  const q = w._q; // showQuizQuestion() 放的
-  const mode = (QUIZ_PREF.mode || "typing");
+  const q = w?._q;
+  const mode = (QUIZ_PREF?.mode || "typing");
 
-  let userInput, expected, correct;
+  let userInput = "";
+  let expected = "";
+  let correct = false;
 
-  if (mode.startsWith("choice_")) {
+  if (typeof mode === "string" && mode.startsWith("choice_")) {
     const chosen = document.querySelector('input[name="quizOpt"]:checked');
-    userInput = chosen ? Number(chosen.value) : NaN;
+    const picked = chosen ? Number(chosen.value) : NaN;
     if (!chosen && !asWrong) { alert("請先選一個選項"); return; }
-    const g = grade(q, asWrong ? -1 : userInput);
-    expected = g.expected; correct = g.correct;
+    const g = grade(q, asWrong ? -1 : picked);
+    expected = g.expected;
+    correct = !!g.correct;
+    userInput = chosen ? (chosen.parentElement?.innerText || "").trim() : "";
   } else {
-    userInput = (document.getElementById("quizAnswer").value || "").trim().toLowerCase();
+    const inputEl = document.getElementById("quizAnswer");
+    userInput = (inputEl?.value || "").trim().toLowerCase();
     const g = grade(q, asWrong ? "" : userInput);
-    expected = g.expected; correct = g.correct || (!asWrong && userInput === (w.word || "").toLowerCase());
+    expected = g.expected;
+    correct = !!g.correct || (!asWrong && userInput === (w.word || "").toLowerCase());
   }
 
-  // 間隔複習 & 介面
-  submitQuizAnswer()
+  // ✅ 作答紀錄（ReviewLogs）
+  try { logReview(w.word, !!correct); } catch {}
+
+  // ✅ 間隔複習排程
   scheduleNext(w.word, !!correct);
+
+  const fb = document.getElementById("quizFeedback");
   if (correct) {
     quizScore++;
-    document.getElementById("quizFeedback").innerHTML = `<span class="text-green-600">✅ 正確！</span>`;
+    if (fb) fb.innerHTML = `<span class="text-green-600">✅ 正確！</span>`;
   } else {
-    document.getElementById("quizFeedback").innerHTML =
+    if (fb) fb.innerHTML =
       `<span class="text-red-600">❌ 錯誤，答案是 <strong>${w.word}</strong></span>`;
+
     const pairForWrong = pickExamplePair(w, { showZh: !!QUIZ_PREF.showZh });
-    wrongAnswers.push({ word: w.word, your: (userInput || "(空白)"), definition: w.definition || "", example: pairForWrong.en || "" });
+    wrongAnswers.push({
+      word: w.word,
+      your: userInput || "(空白)",
+      correct: w.word,
+      definition: w.definition || "",
+      example: pairForWrong?.en || ""
+    });
   }
 
-  // 答後語音（依題型/偏好組合）
+  // 答後語音（若你選了不自動播放，afterAnswerSpeech 應回 []）
   try {
     const seq = afterAnswerSpeech(mode, w, q, { audio: QUIZ_PREF.audio, showZh: !!QUIZ_PREF.showZh });
     if (seq && seq.length) speakSequence(seq);
@@ -741,11 +758,13 @@ export function submitQuizAnswer(asWrong = false){
 
   // 下一步 UI
   quizAwaitingNext = true;
+
   const input = document.getElementById("quizAnswer");
-  input.disabled = true;
-  document.getElementById("quizNext").classList.remove("hidden");
-  document.getElementById("quizSubmit").classList.add("hidden");
-  document.getElementById("quizIDK").classList.add("hidden");
+  if (input) input.disabled = true;
+
+  document.getElementById("quizNext")?.classList.remove("hidden");
+  document.getElementById("quizSubmit")?.classList.add("hidden");
+  document.getElementById("quizIDK")?.classList.add("hidden");
 
   renderSidebarLists?.();
 }
@@ -1122,6 +1141,7 @@ document.addEventListener("DOMContentLoaded", ensureToTopButton);
 window.addEventListener("usage-updated", () => {
   try { refreshUsageUI(); } catch (e) { console.error(e); }
 });
+
 
 
 
