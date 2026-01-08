@@ -649,7 +649,7 @@ function showQuizQuestion(){
 
     // 立即/手動播放
     document.getElementById("qPlay")?.addEventListener("click", () => speak(q.speak));
-    try { speak(q.speak); } catch {}
+    //try { speak(q.speak); } catch {}
   }
   else { // typing（原本的填空）
     q = buildTypingQuestion(w, { showZh: !!QUIZ_PREF.showZh });
@@ -1097,6 +1097,7 @@ document.addEventListener("DOMContentLoaded", ensureToTopButton);
 window.addEventListener("usage-updated", () => {
   try { refreshUsageUI(); } catch (e) { console.error(e); }
 });
+
 
 
 
