@@ -80,8 +80,12 @@ export function openQuizSettings() {
 }
 export function closeQuizSettings() {
   const modal = document.getElementById("quizSettings");
-  if (modal) { modal.classList.add("hidden"); modal.classList.remove("flex"); }
+  if (!modal) return;
+  modal.classList.add("hidden");
+  modal.classList.remove("flex");
+  modal.style.display = "none"; // ✅ 強制隱藏
 }
+
 
 export function startQuizFromSettings() {
   const modal = document.getElementById("quizSettings");
@@ -1059,6 +1063,7 @@ async function doOCR(file) {
     runBtn?.classList.remove("hidden");
   }
 }
+
 
 
 
