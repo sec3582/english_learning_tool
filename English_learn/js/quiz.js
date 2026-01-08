@@ -121,7 +121,7 @@ export function grade(question, userInput) {
 
 // ── 答後語音建議：回傳 [{text, lang}] 供外層串播
 export function afterAnswerSpeech(mode, wordObj, question, prefs = { audio: "none", showZh: true }) {
-  if (!pref || pref.audio === "none") return [];
+  if (!prefs || prefs.audio === "none") return [];
   if (mode === "choice_en2zh" || mode === "choice_zh2en") {
     return [{ text: wordObj.word, lang: "en" }, { text: (wordObj.definition || ""), lang: "zh" }];
   }
@@ -260,4 +260,5 @@ export function buildTypingQuestion(wordObj, opts = { showZh: true }) {
     maskedExample
   };
 }
+
 
