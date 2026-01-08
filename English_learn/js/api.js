@@ -68,6 +68,8 @@ function addUsage(model, usage) {
 
   store[model] = cur;
   writeUsage_(store);
+  window.dispatchEvent(new Event("usage-updated"));
+
 }
 
 export function getUsageSummary() {
@@ -242,4 +244,5 @@ export async function analyzeCustomWordAPI(article, term) {
   });
   return normalizeToJSON_(data?.content);
 }
+
 
