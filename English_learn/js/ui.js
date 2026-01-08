@@ -1,6 +1,6 @@
 // js/ui.js（頂端 imports）
 import { analyzeArticle, extractJSON, getUsageSummary, getUsageBudget, setUsageBudget, resetUsageMonth, analyzeCustomWordAPI } from "./api.js";
-import { addWord, getAllWords, deleteWord, getTodayWords, getDueWords, getDueCount, saveAllWords, scheduleNext, ensureDueForAll, getMasteredCount, getDailyStats } from "./storage.js";
+import { addWord, getAllWords, deleteWord, getTodayWords, getDueWords, getDueCount, saveAllWords, scheduleNext, logReview, ensureDueForAll, getMasteredCount, getDailyStats } from "./storage.js";
 import { speak, speakSequence } from "./speech.js";
 // 這行改成一起匯入 choice/dictation 以及評分/語音建議
 import { buildTypingQuestion, makeChoiceQuestion, makeDictationQuestion, grade, afterAnswerSpeech, pickExamplePair } from "./quiz.js";
@@ -705,6 +705,7 @@ export function submitQuizAnswer(asWrong = false){
   }
 
   // 間隔複習 & 介面
+  submitQuizAnswer()
   scheduleNext(w.word, !!correct);
   if (correct) {
     quizScore++;
@@ -1105,6 +1106,7 @@ document.addEventListener("DOMContentLoaded", ensureToTopButton);
 window.addEventListener("usage-updated", () => {
   try { refreshUsageUI(); } catch (e) { console.error(e); }
 });
+
 
 
 
