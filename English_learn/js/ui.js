@@ -553,37 +553,33 @@ const shuffle = (arr) => {
   return arr;
 };
 
-// 1) due 先照到期日排序（保留「優先複習」的概念）
-// 2) 但如果 due 很多，只取前面一段（例如 60 個）再 shuffle，避免永遠同 15 個
-const dueSorted = getDueWords().sort((a,b)=> new Date(a.dueAt||0) - new Date(b.dueAt||0));
+// 先排序（保留優先複習），再從前面取一段做隨機抽題
+const dueSorted = getDueWords()
+  .sort((a, b) => new Date(a.dueAt || 0) - new Date(b.dueAt || 0));
+
 const duePool = shuffle(dueSorted.slice(0, Math.max(DESIRED * 4, 60)));
-
-// today / all 也洗牌，避免固定順序
 const todayPool = shuffle(getTodayWords().slice());
-const allPool   = shuffle(getAllWords().slice());
+const allPool = shuffle(getAllWords().slice());
 
-// 後面 pushUnique(queue, pool) 請改用這三個 pool
-const due = duePool;
-const today = todayPool;
-const all = allPool;
+const queue = [];
+const seen = new Set();
 
+const pushUnique = (pool) => {
+  for (const w of pool) {
+    const k = (w.word || "").toLowerCase();
+    if (!k || seen.has(k)) continue;
+    seen.add(k);
+    queue.push(w);
+    if (queue.length >= DESIRED) break;
+  }
+};
 
-  const seen = new Set();
-  const pushUnique = (arr, pool) => {
-    for (const w of pool) {
-      const k = (w.word || "").toLowerCase();
-      if (seen.has(k)) continue;
-      arr.push(w); seen.add(k);
-      if (arr.length >= DESIRED) break;
-    }
-  };
+pushUnique(duePool);
+if (queue.length < DESIRED) pushUnique(todayPool);
+if (queue.length < DESIRED) pushUnique(allPool);
 
-  const queue = [];
-  pushUnique(queue, due);
-  if (queue.length < DESIRED) pushUnique(queue, today);
-  if (queue.length < DESIRED) pushUnique(queue, all);
+if (!queue.length) return alert("清單是空的，先新增幾個單字吧！");
 
-  if (!queue.length) return alert("清單是空的，先新增幾個單字吧！");
 
   quizQueue = queue;
   lastQuizQueue = quizQueue.slice();
@@ -1126,6 +1122,7 @@ document.addEventListener("DOMContentLoaded", ensureToTopButton);
 window.addEventListener("usage-updated", () => {
   try { refreshUsageUI(); } catch (e) { console.error(e); }
 });
+
 
 
 
