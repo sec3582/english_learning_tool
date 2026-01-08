@@ -114,16 +114,17 @@ function bindEvents() {
 document.addEventListener("DOMContentLoaded", () => {
   console.log("[WordGarden] DOM Ready");
 
-  // 1. 先執行 UI 綁定 (這樣按鈕才會有反應)
-  bindEvents(); 
+  bindEvents();
 
-  // 2. 非同步執行資料同步，不要用 await 擋住 UI
-  // 這樣就算 Google SDK 載入慢，網頁也不會白屏或卡死
+  UI.refreshUsageUI?.(); // ✅ 新增：一進頁面就用 localStorage 更新 badge
+
   bootstrapFromSheetsToLocalStorage().catch(err => {
     console.warn("Google Sheets 引導失敗，可能未登入:", err);
   });
-  
+
   initGSheetsAppend();
   initWordsAutoSync();
 });
+
+
 
