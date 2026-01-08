@@ -95,6 +95,10 @@ function bindEvents() {
   document.getElementById("quizModePicker")?.addEventListener("click", (e) => {
     const btn = e.target.closest("[data-mode]");
     if (!btn) return;
+
+    e.preventDefault();
+    e.stopPropagation(); // ✅ 阻止同一次 click 觸發到其他「點背景關閉」的邏輯
+    
     UI.startQuizFlowWithMode(btn.getAttribute("data-mode"));
   });
 
@@ -125,6 +129,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initGSheetsAppend();
   initWordsAutoSync();
 });
+
 
 
 
