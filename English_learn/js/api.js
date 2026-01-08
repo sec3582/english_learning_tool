@@ -10,6 +10,12 @@ const MODEL_PRICING = {
   "gpt-4o": { inPerM: 5, outPerM: 15 },
 };
 
+function roughTokenEstimate(str) {
+  const s = String(str || "");
+  return Math.ceil(s.length / 4); // 粗估：4 chars ≈ 1 token
+}
+
+
 function monthKey(d = new Date()) {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
@@ -21,8 +27,9 @@ function usageStoreKey() {
 }
 
 function budgetStoreKey() {
-  return `wordgarden_budget_${monthKey()}`;
+  return `wordgarden_budget`;
 }
+
 
 function readUsage_() {
   try {
@@ -147,8 +154,19 @@ async function callAppsScript(action, payload = {}) {
     throw new Error(data?.error || "GAS 回傳 ok=false");
   }
 
-  // 記錄用量（如果 GAS 有回 usage）
-  if (data?.usage) addUsage(data.model || "gpt-4o", data.usage);
+// 記錄用量（如果 GAS 有回 usage）
+  if (data?.usage) {
+    addUsage(data.model || "gpt-4o", data.usage);
+  } else {
+    // fallback：用粗估避免一直是 0
+    const inTok = roughTokenEstimate(JSON.stringify({ action, ...payload }));
+    const outTok = roughTokenEstimate(data?.content ?? text);
+    addUsage(data.model || "gpt-4o", { prompt_tokens: inTok, completion_tokens: outTok });
+  
+    console.warn("[usage] GAS 沒回 usage，已使用粗估 token 計入本月估算", {
+      action, inTok, outTok,
+    });
+  }
 
   return data;
 }
@@ -224,3 +242,4 @@ export async function analyzeCustomWordAPI(article, term) {
   });
   return normalizeToJSON_(data?.content);
 }
+
