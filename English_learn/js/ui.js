@@ -101,7 +101,10 @@ export function startQuizFromSettings() {
   closeQuizSettings();
 
   // ✅ 授權放在這裡：不要 await（避免卡住 UI），讓它在背景完成
-  window.GSheetsAppend?.authInteractive?.().catch(() => {});
+  window.GSheetsAppend?.authInteractive?.()
+  .then(() => window.GSheetsAppend?.flushNow?.())
+  .catch(() => {});
+
 
   // ✅ 下一個 frame 再開始測驗，確保 modal 已消失
   requestAnimationFrame(() => startQuiz?.());
@@ -140,7 +143,10 @@ export function startQuizFlowWithMode(mode){
       QUIZ_PREF.showZh = false;
       localStorage.setItem("quizPref", JSON.stringify(QUIZ_PREF));
     }
-    window.GSheetsAppend?.authInteractive?.().catch(() => {});
+    window.GSheetsAppend?.authInteractive?.()
+    .then(() => window.GSheetsAppend?.flushNow?.())
+    .catch(() => {});
+
     startQuiz();
   }
 }
@@ -1099,6 +1105,7 @@ document.addEventListener("DOMContentLoaded", ensureToTopButton);
 window.addEventListener("usage-updated", () => {
   try { refreshUsageUI(); } catch (e) { console.error(e); }
 });
+
 
 
 
