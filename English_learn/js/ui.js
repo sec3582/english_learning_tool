@@ -89,8 +89,9 @@ export function startQuizFromSettings() {
   QUIZ_PREF.audio = sel ? sel.value : "none";
   QUIZ_PREF.showZh = cb ? !!cb.checked : true;
   localStorage.setItem("quizPref", JSON.stringify(QUIZ_PREF));
-  closeQuizSettings();
-  startQuiz?.(); // 呼叫開始
+  window.GSheetsAppend?.authInteractive?.().catch(() => {});
+  startQuiz?.();
+
 }
 
 /* ===== 題型選擇視窗 ===== */
@@ -125,6 +126,7 @@ export function startQuizFlowWithMode(mode){
       QUIZ_PREF.showZh = false;
       localStorage.setItem("quizPref", JSON.stringify(QUIZ_PREF));
     }
+    window.GSheetsAppend?.authInteractive?.().catch(() => {});
     startQuiz();
   }
 }
@@ -1049,6 +1051,7 @@ async function doOCR(file) {
     runBtn?.classList.remove("hidden");
   }
 }
+
 
 
 
