@@ -75,23 +75,33 @@ function initGis() {
   gisReady = true;
 }
 
-async function ensureAuthed() {
+async function ensureAuthed({ interactive = false } = {}) {
   if (authed) return true;
   if (!gapiReady || !gisReady) throw new Error("Google not initialized");
-  await new Promise((resolve, reject) => {
-    tokenClient.callback = (resp) => {
-      if (resp && resp.access_token) {
-        gapi.client.setToken(resp);
-        authed = true;
-        resolve(true);
-      } else {
-        reject(new Error("OAuth failed"));
-      }
-    };
-    // prompt:""：已同意過就不會一直跳窗；沒同意過會跳一次
-    tokenClient.requestAccessToken({ prompt: "" });
-  });
-  return true;
+
+  // interactive=true：允許彈一次（prompt:""）
+  // interactive=false：靜默拿 token（prompt:"none"），不打擾作答
+  const prompt = interactive ? "" : "none";
+
+  try {
+    await new Promise((resolve, reject) => {
+      tokenClient.callback = (resp) => {
+        if (resp && resp.access_token) {
+          gapi.client.setToken(resp);
+          authed = true;
+          resolve(true);
+        } else {
+          reject(new Error("OAuth failed"));
+        }
+      };
+      tokenClient.requestAccessToken({ prompt });
+    });
+    return true;
+  } catch (e) {
+    // 靜默失敗就回 false（不要跳窗/不要中斷）
+    if (!interactive) return false;
+    throw e;
+  }
 }
 
 async function appendMany(sheetName, rows) {
@@ -112,7 +122,9 @@ async function flushNow() {
   // 先把 queue 持久化，避免中途關頁
   saveQueue();
 
-  await ensureAuthed();
+const ok = await ensureAuthed({ interactive: false });
+if (!ok) return; // 靜默拿不到 token 就先不寫，queue 留著下次再試
+
 
   // 分別 append（三次呼叫，簡單穩定）
   const words = pending.words.splice(0);
@@ -184,11 +196,13 @@ export async function initGSheetsAppend() {
     try { saveQueue(); } catch {}
   });
 
-  // 掛到 window，讓 storage.js 能同步呼叫（不改 UI async）
-  window.GSheetsAppend = {
-    enqueueWordRow,
-    enqueueAdded,
-    enqueueReview,
-    flushNow,
+window.GSheetsAppend = {
+  enqueueWordRow,
+  enqueueAdded,
+  enqueueReview,
+  flushNow,
+  authInteractive: () => ensureAuthed({ interactive: true }), // ✅ 新增
   };
+
 }
+
