@@ -132,7 +132,7 @@ export function startQuizFlowWithMode(mode){
   // 填空題：需要顯示「自動播放 / 題目顯示中文」等設定
   // 其他題型（選擇題/聽力）直接開始，避免多一步
   if (mode === "typing") {
-    openQuizSettings();
+    setTimeout(() => openQuizSettings(), 0);
   } else {
     // 對聽力給個合適的預設：播「單字」
     if (mode === "dictation") {
@@ -1099,6 +1099,7 @@ document.addEventListener("DOMContentLoaded", ensureToTopButton);
 window.addEventListener("usage-updated", () => {
   try { refreshUsageUI(); } catch (e) { console.error(e); }
 });
+
 
 
 
