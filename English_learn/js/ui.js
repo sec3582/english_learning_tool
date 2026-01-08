@@ -1064,10 +1064,35 @@ async function doOCR(file) {
   }
 }
 
+function ensureToTopButton() {
+  if (document.getElementById("toTopBtn")) return;
+
+  const btn = document.createElement("button");
+  btn.id = "toTopBtn";
+  btn.type = "button";
+  btn.textContent = "↑ 回到最上方";
+  btn.className = "fixed bottom-4 right-4 px-3 py-2 rounded-full border bg-white shadow hidden";
+  btn.addEventListener("click", () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  document.body.appendChild(btn);
+
+  const toggle = () => {
+    if (window.scrollY > 200) btn.classList.remove("hidden");
+    else btn.classList.add("hidden");
+  };
+  window.addEventListener("scroll", toggle, { passive: true });
+  toggle();
+}
+
+document.addEventListener("DOMContentLoaded", ensureToTopButton);
 
 window.addEventListener("usage-updated", () => {
   try { refreshUsageUI(); } catch (e) { console.error(e); }
 });
+
+
 
 
 
