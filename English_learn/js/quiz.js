@@ -12,28 +12,37 @@ function _pickExamplePairCore(w) {
 
 // 允許 UI 指定 showZh 偏好；但不依賴 DOM
 export function pickExamplePair(w, opts = { showZh: true }) {
-  // 來源優先：文章例句 > AI 造句 > 第二例句；如 opts.showZh 為 true，優先選有中文對應者
-  const candidates = [];
-  if (w.example1 || w.example_in_article) {
-    candidates.push({
-      en: w.example1 || w.example_in_article || "",
-      zh: w.example1_zh || w.example_in_article_zh || "",
-      tag: "article",
-    });
-  }
-  if (w.example_ai) {
-    candidates.push({ en: w.example_ai, zh: w.example_ai_zh || "", tag: "ai" });
-  }
-  if (w.example2) {
-    candidates.push({ en: w.example2, zh: w.example2_zh || "", tag: "ex2" });
-  }
-  if (opts?.showZh) {
-    const withZh = candidates.find(c => c.zh && String(c.zh).trim() !== "");
-    if (withZh) return withZh;
-  }
-  if (candidates.length) return candidates[0];
-  return _pickExamplePairCore(w);
+  const variants = [];
+
+  // v1: example1 / 文章例句（同一組）
+  const ex1 = (w.example1 || w.example_in_article || "").trim();
+  const ex1zh = (w.example1_zh || w.example_in_article_zh || "").trim();
+  if (ex1) variants.push({ tag: "ex1", en: ex1, zh: ex1zh });
+
+  // v2: example_ai（同一組）
+  const exAi = (w.example_ai || "").trim();
+  const exAizh = (w.example_ai_zh || "").trim();
+  if (exAi) variants.push({ tag: "ai", en: exAi, zh: exAizh });
+
+  // v3: example2（同一組）
+  const ex2 = (w.example2 || "").trim();
+  const ex2zh = (w.example2_zh || "").trim();
+  if (ex2) variants.push({ tag: "ex2", en: ex2, zh: ex2zh });
+
+  // 沒例句就回空（由 UI 決定要不要顯示）
+  if (!variants.length) return { en: "", zh: "", tag: "none" };
+
+  // ✅ 輪替：每個單字各自記一個 index（存在 localStorage）
+  const k = `exPick:${(w.id || w.word || "").toString().toLowerCase()}`;
+  const idx = parseInt(localStorage.getItem(k) || "0", 10) || 0;
+  const chosen = variants[idx % variants.length];
+  localStorage.setItem(k, String((idx + 1) % variants.length));
+
+  // ✅ 嚴格對應：showZh 只控制顯示與否，不允許拿別的欄位充當
+  if (!opts?.showZh) return { ...chosen, zh: "" };
+  return chosen; // zh 可能是 ""，那就顯示空 or UI 隱藏該行
 }
+
 
 // ── 干擾選項（同 pos / 同 level 優先）
 export function sampleDistractors(target, allWords = [], count = 3) {
@@ -260,5 +269,6 @@ export function buildTypingQuestion(wordObj, opts = { showZh: true }) {
     maskedExample
   };
 }
+
 
 
