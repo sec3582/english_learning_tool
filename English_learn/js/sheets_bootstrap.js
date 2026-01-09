@@ -58,24 +58,40 @@ export async function bootstrapFromSheetsToLocalStorage() {
   await requestToken();
 
   // 讀三張表
-  const wordRows = await getValues(`${SHEET_WORDS}!A2:K`);
+  const headerRows = await getValues(`${SHEET_WORDS}!1:1`);
+  const header = (headerRows && headerRows[0]) ? headerRows[0].map(h => String(h || '').trim()) : [];
+  const colIndex = Object.create(null);
+  header.forEach((h, i) => { if (h) colIndex[h] = i; });
+  const wordRows = await getValues(`${SHEET_WORDS}!A2:Z`);
+
   const addedRows = await getValues(`${SHEET_ADDED}!A2:B`);
   const reviewRows = await getValues(`${SHEET_REVIEW}!A2:C`);
 
   // 轉成你原本 storage.js 使用的格式
+  const getCell = (r, name, fallbackIdx) => {
+    const idx = colIndex[name];
+    if (typeof idx === "number") return r[idx] ?? "";
+    return (typeof fallbackIdx === "number") ? (r[fallbackIdx] ?? "") : "";
+  };
+
+  // 轉成你原本 storage.js 使用的格式（用欄名對應，避免欄位新增後錯位）
   const myWords = wordRows.map(r => ({
-    word: r[0] ?? "",
-    pos: r[1] ?? "",
-    definition: r[2] ?? "",
-    example1: r[3] ?? "",
-    example1_zh: r[4] ?? "",        // ✅ new column
-    example2: r[5] ?? "",
-    example2_zh: r[6] ?? "",
-    level: r[7] ?? "",
-    addedAt: r[8] ?? "",
-    dueAt: r[9] ?? "",
-    stage: r[10] === "" || r[10] == null ? 0 : Number(r[10]),
-  })).filter(x => x.word);
+    word: getCell(r, "word", 0),
+    pos: getCell(r, "pos", 1),
+    definition: getCell(r, "definition", 2),
+    example1: getCell(r, "example1", 3),
+    example1_zh: getCell(r, "example1_zh", 4),
+    example2: getCell(r, "example2", 5),
+    example2_zh: getCell(r, "example2_zh", 6),
+    level: getCell(r, "level", 7),
+    addedAt: getCell(r, "addedAt", 8),
+    dueAt: getCell(r, "dueAt", 9),
+    stage: (() => {
+      const v = getCell(r, "stage", 10);
+      return v === "" || v == null ? 0 : Number(v);
+    })(),
+  })).filter(x => String(x.word || "").trim());
+
 
   const addedLogs = addedRows.map(r => ({
     ts: Date.parse(r[0]) || Date.now(),
