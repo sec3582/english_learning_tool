@@ -206,13 +206,16 @@
           <div class="flex items-center justify-between mb-3">
             <h2 class="text-xl font-semibold">📚 單字清單</h2>
             <div class="inline-flex rounded-md overflow-hidden border">
-              <button id="tabToday" class="px-3 py-1 text-sm bg-gray-100">今日新增</button>
-              <button id="tabDue"   class="px-3 py-1 text-sm">到期複習</button>
-              <button id="tabAll"   class="px-3 py-1 text-sm">全部</button>
+              <button id="tabToday" class="px-4 py-2 text-sm bg-gray-100 whitespace-nowrap">今日新增</button>
+              <button id="tabDue"   class="px-4 py-2 text-sm whitespace-nowrap">到期複習</button>
+              <button id="tabAll"   class="px-4 py-2 text-sm whitespace-nowrap">全部</button>
             </div>
           </div>
 
-          <button id="startQuizBtn" class="w-full mb-3 px-3 py-2 rounded bg-amber-500 text-white hover:bg-amber-600 transition">🧪 開始測驗</button>
+          <button id="cloudQuizBtn" class="w-full mb-2 px-3 py-2 rounded bg-amber-500 text-white hover:bg-amber-600 transition">☁️ 使用雲端資料開始測驗</button>
+          <div class="text-xs text-gray-500 mb-3">從 Google Sheet 載入你的單字與學習進度（會覆蓋本機資料）。</div>
+
+          <button id="startQuizBtn" class="w-full mb-3 px-3 py-2 rounded bg-amber-500 text-white hover:bg-amber-600 transition hidden">🧪 開始測驗</button>
 
           <!-- All filters -->
           <div id="allFilters" class="grid grid-cols-2 gap-2 mb-3 hidden">
@@ -254,7 +257,7 @@
           <svg id="statsSparkline" viewBox="0 0 320 60" class="w-full h-[60px]"></svg>
         </div>
                 <!-- Backup card：匯出 / 匯入 JSON -->
-        <div class="bg-white rounded-xl shadow p-6">
+        <div class="bg-white rounded-xl shadow p-6 hidden">
           <h3 class="font-semibold mb-2">📂 資料備份</h3>
           <p class="text-sm text-gray-600 mb-3">
             可將單字清單匯出成檔案，或從檔案匯入。
