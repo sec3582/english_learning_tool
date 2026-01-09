@@ -68,7 +68,7 @@ export async function bootstrapFromSheetsToLocalStorage() {
     pos: r[1] ?? "",
     definition: r[2] ?? "",
     example1: r[3] ?? "",
-    example1_zh: r[4] ?? "",   // ✅ 新增：對應你的新欄位
+    example1_zh: r[4] ?? "",        // ✅ new column
     example2: r[5] ?? "",
     example2_zh: r[6] ?? "",
     level: r[7] ?? "",
@@ -76,7 +76,6 @@ export async function bootstrapFromSheetsToLocalStorage() {
     dueAt: r[9] ?? "",
     stage: r[10] === "" || r[10] == null ? 0 : Number(r[10]),
   })).filter(x => x.word);
-
 
   const addedLogs = addedRows.map(r => ({
     ts: Date.parse(r[0]) || Date.now(),
@@ -90,6 +89,9 @@ export async function bootstrapFromSheetsToLocalStorage() {
   })).filter(x => x.word);
 
   localStorage.setItem("myWords", JSON.stringify(myWords));
+  // compatibility for older UI
+  localStorage.setItem("words", JSON.stringify(myWords));
+  localStorage.setItem("tv_words", JSON.stringify(myWords));
   localStorage.setItem("addedLogs", JSON.stringify(addedLogs));
   localStorage.setItem("reviewLogs", JSON.stringify(reviewLogs));
 
@@ -99,4 +101,3 @@ export async function bootstrapFromSheetsToLocalStorage() {
     reviewLogs: reviewLogs.length,
   });
 }
-
