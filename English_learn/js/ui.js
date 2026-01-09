@@ -151,6 +151,62 @@ export function startQuizFlowWithMode(mode){
   }
 }
 
+
+/* ===== 一鍵雲端開始測驗（Google Sheet → 本機 → 開始） =====
+   使用者只需要按這顆按鈕：
+   1) 嘗試從 Google Sheet 載入資料（覆蓋 localStorage）
+   2) 載入成功後更新右側清單
+   3) 進入原本的題型選擇流程
+*/
+async function cloudLoadThenStartQuiz(){
+  const btn = document.getElementById("cloudQuizBtn");
+  const oldText = btn?.textContent || "";
+  if (btn){
+    btn.disabled = true;
+    btn.textContent = "☁️ 載入雲端中…";
+  }
+
+  let loaded = false;
+
+  try{
+    // 動態載入，避免未使用時增加依賴
+    const mod = await import("./sheets_bootstrap.js");
+    const fn = mod?.bootstrapFromSheetsToLocalStorage;
+    if (typeof fn !== "function") throw new Error("bootstrapFromSheetsToLocalStorage not found in sheets_bootstrap.js");
+    await fn();
+    loaded = true;
+
+    // 更新右側清單與 badge（以雲端資料為準）
+    try { renderSidebarLists?.(); } catch {}
+  } catch (e){
+    console.error(e);
+    alert("雲端資料載入失敗（或尚未完成授權）。\n\n我會先用本機資料開始測驗。\n若你是換裝置，請先確認已完成 Google 授權與同步代碼設定。");
+  } finally {
+    if (btn){
+      btn.disabled = false;
+      btn.textContent = oldText || "☁️ 使用雲端資料開始測驗";
+    }
+  }
+
+  // 無論雲端是否成功載入，都讓流程往下走（避免卡住）
+  try { openQuizModePicker(); } catch { try { openQuizSettings(); } catch {} }
+
+  // 額外提示（只在成功載入時）
+  if (loaded){
+    // 不用 alert 轟炸，讓使用者自然進測驗；必要時可改成 toast
+    console.log("[cloudQuiz] loaded from Google Sheet");
+  }
+}
+
+// 綁定按鈕事件（不依賴 main.js）
+document.addEventListener("DOMContentLoaded", () => {
+  const b = document.getElementById("cloudQuizBtn");
+  if (b && !b._bound){
+    b.addEventListener("click", cloudLoadThenStartQuiz);
+    b._bound = true;
+  }
+});
+
 /* ===== AI 分析 ===== */
 export async function handleAnalyzeClick() {
   const btn = document.getElementById("analyzeBtn");
