@@ -379,6 +379,7 @@ export function handleSaveSelected(){
   const cbs = Array.from(document.querySelectorAll("input[name='word']:checked"));
   const current = getAllWords();
   const exists = new Set(current.map(w => (w.word||"").toLowerCase()));
+  let anyAdded = false;
 
   cbs.forEach(cb => {
     const { word, pos, definition, example1, example2, example2_zh, level } = cb.detail;
@@ -393,9 +394,16 @@ export function handleSaveSelected(){
       level: level || ""
     });
 
-    if (added) markRowAsAdded(cb, false); else markRowAsAdded(cb, true);
+    if (added) { markRowAsAdded(cb, false); anyAdded = true; } else { markRowAsAdded(cb, true); }
     exists.add(k);
   });
+
+  // ✅ 新增後即同步到 Google Sheet（不阻塞 UI）
+  if (anyAdded) {
+    window.GSheetsAppend?.authInteractive?.()
+      .then(() => window.GSheetsAppend?.flushNow?.())
+      .catch(() => {});
+  }
 
   renderSidebarLists();
   hideFabBar();
@@ -415,6 +423,11 @@ export function handleCustomAdd(){
   const res = addWord({ word, pos, definition, example1, example2, example2_zh, level });
   if (!res.added) return alert(`「${word}」已存在`);
   alert(`已加入：${word}`);
+
+  // ✅ 新增後即同步到 Google Sheet（不阻塞 UI）
+  window.GSheetsAppend?.authInteractive?.()
+    .then(() => window.GSheetsAppend?.flushNow?.())
+    .catch(() => {});
 
   const cb = findCbByWord(word); if (cb) markRowAsAdded(cb, true);
   ["cw_word","cw_pos","cw_def","cw_example_en","cw_example_ai","cw_example_zh","cw_level"]
