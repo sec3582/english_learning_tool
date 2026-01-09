@@ -13,6 +13,7 @@ let allPage = 1; const ALL_PAGE_SIZE = 10; let lastAllFiltered = [];
 let quizQueue = []; let quizIndex = 0; let quizScore = 0; let _quizEnterHandlerBound = false;
 let quizAwaitingNext = false; let wrongAnswers = [];
 let lastQuizQueue = []; // 本輪題庫快照（用於重測）
+let _submittingAnswer = false;
 
 
 function escapeHTML(s=""){
@@ -771,90 +772,101 @@ function showQuizQuestion(){
 
 // js/ui.js ─ 取代原本的 submitQuizAnswer()
 export function submitQuizAnswer(asWrong = false) {
-  const w = quizQueue[quizIndex];
-  const q = w?._q;
-  const mode = (QUIZ_PREF?.mode || "typing");
+  if (_submittingAnswer) return; // 防重入
+  _submittingAnswer = true;
 
-  let userInput = "";
-  let expected = "";
-  let correct = false;
-
-  if (typeof mode === "string" && mode.startsWith("choice_")) {
-    const chosen = document.querySelector('input[name="quizOpt"]:checked');
-    const picked = chosen ? Number(chosen.value) : NaN;
-    if (!chosen && !asWrong) { alert("請先選一個選項"); return; }
-    const g = grade(q, asWrong ? -1 : picked);
-    expected = g.expected;
-    correct = !!g.correct;
-    userInput = chosen ? (chosen.parentElement?.innerText || "").trim() : "";
-  } else {
-    const inputEl = document.getElementById("quizAnswer");
-    userInput = (inputEl?.value || "").trim().toLowerCase();
-    const g = grade(q, asWrong ? "" : userInput);
-    expected = g.expected;
-    correct = !!g.correct || (!asWrong && userInput === (w.word || "").toLowerCase());
-  }
-
-  // ✅ 作答紀錄（ReviewLogs）
-  try { logReview(w.word, !!correct); } catch {}
-
-  // ✅ 間隔複習排程
-  scheduleNext(w.word, !!correct);
-
-  const fb = document.getElementById("quizFeedback");
-  if (correct) {
-    quizScore++;
-    if (fb) fb.innerHTML = `<span class="text-green-600">✅ 正確！</span>`;
-  } else {
-    if (fb) fb.innerHTML =
-      `<span class="text-red-600">❌ 錯誤，答案是 <strong>${w.word}</strong></span>`;
-
-    const pairForWrong = pickExamplePair(w, { showZh: !!QUIZ_PREF.showZh });
-    wrongAnswers.push({
-      word: w.word,
-      your: userInput || "(空白)",
-      correct: w.word,
-      definition: w.definition || "",
-      example: pairForWrong?.en || ""
-    });
-  }
-
-  // 答後語音（若你選了不自動播放，afterAnswerSpeech 應回 []）
-// 答後語音：先用 quiz.js 的建議；若它回空陣列，就用 ui.js 的保底邏輯
   try {
-    const seq = afterAnswerSpeech(mode, w, q, { audio: QUIZ_PREF.audio, showZh: !!QUIZ_PREF.showZh });
-  
-    if (seq && seq.length) {
-      speakSequence(seq);
-    } else {
-      // ✅ 保底：確保「只播單字」一定會播單字
-      const audioMode = (QUIZ_PREF.audio || "none");
-      if (audioMode !== "none") {
-        const texts = [];
-        if ((audioMode === "word" || audioMode === "both") && w?.word) texts.push(w.word);
-  
-        // 例句取你現有的挑選方式
-        const pair = pickExamplePair(w, { showZh: !!QUIZ_PREF.showZh });
-        const sentence = pair?.en || "";
-        if ((audioMode === "sentence" || audioMode === "both") && sentence) texts.push(sentence);
-  
-        if (texts.length) speakSequence(texts);
+    // 若已在等待下一題，直接忽略（避免 Enter 連發）
+    if (quizAwaitingNext) return;
+
+    const w = quizQueue[quizIndex];
+    const q = w?._q;
+    const mode = (QUIZ_PREF?.mode || "typing");
+
+    let userInput = "";
+    let expected = "";
+    let correct = false;
+
+    if (typeof mode === "string" && mode.startsWith("choice_")) {
+      const chosen = document.querySelector('input[name="quizOpt"]:checked');
+      const picked = chosen ? Number(chosen.value) : NaN;
+
+      if (!chosen && !asWrong) {
+        alert("請先選一個選項");
+        return; // ✅ finally 會解鎖
       }
+
+      const g = grade(q, asWrong ? -1 : picked);
+      expected = g.expected;
+      correct = !!g.correct;
+      userInput = chosen ? (chosen.parentElement?.innerText || "").trim() : "";
+    } else {
+      const inputEl = document.getElementById("quizAnswer");
+      userInput = (inputEl?.value || "").trim().toLowerCase();
+
+      const g = grade(q, asWrong ? "" : userInput);
+      expected = g.expected;
+      correct = !!g.correct || (!asWrong && userInput === (w.word || "").toLowerCase());
     }
-  } catch {}
 
+    // ✅ 作答紀錄（ReviewLogs）— 只會進來一次
+    try { logReview(w.word, !!correct); } catch {}
 
-  // 下一步 UI
-  quizAwaitingNext = true;
+    // ✅ 間隔複習排程
+    scheduleNext(w.word, !!correct);
 
-  const input = document.getElementById("quizAnswer");
-  if (input) input.disabled = true;
+    // ✅ feedback
+    const fb = document.getElementById("quizFeedback");
+    if (correct) {
+      quizScore++;
+      if (fb) fb.innerHTML = `<span class="text-green-600">✅ 正確！</span>`;
+    } else {
+      if (fb) fb.innerHTML =
+        `<span class="text-red-600">❌ 錯誤，答案是 <strong>${w.word}</strong></span>`;
 
-  document.getElementById("quizNext")?.classList.remove("hidden");
-  document.getElementById("quizSubmit")?.classList.add("hidden");
-  document.getElementById("quizIDK")?.classList.add("hidden");
+      const pairForWrong = pickExamplePair(w, { showZh: !!QUIZ_PREF.showZh });
+      wrongAnswers.push({
+        word: w.word,
+        your: userInput || "(空白)",
+        correct: w.word,
+        definition: w.definition || "",
+        example: pairForWrong?.en || ""
+      });
+    }
 
-  renderSidebarLists?.();
+    // ✅ 答後語音（略，保留你原本那段）
+    try {
+      const seq = afterAnswerSpeech(mode, w, q, { audio: QUIZ_PREF.audio, showZh: !!QUIZ_PREF.showZh });
+      if (seq && seq.length) {
+        speakSequence(seq);
+      } else {
+        const audioMode = (QUIZ_PREF.audio || "none");
+        if (audioMode !== "none") {
+          const texts = [];
+          if ((audioMode === "word" || audioMode === "both") && w?.word) texts.push(w.word);
+          const pair = pickExamplePair(w, { showZh: !!QUIZ_PREF.showZh });
+          const sentence = pair?.en || "";
+          if ((audioMode === "sentence" || audioMode === "both") && sentence) texts.push(sentence);
+          if (texts.length) speakSequence(texts);
+        }
+      }
+    } catch {}
+
+    // ✅ 下一步 UI
+    quizAwaitingNext = true;
+
+    const input = document.getElementById("quizAnswer");
+    if (input) input.disabled = true;
+
+    document.getElementById("quizNext")?.classList.remove("hidden");
+    document.getElementById("quizSubmit")?.classList.add("hidden");
+    document.getElementById("quizIDK")?.classList.add("hidden");
+
+    renderSidebarLists?.();
+
+  } finally {
+    _submittingAnswer = false; // ✅ 不管中途 return / throw 都會解鎖
+  }
 }
 
 export function closeQuiz(){ const modal = document.getElementById("quizModal"); modal.classList.add("hidden"); modal.classList.remove("flex"); }
@@ -1229,6 +1241,7 @@ document.addEventListener("DOMContentLoaded", ensureToTopButton);
 window.addEventListener("usage-updated", () => {
   try { refreshUsageUI(); } catch (e) { console.error(e); }
 });
+
 
 
 
