@@ -212,7 +212,9 @@
             </div>
           </div>
 
-          <button id="startQuizBtn" class="w-full mb-3 px-3 py-2 rounded bg-amber-500 text-white hover:bg-amber-600 transition">🧪 開始測驗</button>
+          <button id="cloudQuizBtn" class="w-full mb-2 px-3 py-2 rounded bg-sky-600 text-white hover:bg-sky-700 transition">☁️ 使用雲端資料開始測驗</button>
+          <p class="text-xs text-gray-500 mb-3">從 Google Sheet 載入你的單字與學習進度（會覆蓋本機資料）。</p>
+          <button id="startQuizBtn" class="w-full mb-3 px-3 py-2 rounded bg-amber-500 text-white hover:bg-amber-600 transition hidden">🧪 開始測驗</button>
 
           <!-- All filters -->
           <div id="allFilters" class="grid grid-cols-2 gap-2 mb-3 hidden">
@@ -253,8 +255,8 @@
           </div>
           <svg id="statsSparkline" viewBox="0 0 320 60" class="w-full h-[60px]"></svg>
         </div>
-                <!-- Backup card：匯出 / 匯入 JSON -->
-        <div class="bg-white rounded-xl shadow p-6">
+                <!-- Backup card：匯出 / 匯入 JSON (已隱藏：保留工程工具) -->
+        <div id="backupCard" class="bg-white rounded-xl shadow p-6 hidden">
           <h3 class="font-semibold mb-2">📂 資料備份</h3>
           <p class="text-sm text-gray-600 mb-3">
             可將單字清單匯出成檔案，或從檔案匯入。
