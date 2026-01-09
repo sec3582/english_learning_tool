@@ -58,7 +58,7 @@ export async function bootstrapFromSheetsToLocalStorage() {
   await requestToken();
 
   // 讀三張表
-  const wordRows = await getValues(`${SHEET_WORDS}!A2:J`);
+  const wordRows = await getValues(`${SHEET_WORDS}!A2:K`);
   const addedRows = await getValues(`${SHEET_ADDED}!A2:B`);
   const reviewRows = await getValues(`${SHEET_REVIEW}!A2:C`);
 
@@ -68,13 +68,15 @@ export async function bootstrapFromSheetsToLocalStorage() {
     pos: r[1] ?? "",
     definition: r[2] ?? "",
     example1: r[3] ?? "",
-    example2: r[4] ?? "",
-    example2_zh: r[5] ?? "",
-    level: r[6] ?? "",
-    addedAt: r[7] ?? "",
-    dueAt: r[8] ?? "",
-    stage: r[9] === "" || r[9] == null ? 0 : Number(r[9]),
+    example1_zh: r[4] ?? "",   // ✅ 新增：對應你的新欄位
+    example2: r[5] ?? "",
+    example2_zh: r[6] ?? "",
+    level: r[7] ?? "",
+    addedAt: r[8] ?? "",
+    dueAt: r[9] ?? "",
+    stage: r[10] === "" || r[10] == null ? 0 : Number(r[10]),
   })).filter(x => x.word);
+
 
   const addedLogs = addedRows.map(r => ({
     ts: Date.parse(r[0]) || Date.now(),
@@ -97,3 +99,4 @@ export async function bootstrapFromSheetsToLocalStorage() {
     reviewLogs: reviewLogs.length,
   });
 }
+
