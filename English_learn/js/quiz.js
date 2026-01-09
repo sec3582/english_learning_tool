@@ -98,7 +98,8 @@ export function makeChoiceQuestion(w, direction = "en2zh", allWords = []) {
 
 // ── 產生聽寫題（依偏好：單字 / 句子）
 export function makeDictationQuestion(w, audioPref = "word") {
-  const pair = _pickExamplePairCore(w);
+  // 朗讀內容仍可依偏好選「單字」或「句子」；句子來源採用與填空/typing一致的輪替例句
+  const pair = pickExamplePair(w, { showZh: false });
   const speak = (audioPref === "sentence" && pair.en) ? pair.en : (w.word || pair.en || "");
   return {
     type: "dictation",
@@ -110,7 +111,8 @@ export function makeDictationQuestion(w, audioPref = "word") {
 
 // ── 產生填空題（遮字仍在 UI；這裡輸出句子/翻譯/正解）
 export function makeFillQuestion(w, showZh = true) {
-  const pair = _pickExamplePairCore(w);
+  // ✅ 使用輪替例句（ex1/ai/ex2）且 showZh 不影響英文例句來源；中文只顯示同句對應翻譯（可能為空）
+  const pair = pickExamplePair(w, { showZh: !!showZh });
   return {
     type: "fill",
     expected: String(w.word || "").toLowerCase(),
