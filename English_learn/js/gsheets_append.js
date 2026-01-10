@@ -176,11 +176,12 @@ function enqueueWordRow(wordObj) {
   saveQueue();
   scheduleFlush();
 }
-function enqueueAdded(word) {(word) {
+function enqueueAdded(word) {
   pending.added.push([new Date().toISOString(), word]);
   saveQueue();
   scheduleFlush();
 }
+
 function enqueueReview(word, correct) {
   pending.review.push([new Date().toISOString(), word, correct ? "TRUE" : "FALSE"]);
   saveQueue();
@@ -208,4 +209,5 @@ window.GSheetsAppend = {
   };
 
 }
+
 
