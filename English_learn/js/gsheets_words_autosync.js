@@ -75,18 +75,19 @@ async function overwriteWordsNow() {
     w.pos ?? "",
     w.definition ?? "",
     w.example1 ?? "",
+    w.example1_zh ?? "",
     w.example2 ?? "",
     w.example2_zh ?? "",
     w.level ?? "",
     w.addedAt ?? "",
     w.dueAt ?? "",
-    (w.stage ?? "")
+    (w.stage ?? 0).toString()
   ])).filter(r => r[0]);
 
   // 清空 A2:J（保留 header）
   await gapi.client.sheets.spreadsheets.values.clear({
     spreadsheetId: SPREADSHEET_ID,
-    range: `${SHEET_WORDS}!A2:J`,
+    range: `${SHEET_WORDS}!A2:K`,
   });
 
   // 沒資料就結束（代表清空完成）
