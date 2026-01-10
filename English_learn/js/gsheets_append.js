@@ -157,11 +157,14 @@ function scheduleFlush(ms = 1500) {
 
 // 對外 API（給 storage.js 呼叫）
 function enqueueWordRow(wordObj) {
+  // ✅ 必須與 Google Sheet Words header 完全對齊：
+  // word,pos,definition,example1,example1_zh,example2,example2_zh,level,addedAt,dueAt,stage
   const row = [
     wordObj.word ?? "",
     wordObj.pos ?? "",
     wordObj.definition ?? "",
     wordObj.example1 ?? "",
+    wordObj.example1_zh ?? "",
     wordObj.example2 ?? "",
     wordObj.example2_zh ?? "",
     wordObj.level ?? "",
@@ -173,7 +176,7 @@ function enqueueWordRow(wordObj) {
   saveQueue();
   scheduleFlush();
 }
-function enqueueAdded(word) {
+function enqueueAdded(word) {(word) {
   pending.added.push([new Date().toISOString(), word]);
   saveQueue();
   scheduleFlush();
