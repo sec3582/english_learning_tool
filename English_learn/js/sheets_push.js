@@ -79,12 +79,13 @@ export async function pushLocalStorageToSheets() {
     w.pos ?? "",
     w.definition ?? "",
     w.example1 ?? "",
+    w.example1_zh ?? "",
     w.example2 ?? "",
     w.example2_zh ?? "",
     w.level ?? "",
     w.addedAt ?? "",
     w.dueAt ?? "",
-    (w.stage ?? "")
+    (w.stage ?? 0).toString()
   ])).filter(r => r[0]);
 
   const addedRows = (Array.isArray(addedLogs) ? addedLogs : []).map(x => ([
@@ -99,7 +100,7 @@ export async function pushLocalStorageToSheets() {
   ])).filter(r => r[1]);
 
   // 清空 A2 以下（保留 header）
-  await clearRange(`${SHEET_WORDS}!A2:J`);
+  await clearRange(`${SHEET_WORDS}!A2:K`);
   await clearRange(`${SHEET_ADDED}!A2:B`);
   await clearRange(`${SHEET_REVIEW}!A2:C`);
 
