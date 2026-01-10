@@ -809,9 +809,6 @@ export function submitQuizAnswer(asWrong = false) {
       correct = !!g.correct || (!asWrong && userInput === (w.word || "").toLowerCase());
     }
 
-    // ✅ 作答紀錄（ReviewLogs）— 只會進來一次
-    try { logReview(w.word, !!correct); } catch {}
-
     // ✅ 間隔複習排程
     scheduleNext(w.word, !!correct);
 
