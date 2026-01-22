@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Jill's Word Garden</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- ① 加入 Tesseract.js（建議放在 head 或 body 結尾） -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <link rel="stylesheet" href="theme-ocean.css">
+
+
+  <style>
+  .word-row .speak-btn{ visibility:hidden; }
+  .word-row:hover .speak-btn{ visibility:visible; }
+  .speak-btn{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:24px;height:24px;border:1px solid #d1d5db;border-radius:9999px;
+    font-size:12px;line-height:1;opacity:.7;transition:.15s;
+  }
+  .speak-btn:hover{ opacity:1;background:#eff6ff;border-color:#93c5fd; }
+  </style>
+  <style>
+  /* ─── Color Tokens: Word Garden Ocean ─── */
+  :root{
+    --bg: #f1faee;    /* 霧白綠 */
+    --mint: #a8dadc;  /* 薄荷藍綠（次要） */
+    --blue: #457b9d;  /* 海藍（主色） */
+    --navy: #1d3557;  /* 深海藍（重點/標題） */
+
+    --text: #0f172a;
+    --muted: #64748b;
+    --card: #ffffff;
+    --ring: rgba(69,123,157,.35);
+  }
+
+  /* 背景與字體基調 */
+  body{ background: var(--bg); color: var(--text); }
+
+  /* Header：深海 → 海藍的柔和漸層 */
+  .header-gradient{
+    background: linear-gradient(135deg, var(--navy), var(--blue));
+    color:#fff;
+    box-shadow: 0 12px 24px rgba(29,53,87,.25);
+  }
+
+  /* 卡片：圓角 16、柔霧邊框、輕陰影 */
+  .card{
+    background: var(--card);
+    border: 1px solid rgba(29,53,87,.06);
+    border-radius: 16px;
+    box-shadow: 0 10px 20px rgba(29,53,87,.06);
+  }
+
+  /* 標籤/徽章 */
+  .chip{
+    display:inline-block; padding:.25rem .5rem; border-radius: 999px;
+    background:#fff; color: var(--navy); font-weight:600; border:1px solid rgba(29,53,87,.12);
+  }
+
+  /* Tabs（右側：今日/到期/全部） */
+  .tab{
+    padding:.4rem .7rem; font-size:.85rem; border:1px solid transparent;
+    border-right:1px solid rgba(29,53,87,.12);
+    background: #fff; color: var(--navy); transition:.2s ease;
+  }
+  .tab:last-child{ border-right:none; }
+  .tab:hover{ background: #f8fafc; }
+  .tab--active{ background: var(--mint); color: #083344; border-color: rgba(8,51,68,.15); }
+
+  /* Buttons */
+  .btn{ display:inline-flex; align-items:center; gap:.5rem; padding:.6rem 1rem; border-radius:12px; font-weight:600; transition:.2s; }
+  .btn:focus{ outline: none; box-shadow: 0 0 0 4px var(--ring); }
+  .btn-primary{ background: var(--blue); color:#fff; }
+  .btn-primary:hover{ filter: brightness(1.05); }
+  .btn-secondary{ background: var(--mint); color:#083344; }
+  .btn-secondary:hover{ filter: brightness(1.03); }
+  .btn-ghost{ background:#fff; color: var(--navy); border:1px solid rgba(29,53,87,.15); }
+  .btn-ghost:hover{ background:#f8fafc; }
+
+  /* 浮動加入列 (FAB Bar) */
+  .fab{
+    background: var(--blue); color:#fff; border-radius:999px;
+    box-shadow: 0 12px 24px rgba(29,53,87,.28);
+  }
+  .fab .btn{ background:#fff; color: var(--blue); }
+
+  /* Toast */
+  .toast{
+    background: #0b1020; color:#fff; border-radius:14px; box-shadow:0 8px 24px rgba(2,6,23,.4);
+  }
+
+  /* Modal */
+  .modal{ background:#fff; border-radius:16px; box-shadow:0 24px 60px rgba(2,6,23,.35); }
+
+  /* 輕量表單強化：focus ring 換成主色 */
+  textarea, input, select{
+    border-radius:12px; border:1px solid rgba(29,53,87,.15);
+  }
+  textarea:focus, input:focus, select:focus{
+    outline:none; border-color: var(--blue); box-shadow: 0 0 0 4px var(--ring);
+  }
+
+  /* 小喇叭按鈕 */
+  .icon-circle{
+    width: 28px; height: 28px; border-radius:999px; display:grid; place-items:center;
+    border:1px solid rgba(29,53,87,.2); color:#5b7083; background:#fff; transition:.2s;
+  }
+  .icon-circle:hover{ color:#1e293b; border-color: rgba(29,53,87,.35); }
+
+  /* AI 建議卡（維持你原有 hover 顯示喇叭的互動） */
+  .word-row .speak-btn{ visibility:hidden; }
+  .word-row:hover .speak-btn{ visibility:visible; }
+  </style>
+
+
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+  <!-- Header -->
+  <header class="header-gradient p-4">
+    <div class="max-w-6xl mx-auto flex items-center justify-between">
+      <div class="flex items-center">
+        <span class="text-3xl">🌱</span>
+        <h1 class="ml-2 text-2xl font-bold">Jill的背單字工具</h1>
+      </div>
+      <div class="flex items-center gap-4 text-sm opacity-90">
+        <div>已熟悉：
+          <span id="masteredBadge" class="chip">0</span>
+        </div>
+        <div>到期待複習：
+          <span id="dueCountBadge" class="chip">0</span>
+        </div>
+        <button id="openUsageBtn" class="underline decoration-white/60 hover:decoration-white">
+          💸 本月估算：$<span id="usageCostBadge">0.00</span>
+        </button>
+
+      </div>
+
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+
+
+      <!-- Left: main content -->
+      <div class="lg:col-span-2 space-y-6">
+        <!-- Article Input -->
+        <section class="relative bg-white rounded-xl shadow p-6 space-y-4">
+          <h2 class="text-xl font-semibold">📖 匯入文章</h2>
+          <div class="absolute top-4 right-4 flex items-center gap-2">
+            <input id="ocrFile" type="file" accept="image/*" class="hidden">
+            <button id="ocrPickBtn" class="px-3 py-2 bg-gray-100 rounded hover:bg-gray-200">📷 上傳</button>
+            <button id="ocrRunBtn" class="px-3 py-2 bg-gray-100 rounded hover:bg-gray-200 hidden">重跑</button>
+            <span id="ocrStatus" class="text-xs text-gray-500 max-w-[260px] truncate"></span>
+          </div>
+
+          <textarea id="articleInput" rows="5" class="w-full p-4 border rounded-lg focus:ring-2 focus:ring-green-300" placeholder="請貼上英文文章..."></textarea>
+          <button id="analyzeBtn" class="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition">🧠 讓 AI 挑單字</button>
+          <div id="loading" class="text-green-600 hidden">AI 分析中，請稍後...</div>
+        </section>
+
+        <!-- AI Suggestions -->
+        <section id="aiResult" class="bg-white rounded-xl shadow p-6 space-y-4 hidden">
+          <h2 class="text-xl font-semibold">🤖 AI 建議單字</h2>
+          <div id="wordForm" class="space-y-3"></div>
+          <button id="saveBtn" type="button" class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">➕ 加入選取清單</button>
+        </section>
+
+        <!-- Custom add -->
+        <section class="bg-white rounded-xl shadow p-6 space-y-4">
+          <h2 class="text-xl font-semibold">➕ 自訂新增單字</h2>
+
+          <!-- 新增：查詢詞 + 分析 -->
+          <div class="flex gap-2">
+            <input id="customWordInput" type="text" class="flex-1 p-3 border rounded-lg focus:ring-2 focus:ring-green-300" placeholder="輸入單字或片語…">
+            <button id="customAnalyzeBtn" class="px-5 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition">分析</button>
+          </div>
+
+          <!-- 自動填入的編輯卡片（預設隱藏，分析後展開） -->
+          <div id="customWordEdit" class="hidden space-y-4">
+            <div class="grid grid-cols-2 gap-3">
+              <div class="col-span-2"><label class="block font-medium">英文單字</label><input id="cw_word" type="text" class="w-full p-3 border rounded-lg"></div>
+              <div><label class="block font-medium">詞性</label><input id="cw_pos" type="text" class="w-full p-3 border rounded-lg" placeholder="noun/verb..."></div>
+              <div><label class="block font-medium">難度 (A1~C2)</label><input id="cw_level" type="text" class="w-full p-3 border rounded-lg" placeholder="A1~C2"></div>
+              <div class="col-span-2"><label class="block font-medium">中文解釋</label><input id="cw_def" type="text" class="w-full p-3 border rounded-lg"></div>
+              <div class="col-span-2"><label class="block font-medium">文章例句</label><textarea id="cw_example_en" rows="2" class="w-full p-3 border rounded-lg"></textarea></div>
+              
+              <div class="col-span-2">
+                <label class="block font-medium">AI 造句</label>
+                <textarea id="cw_example_ai" rows="2" class="w-full p-3 border rounded-lg"></textarea>
+              </div>
+              <div class="col-span-2">
+                <label class="block font-medium">翻譯</label>
+                <textarea id="cw_example_zh" rows="2" class="w-full p-3 border rounded-lg"></textarea>
+              </div>
+            </div>
+            <button id="customAddBtn" class="w-full px-6 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition ">✅ 加入我的清單</button>
+          </div>
+        </section>
+      </div>
+
+      <!-- Right: sidebar with tabs -->
+      <aside class="space-y-4">
+        <div class="bg-white rounded-xl shadow p-6">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-xl font-semibold whitespace-nowrap flex-shrink-0 mr-6">📚 單字清單</h2>
+            <div class="inline-flex rounded-md overflow-hidden border">
+              <button id="tabToday" class="px-4 py-2 text-sm bg-gray-100 whitespace-nowrap">今日新增</button>
+              <button id="tabDue"   class="px-4 py-2 text-sm whitespace-nowrap">複習</button>
+              <button id="tabAll"   class="px-4 py-2 text-sm whitespace-nowrap">全部</button>
+            </div>
+          </div>
+
+          <!-- 只保留「本機資料開始測驗」；雲端載入/同步請使用下方四顆按鈕 -->
+          <button id="startQuizBtn" class="w-full mb-3 px-3 py-2 rounded bg-amber-500 text-white hover:bg-amber-600 transition">🧪 開始測驗</button>
+
+          <!-- All filters -->
+          <div id="allFilters" class="grid grid-cols-2 gap-2 mb-3 hidden">
+            <input id="allSearch" class="col-span-2 p-2 border rounded" placeholder="搜尋單字或中文解釋" />
+            <select id="allPos" class="p-2 border rounded">
+              <option value="">詞性</option>
+              <option>noun</option><option>verb</option><option>adjective</option><option>adverb</option>
+              <option>pronoun</option><option>preposition</option><option>conjunction</option><option>interjection</option>
+            </select>
+            <select id="allLevel" class="p-2 border rounded">
+              <option value="">難度</option>
+              <option>A1</option><option>A2</option><option>B1</option><option>B2</option><option>C1</option><option>C2</option>
+            </select>
+            <select id="allSort" class="col-span-2 p-2 border rounded">
+              <option value="recent">排序：最近加入</option>
+              <option value="oldest">排序：最早加入</option>
+              <option value="alpha">排序：字母</option>
+              <option value="level">排序：難度</option>
+            </select>
+          </div>
+
+          <ul id="sidebarTodayList" class="space-y-2"></ul>
+          <div id="todayPager" class="flex items-center justify-between mt-3 hidden">
+            <button id="todayPrev" class="px-3 py-1 rounded bg-gray-100 hover:bg-gray-200">上一頁</button>
+            <span id="todayPageInfo" class="text-sm text-gray-500">第 1 / 1 頁</span>
+            <button id="todayNext" class="px-3 py-1 rounded bg-gray-100 hover:bg-gray-200">下一頁</button>
+          </div>
+
+          <ul id="sidebarDueList" class="space-y-2 hidden"></ul>
+          <div id="duePager" class="flex items-center justify-between mt-3 hidden">
+            <button id="duePrev" class="px-3 py-1 rounded bg-gray-100 hover:bg-gray-200">上一頁</button>
+            <span id="duePageInfo" class="text-sm text-gray-500">第 1 / 1 頁</span>
+            <button id="dueNext" class="px-3 py-1 rounded bg-gray-100 hover:bg-gray-200">下一頁</button>
+          </div>
+
+          <ul id="sidebarAllList" class="space-y-2 hidden"></ul>
+          <div id="allPager" class="flex items-center justify-between mt-3 hidden">
+            <button id="allPrev" class="px-3 py-1 rounded bg-gray-100 hover:bg-gray-200">上一頁</button>
+            <span id="allPageInfo" class="text-sm text-gray-500">第 1 / 1 頁</span>
+            <button id="allNext" class="px-3 py-1 rounded bg-gray-100 hover:bg-gray-200">下一頁</button>
+          </div>
+
+        </div>
+
+        <!-- Stats card -->
+        <div class="bg-white rounded-xl shadow p-6">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="font-semibold">📈 最近 14 天</h3>
+            <div class="text-xs text-gray-500">藍：新增　綠：複習</div>
+          </div>
+          <svg id="statsSparkline" viewBox="0 0 320 60" class="w-full h-[60px]"></svg>
+        </div>
+        <!-- Backup / Cloud card：匯入 / 匯出 / 雲端載入 / 雲端同步 -->
+        <div class="bg-white rounded-xl shadow p-6">
+          <h3 class="font-semibold mb-2">☁️ 資料管理</h3>
+          <p class="text-sm text-gray-600 mb-3">
+            預設只會儲存在本機。需要時再手動「雲端載入 / 雲端同步」。
+          </p>
+       <div class="grid grid-cols-2 gap-2">
+        <!-- 本機 -->
+        <button id="exportJsonBtn"
+                class="px-3 py-2 rounded-lg bg-gray-100 text-gray-700 border border-gray-300 text-sm hover:bg-gray-200">
+          匯出 JSON
+        </button>
+
+        <button id="importJsonBtn"
+                class="px-3 py-2 rounded-lg bg-gray-100 text-gray-700 border border-gray-300 text-sm hover:bg-gray-200">
+          匯入 JSON
+        </button>
+
+        <!-- 雲端 -->
+        <button id="loadSheetsBtn"
+                class="px-3 py-2 rounded-lg bg-blue-50 text-blue-800 border border-blue-200 text-sm hover:bg-blue-100">
+          雲端載入
+        </button>
+
+        <button id="pushSheetsBtn"
+                class="px-3 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700">
+          同步到 Google
+        </button>
+
+        <input id="importJsonFile" type="file" accept="application/json" class="hidden">
+      </div>
+
+
+        </div>
+
+      </aside>
+
+    </div>
+  </main>
+
+  <!-- Floating bar -->
+  <div id="fabBar" class="fixed bottom-4 left-1/2 -translate-x-1/2 bg-blue-600 text-white rounded-full shadow-lg px-4 py-2 flex items-center gap-3 hidden">
+    <span id="fabCount" class="font-medium">0</span>
+    <button id="fabAddBtn" class="bg-white text-blue-700 rounded-full px-3 py-1 text-sm">加入清單</button>
+  </div>
+
+  <!-- Undo toast -->
+  <div id="undoToast" class="fixed bottom-20 left-1/2 -translate-x-1/2 bg-gray-900 text-white rounded-lg shadow px-4 py-2 flex items-center gap-3 hidden">
+    <span id="undoText">已刪除。</span>
+    <button id="undoBtn" class="bg-white text-gray-900 rounded px-2 py-0.5 text-sm">復原</button>
+  </div>
+
+  <!-- Quiz modal -->
+  <div id="quizModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+    <div class="bg-white w-full max-w-xl rounded-xl shadow p-6 space-y-4">
+      <div class="flex justify-between items-center">
+        <h3 class="text-lg font-semibold">🧪 單字測驗 <span id="quizProgress" class="text-sm text-gray-500"></span></h3>
+        <button id="quizClose" class="text-gray-500 hover:text-gray-700">✕</button>
+      </div>
+      <div id="quizPrompt" class="text-gray-700"></div>
+      <input id="quizAnswer" class="w-full p-3 border rounded" placeholder="輸入英文單字…"/>
+      <div class="flex gap-2">
+        <button id="quizSubmit" class="px-4 py-2 bg-blue-600 text-white rounded" type="button">提交</button>
+        <button id="quizIDK" class="px-4 py-2 bg-gray-200 rounded" type="button">不會</button>
+        <button id="quizNext" class="px-4 py-2 bg-emerald-600 text-white rounded hidden" type="button">下一題（Enter）</button>
+      </div>
+      <div id="quizFeedback" class="text-sm"></div>
+    </div>
+  </div>
+  <!-- Quiz mode picker -->
+  <div id="quizModePicker" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+    <div class="bg-white w-full max-w-md rounded-xl shadow p-6 space-y-4">
+      <h3 class="text-lg font-semibold">選擇測驗題型</h3>
+      <div class="grid grid-cols-2 gap-3">
+        <button data-mode="typing" class="px-3 py-3 rounded border hover:bg-gray-50 text-left">
+          <div class="font-medium">填空</div>
+          <div class="text-sm text-gray-500">輸入英文單字</div>
+        </button>
+        <button data-mode="choice_en2zh" class="px-3 py-3 rounded border hover:bg-gray-50 text-left">
+          <div class="font-medium">英翻中</div>
+          <div class="text-sm text-gray-500">選中文意思</div>
+        </button>
+        <button data-mode="choice_zh2en" class="px-3 py-3 rounded border hover:bg-gray-50 text-left">
+          <div class="font-medium">中翻英</div>
+          <div class="text-sm text-gray-500">選英文單字</div>
+        </button>
+        <button data-mode="dictation" class="px-3 py-3 rounded border hover:bg-gray-50 text-left">
+          <div class="font-medium">聽力</div>
+          <div class="text-sm text-gray-500">聽發音再作答</div>
+        </button>
+      </div>
+      <div class="flex justify-end">
+        <button id="qpClose" class="px-3 py-2 rounded bg-gray-100">取消</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Quiz settings modal -->
+  <div id="quizSettings" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+    <div class="bg-white w-full max-w-md rounded-xl shadow p-6 space-y-4">
+      <h3 class="text-lg font-semibold">🛠️ 測驗設定</h3>
+
+      <div>
+        <div class="font-medium mb-1">每題結束後自動播放</div>
+        <div class="space-y-2">
+          <label class="flex items-center gap-2"><input type="radio" name="qs_audio" value="none" checked> 不自動播放</label>
+          <label class="flex items-center gap-2"><input type="radio" name="qs_audio" value="word"> 只播單字</label>
+          <label class="flex items-center gap-2"><input type="radio" name="qs_audio" value="sentence"> 只播例句</label>
+          <label class="flex items-center gap-2"><input type="radio" name="qs_audio" value="both"> 單字 + 例句</label>
+        </div>
+      </div>
+
+      <label class="flex items-center gap-2">
+        <input id="qs_showZh" type="checkbox" class="h-4 w-4" checked>
+        題目顯示例句中文翻譯
+      </label>
+
+      <div class="flex justify-end gap-2">
+        <button id="qsCancel" class="px-3 py-2 rounded bg-gray-100">取消</button>
+        <button id="qsStart" class="px-3 py-2 rounded bg-emerald-600 text-white">開始測驗</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Usage modal -->
+  <div id="usageModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+    <div class="bg-white w-full max-w-lg rounded-xl shadow p-6 space-y-4">
+      <div class="flex justify-between items-center">
+        <h3 class="text-lg font-semibold">💸 本月 API 用量估算</h3>
+        <button id="usageClose" class="text-gray-500 hover:text-gray-700">✕</button>
+      </div>
+      <div class="grid grid-cols-2 gap-3 text-sm">
+        <div class="col-span-2">費用：約 <span class="text-lg font-bold">$<span id="usageCostTotal">0.00</span></span></div>
+        <div>Prompt tokens：<span id="usagePromptTokens">0</span></div>
+        <div>Completion tokens：<span id="usageCompletionTokens">0</span></div>
+      </div>
+      <div>
+        <div class="font-medium mb-1">依模型</div>
+        <div id="usagePerModel" class="space-y-1 text-sm"></div>
+      </div>
+      <div class="grid grid-cols-3 gap-2 items-center">
+        <label for="usageBudgetInput" class="col-span-1 text-sm text-gray-700">每月預算（USD）</label>
+        <input id="usageBudgetInput" type="number" step="0.01" class="col-span-1 p-2 border rounded" placeholder="例如 8.50">
+        <button id="usageSaveBudget" class="col-span-1 px-3 py-2 rounded bg-blue-600 text-white">儲存預算</button>
+      </div>
+      <div class="flex justify-between">
+        <button id="usageReset" class="px-3 py-2 rounded bg-gray-100 hover:bg-gray-200">重置本月估算</button>
+        <button id="usageClose2" class="px-3 py-2 rounded bg-gray-900 text-white">關閉</button>
+      </div>
+    </div>
+  </div>
+  <!-- 同步設定視窗 -->
+  <div id="syncModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+    <div class="bg-white w-full max-w-md rounded-xl shadow p-6 space-y-4">
+      <h3 class="text-lg font-semibold">⚙️ 同步設定</h3>
+      <div>
+        <label class="block font-medium mb-1">目前同步代碼</label>
+        <input id="syncCodeCurrent" type="text" readonly
+              class="w-full p-2 border rounded bg-gray-100 text-gray-600">
+      </div>
+      <div>
+        <label class="block font-medium mb-1">切換至其他代碼</label>
+        <input id="syncCodeInput" type="text" class="w-full p-2 border rounded"
+              placeholder="輸入其他代碼以共用資料">
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button id="syncSave" class="px-4 py-2 bg-blue-600 text-white rounded">儲存</button>
+        <button id="syncClose" class="px-4 py-2 bg-gray-200 rounded">關閉</button>
+      </div>
+    </div>
+  </div>
+
+  <!--<button id="googleSignInBtn">登入 Google（測試）</button>-->
+  <!--<button id="testWriteBtn" disabled>測試寫入 Google Sheet</button>-->
+
+  <!-- Google SDK（不要用 onload） -->
+  <script src="https://apis.google.com/js/api.js" defer></script>
+  <script src="https://accounts.google.com/gsi/client" defer></script>
+
+  <!-- 你的測試程式：用一般 script，不要 module -->
+  
+
+  <!-- 原本主程式照常 -->
+  <script type="module" src="js/main.js"></script>
+
+
+</body>
+</html>
+
