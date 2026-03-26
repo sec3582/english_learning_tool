@@ -8,7 +8,6 @@ import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { YoutubeTranscript } from "youtube-transcript";
 
 // ESM 環境下取得 __dirname（CommonJS 才有內建，ESM 需自行計算）
 const __filename = fileURLToPath(import.meta.url);
@@ -202,6 +201,56 @@ function extractYouTubeId(url) {
   return m ? m[1] : null;
 }
 
+// ====== YouTube 字幕擷取（自製，不依賴第三方套件）======
+async function fetchYouTubeTranscript(videoId) {
+  // 1. 抓 YouTube 頁面 HTML
+  const pageRes = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
+    headers: {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      "Accept-Language": "en-US,en;q=0.9",
+    },
+    signal: AbortSignal.timeout(15000),
+  });
+  if (!pageRes.ok) throw new Error(`無法開啟 YouTube 頁面（HTTP ${pageRes.status}）`);
+
+  const html = await pageRes.text();
+
+  // 2. 找 captionTracks 陣列（用括號計數法取完整 JSON）
+  const idx = html.indexOf('"captionTracks":[');
+  if (idx === -1) throw new Error("此影片沒有字幕（或字幕已停用）");
+
+  const arrStart = html.indexOf('[', idx);
+  let depth = 0, arrEnd = arrStart;
+  for (let i = arrStart; i < html.length; i++) {
+    if (html[i] === '[') depth++;
+    else if (html[i] === ']') { depth--; if (!depth) { arrEnd = i + 1; break; } }
+  }
+
+  const tracks = JSON.parse(html.slice(arrStart, arrEnd));
+
+  // 3. 優先選英文字幕，其次取第一條
+  const track = tracks.find(t => /^en/i.test(t.languageCode)) || tracks[0];
+  if (!track?.baseUrl) throw new Error("找不到可用的字幕軌");
+
+  // YouTube 在 HTML 裡用 \u0026 代替 &
+  const captionUrl = track.baseUrl.replace(/\\u0026/g, "&");
+
+  // 4. 抓字幕 XML 並轉成純文字
+  const xmlRes = await fetch(captionUrl, { signal: AbortSignal.timeout(10000) });
+  if (!xmlRes.ok) throw new Error("字幕資料擷取失敗");
+  const xml = await xmlRes.text();
+
+  return xml
+    .replace(/<text[^>]*>/g, " ")
+    .replace(/<\/text>/g, "")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+    .replace(/&#39;/g, "'").replace(/&quot;/g, '"')
+    .replace(/\[.*?\]/g, "")   // 移除 [Music] [Applause] 等標記
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
 // ====== URL 網頁內容抓取（代理，解決 CORS 問題）======
 app.post("/scrape", async (req, res) => {
   const { url } = req.body || {};
@@ -214,19 +263,11 @@ app.post("/scrape", async (req, res) => {
       return res.status(400).json({ ok: false, error: "無法解析 YouTube 影片 ID，請確認網址格式。" });
     }
     try {
-      const segments = await YoutubeTranscript.fetchTranscript(videoId, { lang: "en" });
-      const text = segments
-        .map(s => s.text.trim())
-        .join(" ")
-        .replace(/\[.*?\]/g, "")   // 移除 [Music] [Applause] 等標記
-        .replace(/\s{2,}/g, " ")
-        .trim()
-        .slice(0, 8000);
-
-      if (text.length < 50) {
+      const text = await fetchYouTubeTranscript(videoId);
+      if (!text || text.length < 50) {
         return res.status(400).json({ ok: false, error: "此影片沒有英文字幕（或字幕已停用）。" });
       }
-      return res.json({ ok: true, text, source: "youtube" });
+      return res.json({ ok: true, text: text.slice(0, 8000), source: "youtube" });
     } catch (err) {
       return res.status(400).json({
         ok: false,
