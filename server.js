@@ -201,65 +201,144 @@ function extractYouTubeId(url) {
   return m ? m[1] : null;
 }
 
-// ====== YouTube 字幕擷取（使用 InnerTube API）======
+// ====== YouTube 字幕擷取（多方法備援）======
 async function fetchYouTubeTranscript(videoId) {
-  // 1. 呼叫 InnerTube player API 取得字幕軌清單
-  console.log(`[YouTube] InnerTube API videoId=${videoId}`);
-  const playerRes = await fetch(
-    "https://www.youtube.com/youtubei/v1/player?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-        "Accept-Language": "en-US,en;q=0.9",
-        "X-YouTube-Client-Name": "1",
-        "X-YouTube-Client-Version": "2.20240101.00.00",
-      },
-      body: JSON.stringify({
-        videoId,
-        context: {
-          client: {
-            clientName: "WEB",
-            clientVersion: "2.20240101.00.00",
-            hl: "en",
-            gl: "US",
-          },
-        },
-      }),
-      signal: AbortSignal.timeout(15000),
+  // --- 內部工具：把字幕 XML 轉純文字 ---
+  function xmlToText(xml) {
+    return xml
+      .replace(/<text[^>]*>/g, " ")
+      .replace(/<\/text>/g, "")
+      .replace(/<[^>]+>/g, "")
+      .replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+      .replace(/&#39;/g, "'").replace(/&quot;/g, '"')
+      .replace(/\[.*?\]/g, "")
+      .replace(/\s{2,}/g, " ")
+      .trim();
+  }
+
+  // --- 方法一：timedtext list API ---
+  console.log(`[YouTube] 方法一 timedtext list videoId=${videoId}`);
+  try {
+    const listRes = await fetch(
+      `https://www.youtube.com/api/timedtext?v=${videoId}&type=list`,
+      { signal: AbortSignal.timeout(10000) }
+    );
+    if (listRes.ok) {
+      const listXml = await listRes.text();
+      // 找 lang_code="en" 或第一個 track
+      const enMatch = listXml.match(/lang_code="(en[^"]*)"/);
+      const anyMatch = listXml.match(/lang_code="([^"]+)"/);
+      const lang = (enMatch || anyMatch)?.[1];
+      console.log(`[YouTube] 方法一可用語言: ${lang || "無"}`);
+      if (lang) {
+        const xmlRes = await fetch(
+          `https://www.youtube.com/api/timedtext?v=${videoId}&lang=${lang}`,
+          { signal: AbortSignal.timeout(10000) }
+        );
+        if (xmlRes.ok) {
+          const text = xmlToText(await xmlRes.text());
+          if (text.length > 50) {
+            console.log(`[YouTube] 方法一成功 (${text.length} chars)`);
+            return text;
+          }
+        }
+      }
     }
-  );
+  } catch (e) {
+    console.log("[YouTube] 方法一失敗:", e.message);
+  }
 
-  if (!playerRes.ok) throw new Error(`InnerTube API 失敗（HTTP ${playerRes.status}）`);
-  const playerData = await playerRes.json();
+  // --- 方法二：InnerTube ANDROID client ---
+  console.log(`[YouTube] 方法二 InnerTube ANDROID`);
+  try {
+    const androidRes = await fetch(
+      "https://www.youtube.com/youtubei/v1/player",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "User-Agent": "com.google.android.youtube/19.09.37 (Linux; U; Android 11) gzip",
+          "X-YouTube-Client-Name": "3",
+          "X-YouTube-Client-Version": "19.09.37",
+        },
+        body: JSON.stringify({
+          videoId,
+          context: {
+            client: {
+              clientName: "ANDROID",
+              clientVersion: "19.09.37",
+              androidSdkVersion: 30,
+              hl: "en",
+              gl: "US",
+            },
+          },
+        }),
+        signal: AbortSignal.timeout(15000),
+      }
+    );
+    if (androidRes.ok) {
+      const data = await androidRes.json();
+      const tracks = data?.captions?.playerCaptionsTracklistRenderer?.captionTracks || [];
+      console.log(`[YouTube] 方法二字幕軌:`, tracks.map(t => t.languageCode));
+      const track = tracks.find(t => /^en/i.test(t.languageCode)) || tracks[0];
+      if (track?.baseUrl) {
+        const xmlRes = await fetch(track.baseUrl, { signal: AbortSignal.timeout(10000) });
+        if (xmlRes.ok) {
+          const text = xmlToText(await xmlRes.text());
+          if (text.length > 50) {
+            console.log(`[YouTube] 方法二成功 (${text.length} chars)`);
+            return text;
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.log("[YouTube] 方法二失敗:", e.message);
+  }
 
-  const tracks =
-    playerData?.captions?.playerCaptionsTracklistRenderer?.captionTracks || [];
-  console.log(`[YouTube] 找到 ${tracks.length} 條字幕軌:`, tracks.map(t => t.languageCode));
+  // --- 方法三：InnerTube TV client ---
+  console.log(`[YouTube] 方法三 InnerTube TVHTML5`);
+  try {
+    const tvRes = await fetch(
+      "https://www.youtube.com/youtubei/v1/player",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          videoId,
+          context: {
+            client: {
+              clientName: "TVHTML5",
+              clientVersion: "7.20240101.00.00",
+              hl: "en",
+              gl: "US",
+            },
+          },
+        }),
+        signal: AbortSignal.timeout(15000),
+      }
+    );
+    if (tvRes.ok) {
+      const data = await tvRes.json();
+      const tracks = data?.captions?.playerCaptionsTracklistRenderer?.captionTracks || [];
+      console.log(`[YouTube] 方法三字幕軌:`, tracks.map(t => t.languageCode));
+      const track = tracks.find(t => /^en/i.test(t.languageCode)) || tracks[0];
+      if (track?.baseUrl) {
+        const xmlRes = await fetch(track.baseUrl, { signal: AbortSignal.timeout(10000) });
+        if (xmlRes.ok) {
+          const text = xmlToText(await xmlRes.text());
+          if (text.length > 50) {
+            console.log(`[YouTube] 方法三成功 (${text.length} chars)`);
+            return text;
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.log("[YouTube] 方法三失敗:", e.message);
+  }
 
-  if (tracks.length === 0) throw new Error("此影片沒有字幕（或字幕已停用）");
-
-  // 2. 優先選英文，其次第一條
-  const track = tracks.find(t => /^en/i.test(t.languageCode)) || tracks[0];
-  if (!track?.baseUrl) throw new Error("找不到可用的字幕軌");
-
-  console.log(`[YouTube] 選用字幕軌: ${track.languageCode} - ${track.name?.simpleText}`);
-
-  // 3. 抓字幕 XML 並轉成純文字
-  const xmlRes = await fetch(track.baseUrl, { signal: AbortSignal.timeout(10000) });
-  if (!xmlRes.ok) throw new Error("字幕資料擷取失敗");
-  const xml = await xmlRes.text();
-
-  return xml
-    .replace(/<text[^>]*>/g, " ")
-    .replace(/<\/text>/g, "")
-    .replace(/<[^>]+>/g, "")
-    .replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
-    .replace(/&#39;/g, "'").replace(/&quot;/g, '"')
-    .replace(/\[.*?\]/g, "")
-    .replace(/\s{2,}/g, " ")
-    .trim();
+  throw new Error("此影片沒有可擷取的英文字幕（三種方法均失敗）");
 }
 
 // ====== URL 網頁內容抓取（代理，解決 CORS 問題）======
