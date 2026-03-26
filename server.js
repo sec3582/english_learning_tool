@@ -201,73 +201,53 @@ function extractYouTubeId(url) {
   return m ? m[1] : null;
 }
 
-// ====== YouTube 字幕擷取（自製，不依賴第三方套件）======
+// ====== YouTube 字幕擷取（使用 InnerTube API）======
 async function fetchYouTubeTranscript(videoId) {
-  const commonHeaders = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-    "Accept-Language": "en-US,en;q=0.9",
-  };
-
-  // 方法一：先用 timedtext API 直接嘗試
-  const timedtextUrl = `https://www.youtube.com/api/timedtext?v=${videoId}&lang=en&fmt=json3`;
-  try {
-    const ttRes = await fetch(timedtextUrl, { headers: commonHeaders, signal: AbortSignal.timeout(10000) });
-    if (ttRes.ok) {
-      const ttData = await ttRes.json();
-      const events = ttData?.events || [];
-      const text = events
-        .flatMap(e => (e.segs || []).map(s => s.utf8 || ""))
-        .join(" ")
-        .replace(/\n/g, " ")
-        .replace(/\[.*?\]/g, "")
-        .replace(/\s{2,}/g, " ")
-        .trim();
-      if (text.length > 50) {
-        console.log(`[YouTube] timedtext API 成功 (${text.length} chars)`);
-        return text;
-      }
+  // 1. 呼叫 InnerTube player API 取得字幕軌清單
+  console.log(`[YouTube] InnerTube API videoId=${videoId}`);
+  const playerRes = await fetch(
+    "https://www.youtube.com/youtubei/v1/player?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        "Accept-Language": "en-US,en;q=0.9",
+        "X-YouTube-Client-Name": "1",
+        "X-YouTube-Client-Version": "2.20240101.00.00",
+      },
+      body: JSON.stringify({
+        videoId,
+        context: {
+          client: {
+            clientName: "WEB",
+            clientVersion: "2.20240101.00.00",
+            hl: "en",
+            gl: "US",
+          },
+        },
+      }),
+      signal: AbortSignal.timeout(15000),
     }
-  } catch (e) {
-    console.log("[YouTube] timedtext API 失敗，改用頁面解析:", e.message);
-  }
+  );
 
-  // 方法二：抓 YouTube 頁面 HTML，解析 captionTracks
-  console.log(`[YouTube] 嘗試頁面解析 videoId=${videoId}`);
-  const pageRes = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
-    headers: { ...commonHeaders, "Accept": "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8" },
-    signal: AbortSignal.timeout(20000),
-  });
-  if (!pageRes.ok) throw new Error(`無法開啟 YouTube 頁面（HTTP ${pageRes.status}）`);
+  if (!playerRes.ok) throw new Error(`InnerTube API 失敗（HTTP ${playerRes.status}）`);
+  const playerData = await playerRes.json();
 
-  const html = await pageRes.text();
-  console.log(`[YouTube] 頁面大小: ${html.length} bytes`);
-
-  const idx = html.indexOf('"captionTracks":[');
-  if (idx === -1) {
-    // 檢查是否被機器人偵測
-    if (html.includes("captcha") || html.includes("unusual traffic")) {
-      throw new Error("YouTube 封鎖了伺服器請求（機器人偵測）");
-    }
-    throw new Error("此影片沒有字幕（captionTracks 不存在）");
-  }
-
-  const arrStart = html.indexOf('[', idx);
-  let depth = 0, arrEnd = arrStart;
-  for (let i = arrStart; i < html.length; i++) {
-    if (html[i] === '[') depth++;
-    else if (html[i] === ']') { depth--; if (!depth) { arrEnd = i + 1; break; } }
-  }
-
-  const tracks = JSON.parse(html.slice(arrStart, arrEnd));
+  const tracks =
+    playerData?.captions?.playerCaptionsTracklistRenderer?.captionTracks || [];
   console.log(`[YouTube] 找到 ${tracks.length} 條字幕軌:`, tracks.map(t => t.languageCode));
 
+  if (tracks.length === 0) throw new Error("此影片沒有字幕（或字幕已停用）");
+
+  // 2. 優先選英文，其次第一條
   const track = tracks.find(t => /^en/i.test(t.languageCode)) || tracks[0];
   if (!track?.baseUrl) throw new Error("找不到可用的字幕軌");
 
-  const captionUrl = track.baseUrl.replace(/\\u0026/g, "&");
-  console.log(`[YouTube] 選用字幕軌: ${track.languageCode}`);
+  console.log(`[YouTube] 選用字幕軌: ${track.languageCode} - ${track.name?.simpleText}`);
 
-  const xmlRes = await fetch(captionUrl, { headers: commonHeaders, signal: AbortSignal.timeout(10000) });
+  // 3. 抓字幕 XML 並轉成純文字
+  const xmlRes = await fetch(track.baseUrl, { signal: AbortSignal.timeout(10000) });
   if (!xmlRes.ok) throw new Error("字幕資料擷取失敗");
   const xml = await xmlRes.text();
 
