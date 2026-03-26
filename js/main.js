@@ -172,6 +172,22 @@ function bindEvents() {
   });
 
   // —— 網址抓取 ——
+  function _cleanFetchedText(text) {
+    return text
+      // 解碼 HTML entities（&#x27; → ' 等）
+      .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
+      .replace(/&#(\d+);/g, (_, dec) => String.fromCharCode(Number(dec)))
+      .replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&nbsp;/g, " ")
+      // 移除殘留的 HTML 標籤
+      .replace(/<[^>]+>/g, " ")
+      // 移除控制字元（換行、tab 保留）
+      .replace(/[^\S\n\t ]+/g, " ")
+      // 合併多餘空白行（超過兩行換為兩行）
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+  }
+
   function _setUrlStatus(msg, type = "info") {
     const el = $("urlStatus");
     if (!el) return;
@@ -211,7 +227,7 @@ function bindEvents() {
       // 切到「手動輸入」Tab，把文字填入輸入框
       $("inputTabManual")?.click();
       const ta = $("articleInput");
-      if (ta) ta.value = data.text;
+      if (ta) ta.value = _cleanFetchedText(data.text);
       $("urlInput").value = "";
       _setUrlStatus("", "");
       UI.showToast?.(`已擷取 ${data.text.length} 字，可點「讓 AI 挑單字」開始分析！`, { duration: 4000 });
