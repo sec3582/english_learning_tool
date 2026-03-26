@@ -1,11 +1,9 @@
 // js/ui.js（頂端 imports）
 import { analyzeArticle, extractJSON, getUsageSummary, getUsageBudget, setUsageBudget, resetUsageMonth, analyzeCustomWordAPI } from "./api.js";
-import { addWord, getAllWords, deleteWord, getTodayWords, getDueWords, getDueCount, saveAllWords, scheduleNext, logReview, ensureDueForAll, getMasteredCount, getDailyStats, getSyncMeta, clearDirtyAndSetLastSync } from "./storage.js";
+import { addWord, getAllWords, deleteWord, getTodayWords, getDueWords, getDueCount, saveAllWords, scheduleNext, ensureDueForAll, getMasteredCount, getDailyStats, getSyncMeta, clearDirtyAndSetLastSync } from "./storage.js";
 import { speak, speakSequence } from "./speech.js";
-// 這行改成一起匯入 choice/dictation 以及評分/語音建議
 import { buildTypingQuestion, makeChoiceQuestion, makeDictationQuestion, grade, afterAnswerSpeech, pickExamplePair } from "./quiz.js";
 import { pushLocalStorageToSheets } from "./sheets_push.js";
-import { bootstrapFromSheetsToLocalStorage } from "./sheets_bootstrap.js";
 
 
 
@@ -61,17 +59,6 @@ if (!("mode" in QUIZ_PREF)) QUIZ_PREF.mode = "typing"; // typing | choice_en2zh 
 
 
 
-// 答後自動播放（依偏好）
-function maybeAutoSpeak(w) {
-  const mode = (QUIZ_PREF.audio || "none");
-  if (mode === "none") return;
-  const texts = [];
-  if (mode === "word" || mode === "both") texts.push(w.word);
-  const pair = pickExamplePair(w, { showZh: !!QUIZ_PREF.showZh });
-  const sentence = pair.en || "";
-  if ((mode === "sentence" || mode === "both") && sentence) texts.push(sentence);
-  speakSequence(texts);
-}
 
 /* ===== 測驗設定視窗：開/關/套用後開始 ===== */
 export function openQuizSettings() {
@@ -161,10 +148,6 @@ export async function handleAnalyzeClick() {
 
   try {
     const raw = await analyzeArticle(text);
-    console.log("raw typeof =", typeof raw);
-    console.log("raw =", raw);
-    console.log("analyzeArticle raw type:", typeof raw, raw);
-
     const rawText = (typeof raw === "string") ? raw : JSON.stringify(raw);
     const words = Array.isArray(raw) ? raw : extractJSON(rawText);
 
@@ -223,27 +206,26 @@ export function renderWordSelection(words, articleText = "") {
     cb.className = "mt-1";
     cb.addEventListener("change", updateFabBar);
 
-    // 第一行：左文字 + 右側「發音」按鈕（你目前的版本）
+    // 第一行：左文字（flex-1）+ 右側「發音」按鈕（flex-shrink-0，不換行不重疊）
     const head = document.createElement("div");
-    head.className = "flex items-center flex-wrap gap-2";
+    head.className = "flex items-start gap-2 mb-1";
 
     const headLeft = document.createElement("div");
+    headLeft.className = "flex-1 min-w-0";
     headLeft.innerHTML = `
       <strong>${escapeHTML(w.word)}</strong>
       <span class="text-gray-700">(${escapeHTML(posAbbr(w.pos))})</span>
-      - ${escapeHTML(w.definition)}
+      <span style="word-break:keep-all;">— ${escapeHTML(w.definition)}</span>
     `;
 
     const headRight = document.createElement("button");
     headRight.type = "button";
-    headRight.title = "播放";
-    headRight.textContent = "發音";
-    headRight.className = `
-      ml-3 px-3 py-1 text-sm font-semibold
-      bg-gray-600 text-white rounded-sm
-      hover:bg-gray-700 transition
-      whitespace-nowrap
-    `;
+    headRight.title = "播放發音";
+    headRight.innerHTML = `${ICON_SPEAK} <span>發音</span>`;
+    headRight.className = "flex-shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 text-sm font-medium rounded-lg transition whitespace-nowrap mt-0.5";
+    headRight.style.cssText = "color:#7C96AB; background:transparent;";
+    headRight.addEventListener("mouseenter", () => { headRight.style.background = "#F3F4F1"; headRight.style.color = "#4A4A4A"; });
+    headRight.addEventListener("mouseleave", () => { headRight.style.background = "transparent"; headRight.style.color = "#7C96AB"; });
     headRight.addEventListener("click", () => speak(w.word));
 
     head.appendChild(headLeft);
@@ -251,13 +233,11 @@ export function renderWordSelection(words, articleText = "") {
 
     // 內文
     const body = document.createElement("div");
+    body.className = "text-sm text-gray-700 space-y-1 mt-1";
     body.innerHTML = `
-      <div><em>文章例句：</em>「${escapeHTML(exampleFromArticle || "無")}」</div>
-      <div><em>造句：</em>「${escapeHTML(w.example2 || "無")}」</div>
-      <div><em>翻譯：</em>${escapeHTML(w.example2_zh || "無")}</div>
-      <div class="text-xs text-gray-500" title="${escapeHTML(w.pos || "")}">
-        難度：${escapeHTML(w.level || "")}
-      </div>
+      ${exampleFromArticle ? `<div><em>文章例句：</em>「${escapeHTML(exampleFromArticle)}」</div>` : ""}
+      ${w.example2     ? `<div><em>造句：</em>「${escapeHTML(w.example2)}」</div>` : ""}
+      ${w.example2_zh  ? `<div><em>翻譯：</em>${escapeHTML(w.example2_zh)}</div>` : ""}
     `;
 
     // 佈局：勾選 + 內容
@@ -266,6 +246,7 @@ export function renderWordSelection(words, articleText = "") {
     label.appendChild(cb);
 
     const content = document.createElement("div");
+    content.className = "flex-1 min-w-0";
     content.appendChild(head);
     content.appendChild(body);
     label.appendChild(content);
@@ -287,32 +268,48 @@ export async function handleAnalyzeCustom(){
   const term = document.getElementById("customWordInput")?.value.trim() || "";
   if (!term) return alert("請先輸入要分析的單字或片語");
 
-  // 顯示編輯卡片
   document.getElementById("customWordEdit")?.classList.remove("hidden");
 
   try {
     const obj = await analyzeCustomWordAPI(article, term);
 
-    // 安全填值
     const set = (id, v="") => { const el = document.getElementById(id); if (el) el.value = String(v||""); };
     set("cw_word", obj.word || term);
     set("cw_pos", obj.pos);
     set("cw_def", obj.definition);
-    set("cw_example_en", obj.example_in_article || obj.example_ai || "");
     set("cw_level", obj.level || "");
 
     const exEN = document.getElementById("cw_example_en");
     const exAI = document.getElementById("cw_example_ai");
     const exZH = document.getElementById("cw_example_zh");
-
     if (exEN) exEN.value = obj.example_in_article || "";
     if (exAI) exAI.value = obj.example_ai || "";
     if (exZH) exZH.value = obj.example_ai_zh || obj.example_in_article_zh || "";
-
   } catch (err) {
     console.error(err);
     alert("分析失敗，請稍後再試或換較短的片語/單字");
   }
+}
+
+/* ===== 自訂新增（手動加入） ===== */
+export function handleCustomAdd(){
+  const word = document.getElementById("cw_word").value.trim();
+  const pos  = document.getElementById("cw_pos").value.trim();
+  const definition = document.getElementById("cw_def").value.trim();
+  const example1   = document.getElementById("cw_example_en")?.value.trim() || "";
+  const example2   = document.getElementById("cw_example_ai")?.value.trim() || "";
+  const example2_zh = document.getElementById("cw_example_zh")?.value.trim() || "";
+  const level = document.getElementById("cw_level")?.value.trim() || "";
+  if (!word || !pos || !definition) return alert("請至少填：英文單字、詞性、中文解釋");
+
+  const res = addWord({ word, pos, definition, example1, example2, example2_zh, level });
+  if (!res.added) return alert(`「${word}」已存在`);
+  alert(`已加入：${word}`);
+
+  const cb = findCbByWord(word); if (cb) markRowAsAdded(cb, true);
+  ["cw_word","cw_pos","cw_def","cw_example_en","cw_example_ai","cw_example_zh","cw_level"]
+    .forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+  renderSidebarLists();
 }
 
 /* ===== 加入勾選 ===== */
@@ -320,7 +317,6 @@ export function handleSaveSelected(){
   const cbs = Array.from(document.querySelectorAll("input[name='word']:checked"));
   const current = getAllWords();
   const exists = new Set(current.map(w => (w.word||"").toLowerCase()));
-  let anyAdded = false;
 
   cbs.forEach(cb => {
     const { word, pos, definition, example1, example2, example2_zh, level } = cb.detail;
@@ -335,7 +331,7 @@ export function handleSaveSelected(){
       level: level || ""
     });
 
-    if (added) { markRowAsAdded(cb, false); anyAdded = true; } else { markRowAsAdded(cb, true); }
+    if (added) { markRowAsAdded(cb, false); } else { markRowAsAdded(cb, true); }
     exists.add(k);
   });
 
@@ -343,30 +339,6 @@ export function handleSaveSelected(){
 
   renderSidebarLists();
   hideFabBar();
-}
-
-/* ===== 自訂新增（手動加入） ===== */
-export function handleCustomAdd(){
-  const word = document.getElementById("cw_word").value.trim();
-  const pos  = document.getElementById("cw_pos").value.trim();
-  const definition = document.getElementById("cw_def").value.trim();
-  const example1 = document.getElementById("cw_example_en")?.value.trim() || "";
-  const example2    = document.getElementById("cw_example_ai")?.value.trim() || "";
-  const example2_zh = document.getElementById("cw_example_zh")?.value.trim() || "";
-  const level = document.getElementById("cw_level")?.value.trim() || "";
-  if (!word || !pos || !definition) return alert("請至少填：英文單字、詞性、中文解釋");
-
-  const res = addWord({ word, pos, definition, example1, example2, example2_zh, level });
-  if (!res.added) return alert(`「${word}」已存在`);
-  alert(`已加入：${word}`);
-
-  // 國考工具模式：新增不自動同步；請用「雲端同步」按鈕
-
-  const cb = findCbByWord(word); if (cb) markRowAsAdded(cb, true);
-  ["cw_word","cw_pos","cw_def","cw_example_en","cw_example_ai","cw_example_zh","cw_level"]
-    .forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
-
-  renderSidebarLists();
 }
 
 /* ===== 右側列表 + 分頁 ===== */
@@ -545,55 +517,129 @@ export function gotoDueNext(){
 
 
 
-// ===== 右側清單：可展開詳情（含喇叭） =====
+// ===== 右側清單：可展開詳情（Morandi 扁平化） =====
+
+// SVG 圖示（Lucide outline 風格）
+const ICON_SPEAK = `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>`;
+const ICON_TRASH = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>`;
+const ICON_SAVE  = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>`;
+
 function makeListItem(w, opts = {}) {
   const li = document.createElement("li");
+  li.dataset.word = (w.word || "").toLowerCase();
 
-  const summary = document.createElement("button");
-  summary.type = "button";
-  summary.className = "w-full text-left flex items-center justify-between";
- summary.innerHTML = `
-  <span>
-    <strong>${escapeHTML(w.word)}</strong>
-    (${escapeHTML(posAbbr(w.pos) || "")}) - ${escapeHTML(w.definition || "")}
-  </span>
-  <span class="text-gray-400">▸</span>
-`;
+  // ── 標題行 ──
+  const header = document.createElement("div");
+  header.className = "wc-header";
 
+  // 複習 Checkbox（僅限 today / due tab）
+  if (opts.showReview) {
+    const reviewCb = document.createElement("input");
+    reviewCb.type = "checkbox";
+    reviewCb.style.cssText = "flex-shrink:0;width:13px;height:13px;accent-color:#7C96AB;cursor:pointer;";
+    reviewCb.title = "標記複習完成";
+    reviewCb.addEventListener("click", (e) => {
+      e.stopPropagation();
+      scheduleNext(w.word, true);
+      renderSidebarLists();
+    });
+    header.appendChild(reviewCb);
+  }
 
+  // 單字標題：word 獨立一行（block），pos+def 為獨立 meta row
+  const titleArea = document.createElement("div");
+  titleArea.className = "wc-title";
+  titleArea.style.cssText = "flex:1;min-width:0;";
+  titleArea.innerHTML =
+    `<strong>${escapeHTML(w.word)}</strong>` +
+    `<div class="wc-meta">` +
+      `<span class="wc-pos">${escapeHTML(posAbbr(w.pos) || "")}</span>` +
+      `<span class="wc-def">— ${escapeHTML(w.definition || "")}</span>` +
+    `</div>`;
+
+  // 展開箭頭
+  const arrow = document.createElement("span");
+  arrow.className = "wc-arrow";
+  arrow.textContent = "▸";
+
+  header.appendChild(titleArea);
+  header.appendChild(arrow);
+
+  // ── 詳情區 ──
   const details = document.createElement("div");
-  details.className = "mt-2 pl-5 text-sm text-gray-700 hidden";
+  details.className = "wc-body hidden";
 
   const exArticle = w.example1 || w.example_in_article || "";
   const exMake    = w.example2 || w.example_ai || "";
   const exZh      = w.example2_zh || w.example_ai_zh || "";
 
-details.innerHTML = `
-  <div class="mt-1">
-    <button type="button" title="播放"
-      class="ml-3 px-3 py-1 text-sm font-semibold
-            bg-gray-600 text-white rounded-sm
-            hover:bg-gray-700 transition whitespace-nowrap">發音</button>
-  </div>
-  ${exArticle ? `<div class="mt-1">文章例句：「${escapeHTML(exArticle)}」</div>` : ""}
-  ${exMake    ? `<div class="mt-1">造句：「${escapeHTML(exMake)}」</div>` : ""}
-  ${exZh      ? `<div class="mt-1">翻譯：${escapeHTML(exZh)}</div>` : ""}
-  ${w.level   ? `<div class="mt-1 text-gray-500">難度：${escapeHTML(w.level)}</div>` : ""}
-  <div class="mt-2 flex items-center gap-3">
-    ${opts.showReview ? `<button class="text-green-600 underline" data-act="review">複習完成</button>` : ""}
-    <button class="text-red-500" data-act="del">刪除</button>
-  </div>
-`;
+  // 1. 發音（SVG 喇叭，霧霾藍，無 emoji 無打字機字體）
+  const speakBtn = document.createElement("button");
+  speakBtn.type = "button";
+  speakBtn.className = "wc-speak";
+  speakBtn.title = "播放發音";
+  speakBtn.innerHTML = ICON_SPEAK;
+  speakBtn.addEventListener("click", (e) => { e.stopPropagation(); speak(w.word); });
+  details.appendChild(speakBtn);
 
+  // 2. 文章例句（正常字體，次要文字色 #7A7A7A，line-height 1.6）
+  if (exArticle) {
+    const artEx = document.createElement("p");
+    artEx.className = "wc-article";
+    artEx.textContent = `"${exArticle}"`;
+    details.appendChild(artEx);
+  }
 
-  summary.addEventListener("click", () => {
+  // 3. AI 助教解析區塊（移除標題行，直接從「造句」開始）
+  if (exMake || exZh) {
+    const aiSection = document.createElement("div");
+    aiSection.className = "wc-ai";
+
+    if (exMake) {
+      const makeLine = document.createElement("p");
+      makeLine.className = "wc-ai-text";
+      makeLine.textContent = exMake;
+      aiSection.appendChild(makeLine);
+    }
+    if (exZh) {
+      const zhLine = document.createElement("p");
+      zhLine.className = "wc-ai-zh";
+      zhLine.textContent = exZh;
+      aiSection.appendChild(zhLine);
+    }
+    details.appendChild(aiSection);
+  }
+
+  // 4. 底部操作列（淡分隔線；刪除 hover → 莫蘭迪紅 #D98C8C；存檔 hover → 霧霾藍）
+  const btnRow = document.createElement("div");
+  btnRow.className = "wc-footer";
+
+  const delBtn = document.createElement("button");
+  delBtn.type = "button";
+  delBtn.setAttribute("data-act", "del");
+  delBtn.className = "wc-btn-del";
+  delBtn.innerHTML = `${ICON_TRASH} 刪除`;
+  btnRow.appendChild(delBtn);
+
+  if (opts.showReview) {
+    const saveBtn = document.createElement("button");
+    saveBtn.type = "button";
+    saveBtn.setAttribute("data-act", "review");
+    saveBtn.className = "wc-btn-save";
+    saveBtn.innerHTML = `${ICON_SAVE} 存檔`;
+    btnRow.appendChild(saveBtn);
+  }
+
+  details.appendChild(btnRow);
+
+  // 點標題行切換展開
+  header.addEventListener("click", (e) => {
+    if (e.target.closest("button, input")) return;
     details.classList.toggle("hidden");
-    const arrow = summary.querySelector("span:last-child");
-    if (arrow) arrow.textContent = details.classList.contains("hidden") ? "▸" : "▾";
+    arrow.textContent = details.classList.contains("hidden") ? "▸" : "▾";
   });
 
-  details.querySelector("button[title='播放']")?.addEventListener("click", () => speak(w.word));
-  details.querySelector("[data-act='del']")?.addEventListener("click", () => {
+  delBtn.addEventListener("click", () => {
     const deleted = deleteWord(w.word);
     if (deleted) {
       lastDeleted = deleted;
@@ -608,8 +654,8 @@ details.innerHTML = `
   });
 
   const row = document.createElement("div");
-  row.className = "p-2 border rounded bg-white shadow";
-  row.appendChild(summary);
+  row.className = "wc-card";
+  row.appendChild(header);
   row.appendChild(details);
   li.appendChild(row);
   return li;
@@ -629,14 +675,21 @@ export function markRowAsAdded(cb, already) {
   cb.checked = false;
   updateFabBar?.();
   const card = cb._card || cb.closest(".p-3, .ai-card, .word-row") || cb.closest("div");
-  if (card) {
-    card.classList.add("bg-gray-200", "opacity-60", "pointer-events-none");
-    if (!card.querySelector(".ai-mark-tip")) {
-      const tip = document.createElement("span");
-      tip.className = "ai-mark-tip ml-2 text-green-600 text-sm";
-      tip.textContent = already ? "已存在" : "已加入";
-      card.appendChild(tip);
-    }
+  if (!card) return;
+
+  card.classList.add("pointer-events-none");
+  card.style.cssText += "background:#F0F0F0;opacity:0.55;";
+
+  if (!card.querySelector(".ai-mark-tip")) {
+    const tip = document.createElement("span");
+    tip.className = "ai-mark-tip";
+    tip.style.cssText =
+      "display:inline-flex;align-items:center;gap:3px;" +
+      "margin-left:8px;padding:2px 9px;border-radius:999px;" +
+      "background:#A3B18A;color:#fff;" +
+      "font-size:.72rem;font-weight:700;white-space:nowrap;";
+    tip.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>${already ? "已存在" : "已加入"}`;
+    card.appendChild(tip);
   }
 }
 
@@ -650,7 +703,9 @@ export function unmarkRowByWord(word) {
 
   const card = cb._card || cb.closest(".p-3, .ai-card, .word-row") || cb.closest("div");
   if (card) {
-    card.classList.remove("bg-gray-200", "opacity-60", "pointer-events-none");
+    card.classList.remove("pointer-events-none");
+    card.style.background = "";
+    card.style.opacity = "";
     const tip = card.querySelector(".ai-mark-tip");
     if (tip) tip.remove();
   }
@@ -832,7 +887,6 @@ export function submitQuizAnswer(asWrong = false) {
     const mode = (QUIZ_PREF?.mode || "typing");
 
     let userInput = "";
-    let expected = "";
     let correct = false;
 
     if (typeof mode === "string" && mode.startsWith("choice_")) {
@@ -845,7 +899,6 @@ export function submitQuizAnswer(asWrong = false) {
       }
 
       const g = grade(q, asWrong ? -1 : picked);
-      expected = g.expected;
       correct = !!g.correct;
       userInput = chosen ? (chosen.parentElement?.innerText || "").trim() : "";
     } else {
@@ -853,7 +906,6 @@ export function submitQuizAnswer(asWrong = false) {
       userInput = (inputEl?.value || "").trim().toLowerCase();
 
       const g = grade(q, asWrong ? "" : userInput);
-      expected = g.expected;
       correct = !!g.correct || (!asWrong && userInput === (w.word || "").toLowerCase());
     }
  
@@ -1058,8 +1110,8 @@ function refreshMasteredAndChart(){
   const data = getDailyStats(14); const maxY = Math.max(1, ...data.map(d => Math.max(d.added, d.reviewed))); const stepX = (W - P*2) / Math.max(1, data.length - 1); const y = v => H - P - (v / maxY) * (H - P*2);
   function pathFor(key){ return data.map((d,i)=> `${i?"L":"M"}${P + i*stepX},${y(d[key])}`).join(" "); }
   svg.innerHTML = ""; const mid = document.createElementNS("http://www.w3.org/2000/svg","line"); mid.setAttribute("x1","0"); mid.setAttribute("x2",String(W)); mid.setAttribute("y1",String(y(Math.ceil(maxY/2)))); mid.setAttribute("y2",String(y(Math.ceil(maxY/2)))); mid.setAttribute("stroke","#e5e7eb"); mid.setAttribute("stroke-dasharray","2 3"); svg.appendChild(mid);
-  const p1 = document.createElementNS("http://www.w3.org/2000/svg","path"); p1.setAttribute("d", pathFor("added")); p1.setAttribute("fill","none"); p1.setAttribute("stroke","#2563eb"); p1.setAttribute("stroke-width","2"); svg.appendChild(p1);
-  const p2 = document.createElementNS("http://www.w3.org/2000/svg","path"); p2.setAttribute("d", pathFor("reviewed")); p2.setAttribute("fill","none"); p2.setAttribute("stroke","#16a34a"); p2.setAttribute("stroke-width","2"); svg.appendChild(p2);
+  const p1 = document.createElementNS("http://www.w3.org/2000/svg","path"); p1.setAttribute("d", pathFor("added")); p1.setAttribute("fill","none"); p1.setAttribute("stroke","#A3B18A"); p1.setAttribute("stroke-width","2"); svg.appendChild(p1);
+  const p2 = document.createElementNS("http://www.w3.org/2000/svg","path"); p2.setAttribute("d", pathFor("reviewed")); p2.setAttribute("fill","none"); p2.setAttribute("stroke","#BC9C7F"); p2.setAttribute("stroke-width","2"); svg.appendChild(p2);
 }
 
 /* ===== Sync 狀態（dirty / lastSync） ===== */
@@ -1095,7 +1147,7 @@ export function refreshUsageUI(){
 export function openUsageModal(){ const input = document.getElementById("usageBudgetInput"); const b = getUsageBudget(); if (input) input.value = b!=null?String(b):""; refreshUsageUI(); const m = document.getElementById("usageModal"); m?.classList.remove("hidden"); m?.classList.add("flex"); }
 export function closeUsageModal(){ const m = document.getElementById("usageModal"); m?.classList.add("hidden"); m?.classList.remove("flex"); }
 export function saveUsageBudget(){ const v = Number(document.getElementById("usageBudgetInput")?.value); if (isNaN(v)) return alert("請輸入數字（USD）"); setUsageBudget(v); refreshUsageUI(); alert("已儲存每月預算"); }
-export function resetUsage(){ resetUsageMonth(); refreshUsageUI(); alert("已重置本月估算（不影響 OpenAI 真實用量）"); }
+export function resetUsage(){ resetUsageMonth(); refreshUsageUI(); alert("已重置本月估算（不影響 Gemini 真實用量）"); }
 
 // ===== 匯出 / 匯入 JSON：備份單字清單 =====
 export function handleExportJson() {
@@ -1337,6 +1389,425 @@ window.addEventListener("usage-updated", () => {
   try { refreshUsageUI(); } catch (e) { console.error(e); }
 });
 
+/* ===== 通用 Toast（底部彈出訊息） ===== */
+export function showToast(message, { duration = 3000, type = "success" } = {}) {
+  let toast = document.getElementById("generalToast");
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "generalToast";
+    toast.style.cssText =
+      "position:fixed;bottom:5rem;left:50%;transform:translateX(-50%);" +
+      "padding:.6rem 1.2rem;border-radius:12px;font-size:.9rem;font-weight:500;" +
+      "box-shadow:0 6px 20px rgba(0,0,0,.18);z-index:300;transition:opacity .25s;";
+    document.body.appendChild(toast);
+  }
+
+  const colors = {
+    success: "background:#1d3557;color:#fff;",
+    warn:    "background:#92400e;color:#fff;",
+    info:    "background:#6B7F5E;color:#fff;",
+  };
+  toast.style.cssText += colors[type] || colors.success;
+  toast.textContent = message;
+  toast.style.opacity = "1";
+
+  clearTimeout(toast._tid);
+  toast._tid = setTimeout(() => { toast.style.opacity = "0"; }, duration);
+}
+
+
+/* ===== 圖書館列表（含搜尋 + 分頁） ===== */
+const LIBRARY_PAGE_SIZE = 10;
+let _libraryAllArticles = [];
+let _libraryPage = 0;
+
+export function renderLibraryList(articles) {
+  _libraryAllArticles = articles || [];
+  _libraryPage = 0;
+  _renderLibraryPage_();
+}
+
+export function filterLibraryList() {
+  _libraryPage = 0;
+  _renderLibraryPage_();
+}
+
+export function gotoLibraryPrev() {
+  if (_libraryPage > 0) { _libraryPage--; _renderLibraryPage_(); }
+}
+
+export function gotoLibraryNext() {
+  const keyword = (document.getElementById("librarySearch")?.value || "").trim().toLowerCase();
+  const filtered = keyword
+    ? _libraryAllArticles.filter(a => a.title.toLowerCase().includes(keyword))
+    : _libraryAllArticles;
+  const maxPage = Math.max(0, Math.ceil(filtered.length / LIBRARY_PAGE_SIZE) - 1);
+  if (_libraryPage < maxPage) { _libraryPage++; _renderLibraryPage_(); }
+}
+
+export function removeLibraryArticle(sheetRowIndex) {
+  _libraryAllArticles = _libraryAllArticles
+    .filter(a => a.sheetRowIndex !== sheetRowIndex)
+    .map(a => ({
+      ...a,
+      // All rows after the deleted row shift up by 1 in the sheet
+      sheetRowIndex: a.sheetRowIndex > sheetRowIndex ? a.sheetRowIndex - 1 : a.sheetRowIndex,
+    }));
+  _renderLibraryPage_();
+}
+
+function _renderLibraryPage_() {
+  const container = document.getElementById("libraryItems");
+  const pager     = document.getElementById("libraryPager");
+  const pageInfo  = document.getElementById("libraryPageInfo");
+  const prevBtn   = document.getElementById("libraryPrev");
+  const nextBtn   = document.getElementById("libraryNext");
+  if (!container) return;
+
+  const keyword = (document.getElementById("librarySearch")?.value || "").trim().toLowerCase();
+  const filtered = keyword
+    ? _libraryAllArticles.filter(a => a.title.toLowerCase().includes(keyword))
+    : _libraryAllArticles;
+
+  const emptyState = document.getElementById("libraryEmptyState");
+  if (!filtered.length) {
+    // 顯示 empty state，清除任何先前的文章 item
+    Array.from(container.children).forEach(el => {
+      if (el.id !== "libraryEmptyState") el.remove();
+    });
+    if (emptyState) {
+      emptyState.style.display = "";
+      emptyState.querySelector("p").textContent = keyword
+        ? "找不到符合的文章。"
+        : "尚無文章記錄。\n如需同步，請使用右側「資料管理」的「雲端載入」。";
+    }
+    pager?.classList.add("hidden");
+    return;
+  }
+
+  // 有文章時隱藏 empty state，只移除文章 items
+  if (emptyState) emptyState.style.display = "none";
+  Array.from(container.children).forEach(el => {
+    if (el.id !== "libraryEmptyState") el.remove();
+  });
+
+  const totalPages = Math.ceil(filtered.length / LIBRARY_PAGE_SIZE);
+  if (_libraryPage >= totalPages) _libraryPage = totalPages - 1;
+  const page = filtered.slice(_libraryPage * LIBRARY_PAGE_SIZE, (_libraryPage + 1) * LIBRARY_PAGE_SIZE);
+  page.forEach(article => {
+    const item = document.createElement("div");
+    item.className = "library-item";
+
+    const dateStr = article.savedAt
+      ? new Date(article.savedAt).toLocaleDateString("zh-TW", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
+      : "";
+
+    const textArea = document.createElement("div");
+    textArea.className = "flex-1 min-w-0 cursor-pointer";
+    textArea.innerHTML = `
+      <div class="font-medium text-gray-800 truncate">${escapeHTML(article.title)}</div>
+      <div class="text-xs text-gray-400 mt-0.5">${escapeHTML(dateStr)}</div>
+    `;
+    textArea.addEventListener("click", () => showReaderMode(article));
+
+    const trashBtn = document.createElement("button");
+    trashBtn.className = "flex-shrink-0 text-gray-300 hover:text-red-400 transition text-base px-1";
+    trashBtn.title = "刪除此文章";
+    trashBtn.textContent = "🗑️";
+    trashBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      window.dispatchEvent(new CustomEvent("library-delete", { detail: { sheetRowIndex: article.sheetRowIndex, title: article.title } }));
+    });
+
+    item.appendChild(textArea);
+    item.appendChild(trashBtn);
+    container.appendChild(item);
+  });
+
+  // Pagination controls
+  if (totalPages > 1) {
+    pager?.classList.remove("hidden");
+    if (pageInfo) pageInfo.textContent = `第 ${_libraryPage + 1} / ${totalPages} 頁（共 ${filtered.length} 篇）`;
+    if (prevBtn) prevBtn.disabled = _libraryPage === 0;
+    if (nextBtn) nextBtn.disabled = _libraryPage >= totalPages - 1;
+  } else {
+    pager?.classList.add("hidden");
+  }
+}
+
+
+/* ===== 閱讀模式 ===== */
+function highlightKnownWords_(text, knownWords) {
+  if (!knownWords.length) {
+    // 無已知詞時直接轉段落
+    return text.split(/\n\n+/).map(p =>
+      `<p>${escapeHTML(p.replace(/\n/g, " "))}</p>`
+    ).join("");
+  }
+
+  // 依長度降冪，優先匹配較長的片語
+  const sorted = [...knownWords].sort((a, b) => b.word.length - a.word.length);
+
+  // 先逐段處理，避免跨段 span
+  return text.split(/\n\n+/).map(para => {
+    let html = escapeHTML(para.replace(/\n/g, " "));
+    for (const w of sorted) {
+      const escaped = escapeReg(escapeHTML(w.word));
+      const re = new RegExp(`\\b${escaped}\\b`, "gi");
+      html = html.replace(re, match =>
+        `<span class="reader-word" data-word="${escapeHTML(w.word)}" ` +
+        `data-pos="${escapeHTML(w.pos)}" data-def="${escapeHTML(w.definition)}">${match}</span>`
+      );
+    }
+    return `<p>${html}</p>`;
+  }).join("");
+}
+
+export function showReaderMode(article) {
+  // 隱藏輸入區、顯示閱讀區
+  document.getElementById("articleInputSection")?.classList.add("hidden");
+  const readerSection = document.getElementById("readerSection");
+  readerSection?.classList.remove("hidden");
+
+  // 標題 & 日期
+  document.getElementById("readerTitle").textContent = article.title || "(無標題)";
+  const dateEl = document.getElementById("readerSavedAt");
+  if (dateEl && article.savedAt) {
+    dateEl.textContent = "存檔時間：" + new Date(article.savedAt).toLocaleString("zh-TW");
+  }
+
+  // 取得已知單字（for 高亮）
+  const knownWords = getAllWords().map(w => ({
+    word: w.word || "",
+    pos:  w.pos  || "",
+    definition: w.definition || "",
+  })).filter(w => w.word);
+
+  // 渲染內文
+  const content = document.getElementById("readerContent");
+  content.innerHTML = highlightKnownWords_(article.fullText || "", knownWords);
+
+  // 已知單字點擊 → 顯示提示卡 + 右側字卡跳轉
+  content.querySelectorAll(".reader-word").forEach(el => {
+    el.addEventListener("click", (e) => {
+      e.stopPropagation();
+      showReaderTooltip_(el, {
+        word: el.dataset.word,
+        pos:  el.dataset.pos,
+        definition: el.dataset.def,
+      });
+      jumpToWordCard(el.dataset.word);
+    });
+  });
+
+  // 點擊其他地方關閉提示
+  content.addEventListener("click", () => {
+    document.getElementById("readerTooltip")?.remove();
+  }, { once: false });
+
+  readerSection.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function showReaderTooltip_(el, wordData) {
+  document.getElementById("readerTooltip")?.remove();
+
+  const tip = document.createElement("div");
+  tip.id = "readerTooltip";
+  tip.className = "reader-tooltip";
+  tip.innerHTML = `
+    <button onclick="document.getElementById('readerTooltip').remove()"
+      style="position:absolute;top:6px;right:10px;color:#94a3b8;font-size:14px;">✕</button>
+    <div style="font-weight:700">${escapeHTML(wordData.word)}
+      <span style="font-weight:400;color:#64748b;font-size:.85rem"> (${escapeHTML(wordData.pos)})</span>
+    </div>
+    <div style="margin-top:4px;font-size:.9rem;color:#334155">${escapeHTML(wordData.definition)}</div>
+  `;
+
+  document.body.appendChild(tip);
+
+  const rect = el.getBoundingClientRect();
+  const tipW = 250;
+  let left = rect.left + window.scrollX;
+  if (left + tipW > window.innerWidth - 16) left = window.innerWidth - tipW - 16;
+  tip.style.top  = `${rect.bottom + window.scrollY + 6}px`;
+  tip.style.left = `${left}px`;
+
+  // 4 秒後自動消失
+  setTimeout(() => tip.remove(), 4000);
+}
+
+export function hideReaderMode() {
+  document.getElementById("readerSection")?.classList.add("hidden");
+  document.getElementById("articleInputSection")?.classList.remove("hidden");
+  document.getElementById("readerTooltip")?.remove();
+}
+
+// 點擊閱讀模式中的已知單字 → 右側字卡跳轉
+export function jumpToWordCard(word) {
+  if (!word) return;
+
+  // 切換到「全部」分頁
+  switchSidebarTab?.("all");
+
+  // 把搜尋框設為該單字並觸發渲染
+  const searchEl = document.getElementById("allSearch");
+  if (searchEl) {
+    searchEl.value = word;
+    searchEl.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+
+  // 短暫高亮第一筆符合的字卡
+  setTimeout(() => {
+    const sidebar = document.getElementById("sidebarAllList");
+    const target = word.toLowerCase();
+    const firstCard = sidebar?.querySelector(`[data-word="${target}"]`);
+    if (firstCard) {
+      firstCard.scrollIntoView({ behavior: "smooth", block: "center" });
+      firstCard.style.transition = "background .3s";
+      firstCard.style.background = "#dbeafe";
+      setTimeout(() => { firstCard.style.background = ""; }, 2000);
+    }
+  }, 200);
+}
+
+
+/* ===== 反白選字浮動分析 ===== */
+export async function handleSelectionAnalyze(term, anchorRect = null) {
+  if (!term) return;
+  const article = document.getElementById("articleInput")?.value.trim() || "";
+  showToast("分析中…", { duration: 10000, type: "info" });
+  try {
+    const obj = await analyzeCustomWordAPI(article, term);
+    showToast("", { duration: 1 }); // 清除 loading toast
+    _showSelectionResult(obj, term, anchorRect);
+  } catch (err) {
+    console.error(err);
+    showToast("分析失敗，請稍後再試", { type: "warn", duration: 4000 });
+  }
+}
+
+function _extractSentence(text, word) {
+  if (!text) return "";
+  // 切句：以句號/問號/驚嘆號（含中英文）作為邊界
+  const sentences = text.split(/(?<=[.!?。！？])\s*/);
+  const re = new RegExp(word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+  const hit = sentences.find(s => re.test(s));
+  return (hit || text).trim();
+}
+
+function _highlightWord(sentence, word) {
+  const re = new RegExp(`(${word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi");
+  return escapeHTML(sentence).replace(
+    re,
+    `<strong style="color:#A3B18A;font-weight:700;">$1</strong>`
+  );
+}
+
+const ICON_SPEAK_SM = `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#A3B18A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>`;
+
+function _showSelectionResult(obj, term, anchorRect = null) {
+  const card = document.getElementById("selectionResult");
+  if (!card) return;
+
+  const word  = obj.word || term;
+  const pos   = obj.pos || "";
+  const def   = obj.definition || "";
+  const exArt = _extractSentence(obj.example_in_article || "", word);
+  const exAI  = obj.example_ai || "";
+  const exZH  = obj.example_ai_zh || obj.example_in_article_zh || "";
+
+  const sentenceHTML = exArt ? _highlightWord(exArt, word) : "";
+
+  // 檢查是否已加入清單，決定按鈕初始狀態
+  const alreadyAdded = getAllWords().some(w => (w.word || "").toLowerCase() === word.toLowerCase());
+  const addBtnStyle = alreadyAdded
+    ? "margin-top:2px;width:100%;padding:7px 0;background:#EEF2E8;color:#8d9b76;border:none;border-radius:9px;font-size:.84rem;font-weight:600;cursor:default;"
+    : "margin-top:2px;width:100%;padding:7px 0;background:#A3B18A;color:#fff;border:none;border-radius:9px;font-size:.84rem;font-weight:600;cursor:pointer;transition:background .15s;";
+  const addBtnText = alreadyAdded ? "✓ 已在單字清單" : "加入單字清單";
+
+  card.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:10px;">
+
+      <!-- 標題列：單字 + 發音 + 關閉 -->
+      <div style="display:flex;align-items:center;gap:6px;">
+        <strong style="font-size:1.1rem;color:#222;flex:1;min-width:0;">${escapeHTML(word)}</strong>
+        ${pos ? `<span style="font-size:.78rem;color:#888;white-space:nowrap;">${escapeHTML(pos)}</span>` : ""}
+        <button id="_selSpeakBtn" title="朗讀" style="
+          background:none;border:none;cursor:pointer;padding:2px;
+          display:flex;align-items:center;flex-shrink:0;
+        ">${ICON_SPEAK_SM}</button>
+        <button id="_selCloseBtn" title="關閉" style="
+          background:none;border:none;cursor:pointer;padding:3px 5px;
+          font-size:.9rem;color:#A3B18A;line-height:1;flex-shrink:0;
+          border-radius:4px;transition:background .15s;
+        ">✕</button>
+      </div>
+
+      <!-- 中文解釋 -->
+      ${def ? `<p style="font-size:.88rem;color:#444;margin:0;word-break:keep-all;">${escapeHTML(def)}</p>` : ""}
+
+      <!-- 上下文例句（僅目標句，單字高亮） -->
+      ${sentenceHTML ? `<p style="font-size:.8rem;color:#555;margin:0;line-height:1.6;font-style:italic;">"${sentenceHTML}"</p>` : ""}
+
+      <!-- AI 造句 + 翻譯 -->
+      ${exAI  ? `<p style="font-size:.8rem;color:#666;margin:0;line-height:1.6;">${escapeHTML(exAI)}</p>` : ""}
+      ${exZH  ? `<p style="font-size:.78rem;color:#999;margin:0;">${escapeHTML(exZH)}</p>` : ""}
+
+      <!-- 加入按鈕 -->
+      <button id="_selAddBtn" ${alreadyAdded ? "disabled" : ""} style="${addBtnStyle}">${addBtnText}</button>
+    </div>
+  `;
+
+  // 定位：使用 FAB 隱藏前記錄的座標（anchorRect），不超出視窗邊界
+  if (anchorRect && anchorRect.width + anchorRect.height > 0) {
+    const left = Math.min(anchorRect.left, window.innerWidth - 370);
+    card.style.left = Math.max(8, left) + "px";
+    card.style.top  = (anchorRect.bottom + 8) + "px";
+  }
+  card.classList.remove("hidden");
+
+  // 發音
+  document.getElementById("_selSpeakBtn")?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    speak(word);
+  });
+
+  function _closeAll() {
+    card.classList.add("hidden");
+    const fab = document.getElementById("selectionFab");
+    if (fab) fab.style.display = "none";
+    window.getSelection()?.removeAllRanges();
+  }
+
+  // 關閉按鈕
+  document.getElementById("_selCloseBtn")?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    _closeAll();
+  });
+
+  // 加入清單
+  document.getElementById("_selAddBtn")?.addEventListener("click", () => {
+    if (alreadyAdded) return; // 已在清單，不重複加
+    const btn = document.getElementById("_selAddBtn");
+    const { added } = addWord({
+      word, pos,
+      definition:  obj.definition || "",
+      example1:    exArt,
+      example2:    exAI,
+      example2_zh: exZH,
+      level:       obj.level || "",
+    });
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = added ? "✓ 已加入" : "✓ 已在單字清單";
+      btn.style.background = "#EEF2E8";
+      btn.style.color = "#8d9b76";
+      btn.style.cursor = "default";
+    }
+    if (added) renderSidebarLists();
+    setTimeout(_closeAll, 1000);
+  });
+}
 
 
 

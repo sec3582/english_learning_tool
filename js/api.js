@@ -1,13 +1,17 @@
-// js/api.js (GAS 版：前端不再直連 OpenAI)
+// js/api.js（Gemini 版：前端呼叫本機 Node.js 代理伺服器，再由伺服器呼叫 Google Gemini API）
+// 原本透過 Google Apps Script (GAS) proxy 呼叫 OpenAI，現已改為呼叫本機 server.js
 
-// 你的 GAS Web App /exec URL（你提供的這條）
-export const APPS_SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbzutX0-ktHxBftKRlP_1-nrOh-i0UoOYmVLT1EjuFHL8WC4V12iW7S1qrNten-EVyaGqA/exec";
+// 本機代理伺服器端點（server.js 啟動後的位址）
+// 原本是 GAS Web App URL，現在改為本機 Express 伺服器
+export const APPS_SCRIPT_URL = "http://localhost:3000/api";
 
 // ====== 用量統計（本機 localStorage）======
-// 模型單價（USD / 百萬 tokens），可依實際調整
+// 模型單價（USD / 百萬 tokens）— 已從 OpenAI GPT-4o 改為 Google Gemini 系列費率
+// 參考：https://ai.google.dev/pricing
 const MODEL_PRICING = {
-  "gpt-4o": { inPerM: 5, outPerM: 15 },
+  "gemini-2.5-flash-lite": { inPerM: 0.10, outPerM: 0.40 }, // Gemini 2.0 Flash：快速且低成本
+  "gemini-2.5-flash-lite": { inPerM: 0.075, outPerM: 0.30 }, // Gemini 1.5 Flash（備用）
+  "gemini-1.5-pro":   { inPerM: 1.25,  outPerM: 5.00 }, // Gemini 1.5 Pro（高性能，較貴）
 };
 
 function roughTokenEstimate(str) {
@@ -84,7 +88,8 @@ export function getUsageSummary() {
   const perModel = {};
 
   for (const [model, v] of Object.entries(store)) {
-    const price = MODEL_PRICING[model] || MODEL_PRICING["gpt-4o"];
+    // 若模型不在定價表中，以 gemini-2.5-flash-lite 費率作為 fallback
+    const price = MODEL_PRICING[model] || MODEL_PRICING["gemini-2.5-flash-lite"];
     const inTok = Number(v?.input) || 0;
     const outTok = Number(v?.output) || 0;
 
@@ -127,45 +132,48 @@ export function setUsageBudget(v) {
   localStorage.setItem(budgetStoreKey(), String(Number.isFinite(n) ? n : 0));
 }
 
-// ====== GAS 呼叫 ======
+// ====== 本機伺服器呼叫（取代原 GAS 呼叫）======
+// 原本送到 Google Apps Script，現在改送到本機 server.js（Node.js + Gemini API）
 async function callAppsScript(action, payload = {}) {
   const res = await fetch(APPS_SCRIPT_URL, {
     method: "POST",
     headers: {
-      // 讓 GAS 直接用 e.postData.contents 解析
-      "Content-Type": "text/plain;charset=utf-8",
+      // 改用 application/json（本機伺服器直接以 express.json() 解析，不需 text/plain）
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({ action, ...payload }),
   });
 
-  // GAS 有時會回非 JSON（例如錯誤 HTML），這裡先拿文字再嘗試 parse
+  // 伺服器偶爾可能回傳非 JSON（例如 Express 錯誤頁），先拿文字再嘗試 parse
   const text = await res.text();
 
   let data;
   try {
     data = JSON.parse(text);
   } catch {
-    throw new Error(`GAS 回傳非 JSON：\n${text.slice(0, 300)}`);
+    throw new Error(`伺服器回傳非 JSON：\n${text.slice(0, 300)}`);
   }
 
   if (!res.ok) {
-    throw new Error(`GAS HTTP ${res.status}: ${data?.error || text}`);
+    throw new Error(`伺服器 HTTP ${res.status}: ${data?.error || text}`);
   }
 
   if (!data?.ok) {
-    throw new Error(data?.error || "GAS 回傳 ok=false");
+    throw new Error(data?.error || "伺服器回傳 ok=false");
   }
 
 // 記錄用量（如果 GAS 有回 usage）
+  // 記錄用量（server.js 從 Gemini usageMetadata 取得後回傳）
   if (data?.usage) {
-    addUsage(data.model || "gpt-4o", data.usage);
+    // 使用伺服器回傳的精確 token 用量（來自 Gemini API 的 usageMetadata）
+    addUsage(data.model || "gemini-2.5-flash-lite", data.usage);
   } else {
-    // fallback：用粗估避免一直是 0
+    // fallback：伺服器未回傳 usage 時，以字元數粗估 token 數量
     const inTok = roughTokenEstimate(JSON.stringify({ action, ...payload }));
     const outTok = roughTokenEstimate(data?.content ?? text);
-    addUsage(data.model || "gpt-4o", { prompt_tokens: inTok, completion_tokens: outTok });
-  
-    console.warn("[usage] GAS 沒回 usage，已使用粗估 token 計入本月估算", {
+    addUsage(data.model || "gemini-2.5-flash-lite", { prompt_tokens: inTok, completion_tokens: outTok });
+
+    console.warn("[usage] 伺服器未回傳 usage，已使用粗估 token 計入本月估算", {
       action, inTok, outTok,
     });
   }

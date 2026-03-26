@@ -1,11 +1,13 @@
 // /js/main.js — ESM 入口：事件綁定 + 啟動（含測驗設定開關）
 import * as UI from "./ui.js";
-// 雲端相關功能改為「手動觸發」：只有按下按鈕才會載入/同步
+import { initGSheetsHistory, saveArticleHistory, getRecentArticles, deleteArticleHistory } from "./gsheets_history.js";
 
 
 
 
 const $ = (id) => document.getElementById(id);
+let _starredRowIndex = null; // tracks sheetRowIndex of currently starred article
+
 const on = (id, evt, fn) => {
   const el = $(id);
   if (el && typeof fn === "function") el.addEventListener(evt, fn);
@@ -45,6 +47,30 @@ async function handleImageUpload() {
 }
 
 
+/* ── 匯入文章 Tab 切換 ── */
+function initInputTabs() {
+  const tabs = [
+    { btn: "inputTabManual",  panel: "inputPanelManual"  },
+    { btn: "inputTabUrl",     panel: "inputPanelUrl"     },
+    { btn: "inputTabLibrary", panel: "inputPanelLibrary" },
+  ];
+
+  tabs.forEach(({ btn, panel }) => {
+    const btnEl = $(btn);
+    if (!btnEl) return;
+    btnEl.addEventListener("click", () => {
+      // 所有 tab → 非 active
+      tabs.forEach(t => {
+        $(t.btn)?.classList.remove("input-tab--active");
+        $(t.panel)?.classList.add("hidden");
+      });
+      // 點選的 tab → active + 顯示 panel
+      btnEl.classList.add("input-tab--active");
+      $(panel)?.classList.remove("hidden");
+    });
+  });
+}
+
 function bindEvents() {
   // —— 左側：AI 分析 & 自訂新增 ——
   on("analyzeBtn", "click", UI.handleAnalyzeClick);
@@ -55,6 +81,151 @@ function bindEvents() {
   on("ocrRunBtn", "click", UI.handleRunOcr);
   on("loadSheetsBtn", "click", UI.handleLoadSheets);
   on("pushSheetsBtn", "click", UI.handlePushSheets);
+
+  // —— 收藏此文 / 取消收藏 ——
+  // SVG 星星（outline = 未收藏、filled = 已收藏）
+  const _STAR_OUT  = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+  const _STAR_FILL = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+
+  function _setStarBtn(btn, starred) {
+    if (starred) {
+      btn.innerHTML = `${_STAR_FILL} 已收藏`;
+      btn.className = "btn-ghost-m btn-ghost-m--starred";
+    } else {
+      btn.innerHTML = `${_STAR_OUT} 收藏此文`;
+      btn.className = "btn-ghost-m";
+    }
+  }
+
+  on("saveArticleBtn", "click", async () => {
+    const btn = $("saveArticleBtn");
+    if (!btn) return;
+
+    // ── 已收藏 → 再次點擊 = 取消收藏 ──
+    if (_starredRowIndex !== null) {
+      const confirmDel = confirm("確定要取消收藏此文章並從圖書館刪除嗎？");
+      if (!confirmDel) return;
+
+      btn.disabled = true;
+      btn.textContent = "刪除中…";
+      try {
+        await deleteArticleHistory(_starredRowIndex);
+        UI.removeLibraryArticle(_starredRowIndex);
+        _starredRowIndex = null;
+        _setStarBtn(btn, false);
+        btn.disabled = false;
+        UI.showToast("已從圖書館移除", { type: "info", duration: 3000 });
+      } catch (err) {
+        UI.showToast("刪除失敗：" + err.message, { type: "warn", duration: 5000 });
+        _setStarBtn(btn, true);
+        btn.disabled = false;
+      }
+      return;
+    }
+
+    // ── 尚未收藏 → 儲存 ──
+    const text = $("articleInput")?.value.trim();
+    if (!text) return UI.showToast("請先貼上文章內容", { type: "warn" });
+
+    btn.disabled = true;
+    btn.textContent = "收藏中…";
+
+    try {
+      const result = await saveArticleHistory(text);
+
+      _starredRowIndex = result.sheetRowIndex;
+      _setStarBtn(btn, true);
+      btn.disabled = false;
+
+      if (result.duplicate) {
+        UI.showToast("這篇文章已在圖書館中", { type: "info", duration: 4000 });
+      } else {
+        UI.showToast(`已收藏「${result.title.slice(0, 30)}…」`, { duration: 4000 });
+        try {
+          const articles = await getRecentArticles(50);
+          UI.renderLibraryList(articles);
+        } catch { /* 靜默 */ }
+      }
+    } catch (err) {
+      UI.showToast("收藏失敗：" + err.message, { type: "warn", duration: 5000 });
+      _setStarBtn(btn, false);
+      btn.disabled = false;
+    }
+  });
+
+  // 文章內容變動時重置收藏按鈕狀態
+  $("articleInput")?.addEventListener("input", () => {
+    _starredRowIndex = null;
+    const btn = $("saveArticleBtn");
+    if (btn) { _setStarBtn(btn, false); btn.disabled = false; }
+  });
+
+  // —— 文法重點分析（功能開發中，先給提示） ——
+  on("grammarBtn", "click", () => {
+    const text = document.getElementById("articleInput")?.value.trim();
+    if (!text) return alert("請先在文字框貼上英文文章");
+    alert("📝 文法重點分析功能開發中，敬請期待！");
+  });
+
+  // —— 網址抓取 ——
+  on("urlFetchBtn", "click", async () => {
+    const url = $("urlInput")?.value.trim();
+    if (!url) return alert("請輸入網址");
+    const btn = $("urlFetchBtn");
+    const old = btn.textContent;
+    btn.textContent = "抓取中…";
+    btn.disabled = true;
+    try {
+      const res = await fetch("/scrape", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      });
+      const data = await res.json();
+      if (!data.ok) return alert("擷取失敗：" + data.error);
+
+      // 切到「手動輸入」Tab，把文字填入輸入框
+      $("inputTabManual")?.click();
+      const ta = $("articleInput");
+      if (ta) ta.value = data.text;
+      alert(`✅ 已成功擷取 ${data.text.length} 字，可點「🧠 讓 AI 挑單字」開始分析！`);
+    } catch (e) {
+      alert("網路錯誤：" + e.message);
+    } finally {
+      btn.textContent = old;
+      btn.disabled = false;
+    }
+  });
+
+  // 圖書館：搜尋 + 分頁
+  $("librarySearch")?.addEventListener("input", () => UI.filterLibraryList?.());
+  on("libraryPrev", "click", () => UI.gotoLibraryPrev?.());
+  on("libraryNext", "click", () => UI.gotoLibraryNext?.());
+
+  // 圖書館：刪除事件（由圖書館列表的垃圾桶按鈕觸發）
+  window.addEventListener("library-delete", async (e) => {
+    const { sheetRowIndex, title } = e.detail || {};
+    if (!sheetRowIndex) return;
+    try {
+      await deleteArticleHistory(sheetRowIndex);
+      UI.removeLibraryArticle(sheetRowIndex);
+      // 如果目前 starred 的正是這篇，也重置星星按鈕
+      if (_starredRowIndex === sheetRowIndex) {
+        _starredRowIndex = null;
+        const btn = $("saveArticleBtn");
+        if (btn) { _setStarBtn(btn, false); btn.disabled = false; }
+      } else if (_starredRowIndex !== null && _starredRowIndex > sheetRowIndex) {
+        // Rows after deleted row shift up by 1
+        _starredRowIndex--;
+      }
+      UI.showToast(`已刪除「${(title || "").slice(0, 25)}…」`, { type: "info", duration: 3000 });
+    } catch (err) {
+      UI.showToast("刪除失敗：" + err.message, { type: "warn", duration: 5000 });
+    }
+  });
+
+  // —— 閱讀模式：返回編輯 ——
+  on("readerBackBtn", "click", () => UI.hideReaderMode?.());
 
   on("customWordInput", "keydown", (e) => {
     if (e.key === "Enter") { e.preventDefault(); UI.handleAnalyzeCustom?.(); }
@@ -118,17 +289,125 @@ function bindEvents() {
   // —— 匯出 / 匯入 JSON 單字清單 ——
   on("exportJsonBtn", "click", UI.handleExportJson);
   on("importJsonBtn", "click", UI.handleImportJsonClick);
+
+  // —— 反白選字浮動分析 FAB ——
+  const selFab    = $("selectionFab");
+  const selResult = $("selectionResult");
+  let _selTerm    = "";
+  let _hiddenAt   = 0; // 時間戳：防止 mousedown→mouseup 連鎖重新顯示 FAB
+
+  function _clearSelection() {
+    window.getSelection()?.removeAllRanges();
+  }
+
+  // 統一清理函式：確保畫面上不殘留分析按鈕與結果卡
+  function cleanupAnalysisButton() {
+    if (selFab)    selFab.style.display = "none";   // inline style 控制，避免被 class 優先級覆蓋
+    selResult?.classList.add("hidden");
+  }
+
+  function _showFab(x, y, term) {
+    // 若剛剛才關閉（50ms 內），不重新顯示
+    if (Date.now() - _hiddenAt < 50) return;
+    // 每次顯示新按鈕前先清除舊的，防止同時存在兩個
+    cleanupAnalysisButton();
+    _selTerm = term;
+    selFab.style.left    = Math.max(8, x) + "px";
+    selFab.style.top     = Math.max(8, y) + "px";
+    selFab.style.display = "flex";  // inline style 顯示
+  }
+
+  // selFab 用 style.display 判斷；selResult 用 hidden class 判斷
+  function _isVisible(el) {
+    if (!el) return false;
+    if (el === selFab) return el.style.display !== "none";
+    return !el.classList.contains("hidden");
+  }
+
+  function _hideFab() {
+    const hadVisible = _isVisible(selFab) || _isVisible(selResult);
+    cleanupAnalysisButton();
+    // 只有在 FAB / 結果卡確實可見時才清除 selection 與設時間戳
+    // 避免對每次普通點擊（如貼入 textarea）都呼叫 removeAllRanges()
+    if (!hadVisible) return;
+    _clearSelection();
+    _hiddenAt = Date.now();
+  }
+
+  // 在 articleInput textarea 上反白
+  $("articleInput")?.addEventListener("mouseup", (e) => {
+    if (Date.now() - _hiddenAt < 50) return; // 壓制：剛因點擊外部而關閉
+    const ta   = e.currentTarget;
+    const term = ta.value.slice(ta.selectionStart, ta.selectionEnd).trim();
+    if (!term) { _hideFab(); return; }
+    _showFab(e.clientX - 30, e.clientY - 46, term);
+  });
+
+  // 在 readerContent div 上反白
+  $("readerContent")?.addEventListener("mouseup", () => {
+    if (Date.now() - _hiddenAt < 50) return;
+    const sel  = window.getSelection();
+    const term = sel?.toString().trim();
+    if (!term) { _hideFab(); return; }
+    const rect = sel.getRangeAt(0).getBoundingClientRect();
+    _showFab(rect.left + rect.width / 2 - 30, rect.top - 46, term);
+  });
+
+  // 點擊 FAB → 先記錄位置再隱藏，位置傳給結果卡使用
+  selFab?.addEventListener("click", async () => {
+    const fabRect = selFab.getBoundingClientRect(); // 隱藏前先記座標
+    cleanupAnalysisButton();
+    _clearSelection();
+    _hiddenAt = Date.now();
+    await UI.handleSelectionAnalyze?.(_selTerm, fabRect);
+  });
+
+  // 全域 mousedown 監聽：點擊非 FAB / 非結果卡的任何位置 → 清除按鈕
+  // 必須用 mousedown（不能用 click）：click 在 mouseup 之後觸發，
+  // 會把 mouseup 剛顯示的 FAB 立即再隱藏，導致選字無效。
+  document.addEventListener("mousedown", (e) => {
+    if (!selFab?.contains(e.target) && !selResult?.contains(e.target)) {
+      _hideFab();
+    }
+  });
+
+  // selectionchange：選取範圍消失時立即清除殘留的 FAB（不動結果卡）
+  document.addEventListener("selectionchange", () => {
+    const taActive = document.activeElement === $("articleInput");
+    if (taActive) return; // textarea 的 selectionchange 由 mouseup 自行管理
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed || !sel.toString().trim()) {
+      if (selFab) selFab.style.display = "none";
+    }
+  });
 }
 
 document.addEventListener("DOMContentLoaded", () => {
   console.log("[WordGarden] DOM Ready");
 
+  initInputTabs();
   bindEvents();
 
-  UI.refreshUsageUI?.(); // ✅ 新增：一進頁面就用 localStorage 更新 badge
+  UI.refreshUsageUI?.();
   UI.renderSidebarLists?.();
   UI.refreshSyncUI?.();
-  // ✅ 不再自動載入/同步雲端：完全比照國考工具模式
+
+  // Google Sheets History 模組初始化（靜默）
+  initGSheetsHistory().catch(() => {});
+
+  // ── 文章輸入框：自動撐高（Auto-expanding textarea）──
+  // 原理：每次 input 先將 height 設為 'auto' 讓瀏覽器重算 scrollHeight，
+  // 再將 height 設為 scrollHeight，使框體隨內容無限向下延伸，不出現 scrollbar。
+  const articleTa = document.getElementById("articleInput");
+  if (articleTa) {
+    const autoResize = () => {
+      articleTa.style.height = "auto";
+      articleTa.style.height = articleTa.scrollHeight + "px";
+    };
+    articleTa.addEventListener("input", autoResize);
+    // paste 事件需等 DOM 更新後才能拿到正確 scrollHeight
+    articleTa.addEventListener("paste", () => setTimeout(autoResize, 0));
+  }
 });
 
 
