@@ -1,6 +1,10 @@
 // /js/main.js — ESM 入口：事件綁定 + 啟動（含測驗設定開關）
 import * as UI from "./ui.js";
 import { initGSheetsHistory, saveArticleHistory, getRecentArticles, deleteArticleHistory } from "./gsheets_history.js";
+import { APPS_SCRIPT_URL } from "./api.js";
+
+// 由 APPS_SCRIPT_URL（http://localhost:3000/api）推導出 /scrape 端點
+const SCRAPE_URL = APPS_SCRIPT_URL.replace(/\/api$/, "/scrape");
 
 
 
@@ -168,31 +172,67 @@ function bindEvents() {
   });
 
   // —— 網址抓取 ——
+  function _setUrlStatus(msg, type = "info") {
+    const el = $("urlStatus");
+    if (!el) return;
+    const styles = {
+      info:    "background:#F3F4F1;color:#6B7280;",
+      success: "background:#EEF2E8;color:#7a9068;",
+      error:   "background:#FEF2F2;color:#C0392B;",
+      youtube: "background:#FFF7ED;color:#92400E;",
+    };
+    el.style.cssText = styles[type] || styles.info;
+    el.textContent = msg;
+    el.classList.toggle("hidden", !msg);
+  }
+
   on("urlFetchBtn", "click", async () => {
     const url = $("urlInput")?.value.trim();
-    if (!url) return alert("請輸入網址");
+    if (!url) { _setUrlStatus("請輸入網址", "error"); return; }
+
+    // YouTube：無法自動擷取字幕，改顯示操作說明
+    if (/youtube\.com|youtu\.be/i.test(url)) {
+      _setUrlStatus(
+        "YouTube 影片無法自動擷取字幕。請至 YouTube 頁面點選「⋯更多」→「開啟逐字稿」，選取全文後複製，再切換到「手動輸入」貼上。",
+        "youtube"
+      );
+      return;
+    }
+
     const btn = $("urlFetchBtn");
-    const old = btn.textContent;
     btn.textContent = "抓取中…";
     btn.disabled = true;
+    _setUrlStatus("正在擷取網頁內容…", "info");
+
     try {
-      const res = await fetch("/scrape", {
+      const res = await fetch(SCRAPE_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url }),
       });
       const data = await res.json();
-      if (!data.ok) return alert("擷取失敗：" + data.error);
+
+      if (!data.ok) {
+        _setUrlStatus(data.error, "error");
+        return;
+      }
 
       // 切到「手動輸入」Tab，把文字填入輸入框
       $("inputTabManual")?.click();
       const ta = $("articleInput");
       if (ta) ta.value = data.text;
-      alert(`✅ 已成功擷取 ${data.text.length} 字，可點「🧠 讓 AI 挑單字」開始分析！`);
+      $("urlInput").value = "";
+      _setUrlStatus("", "");
+      UI.showToast?.(`已擷取 ${data.text.length} 字，可點「讓 AI 挑單字」開始分析！`, { duration: 4000 });
     } catch (e) {
-      alert("網路錯誤：" + e.message);
+      _setUrlStatus(
+        navigator.onLine
+          ? "無法連接本機伺服器，請確認 server.js 已啟動（node server.js）。"
+          : "無網路連線，請檢查網路狀態。",
+        "error"
+      );
     } finally {
-      btn.textContent = old;
+      btn.textContent = "擷取內容";
       btn.disabled = false;
     }
   });

@@ -410,16 +410,15 @@
 
           <!-- Panel②：網址 / YT -->
           <div id="inputPanelUrl" class="hidden space-y-3">
-            <p class="text-sm text-gray-400">貼上網址或 YouTube 連結，AI 將自動擷取文章內容進行分析。</p>
+            <p class="text-sm text-gray-400">貼上網址或 YouTube 連結，自動擷取文章內容。</p>
             <div class="flex gap-2">
               <input id="urlInput" type="url"
-                class="flex-1 p-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#7C96AB] focus:ring-2 focus:ring-[#7C96AB]/20"
+                class="flex-1 p-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#A3B18A] focus:ring-2 focus:ring-[#A3B18A]/20"
                 placeholder="https://…">
               <button id="urlFetchBtn" class="btn-primary-m">擷取內容</button>
             </div>
-            <p class="text-xs text-gray-400 bg-gray-50 rounded-lg px-3 py-2">
-              此功能正在開發中，敬請期待。
-            </p>
+            <!-- 動態狀態：成功 / 錯誤 / YouTube 提示 -->
+            <div id="urlStatus" class="hidden text-xs rounded-lg px-3 py-2 leading-relaxed"></div>
           </div>
 
           <!-- Panel③：我的圖書館 -->
