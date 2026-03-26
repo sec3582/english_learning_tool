@@ -203,7 +203,6 @@ function extractYouTubeId(url) {
 
 // ====== YouTube 字幕擷取（多方法備援）======
 async function fetchYouTubeTranscript(videoId) {
-  // --- 內部工具：把字幕 XML 轉純文字 ---
   function xmlToText(xml) {
     return xml
       .replace(/<text[^>]*>/g, " ")
@@ -216,8 +215,39 @@ async function fetchYouTubeTranscript(videoId) {
       .trim();
   }
 
-  // --- 方法一：timedtext list API ---
-  console.log(`[YouTube] 方法一 timedtext list videoId=${videoId}`);
+  async function tryInnerTube(clientName, clientVersion, extraHeaders = {}, extraBody = {}) {
+    const res = await fetch("https://www.youtube.com/youtubei/v1/player", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...extraHeaders },
+      body: JSON.stringify({
+        videoId,
+        racyCheckOk: true,
+        contentCheckOk: true,
+        context: {
+          client: { clientName, clientVersion, hl: "en", gl: "US", ...extraBody },
+        },
+      }),
+      signal: AbortSignal.timeout(15000),
+    });
+    console.log(`[YouTube] ${clientName} HTTP ${res.status}`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data?.captions?.playerCaptionsTracklistRenderer?.captionTracks || [];
+  }
+
+  async function fetchTrackText(tracks) {
+    const track = tracks.find(t => /^en/i.test(t.languageCode)) || tracks[0];
+    if (!track?.baseUrl) return null;
+    console.log(`[YouTube] 選用字幕軌: ${track.languageCode}`);
+    const xmlRes = await fetch(track.baseUrl, { signal: AbortSignal.timeout(10000) });
+    if (!xmlRes.ok) return null;
+    const text = xmlToText(await xmlRes.text());
+    return text.length > 50 ? text : null;
+  }
+
+  console.log(`[YouTube] videoId=${videoId}`);
+
+  // 方法一：timedtext list（最輕量，有些影片支援）
   try {
     const listRes = await fetch(
       `https://www.youtube.com/api/timedtext?v=${videoId}&type=list`,
@@ -225,11 +255,10 @@ async function fetchYouTubeTranscript(videoId) {
     );
     if (listRes.ok) {
       const listXml = await listRes.text();
-      // 找 lang_code="en" 或第一個 track
+      console.log(`[YouTube] timedtext list: ${listXml.slice(0, 200)}`);
       const enMatch = listXml.match(/lang_code="(en[^"]*)"/);
       const anyMatch = listXml.match(/lang_code="([^"]+)"/);
       const lang = (enMatch || anyMatch)?.[1];
-      console.log(`[YouTube] 方法一可用語言: ${lang || "無"}`);
       if (lang) {
         const xmlRes = await fetch(
           `https://www.youtube.com/api/timedtext?v=${videoId}&lang=${lang}`,
@@ -237,108 +266,46 @@ async function fetchYouTubeTranscript(videoId) {
         );
         if (xmlRes.ok) {
           const text = xmlToText(await xmlRes.text());
-          if (text.length > 50) {
-            console.log(`[YouTube] 方法一成功 (${text.length} chars)`);
-            return text;
-          }
+          if (text.length > 50) { console.log(`[YouTube] 方法一成功`); return text; }
         }
       }
     }
-  } catch (e) {
-    console.log("[YouTube] 方法一失敗:", e.message);
-  }
+  } catch (e) { console.log("[YouTube] 方法一例外:", e.message); }
 
-  // --- 方法二：InnerTube ANDROID client ---
-  console.log(`[YouTube] 方法二 InnerTube ANDROID`);
+  // 方法二：WEB_EMBEDDED_PLAYER（嵌入播放器，限制較少）
   try {
-    const androidRes = await fetch(
-      "https://www.youtube.com/youtubei/v1/player",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "User-Agent": "com.google.android.youtube/19.09.37 (Linux; U; Android 11) gzip",
-          "X-YouTube-Client-Name": "3",
-          "X-YouTube-Client-Version": "19.09.37",
-        },
-        body: JSON.stringify({
-          videoId,
-          context: {
-            client: {
-              clientName: "ANDROID",
-              clientVersion: "19.09.37",
-              androidSdkVersion: 30,
-              hl: "en",
-              gl: "US",
-            },
-          },
-        }),
-        signal: AbortSignal.timeout(15000),
-      }
-    );
-    if (androidRes.ok) {
-      const data = await androidRes.json();
-      const tracks = data?.captions?.playerCaptionsTracklistRenderer?.captionTracks || [];
-      console.log(`[YouTube] 方法二字幕軌:`, tracks.map(t => t.languageCode));
-      const track = tracks.find(t => /^en/i.test(t.languageCode)) || tracks[0];
-      if (track?.baseUrl) {
-        const xmlRes = await fetch(track.baseUrl, { signal: AbortSignal.timeout(10000) });
-        if (xmlRes.ok) {
-          const text = xmlToText(await xmlRes.text());
-          if (text.length > 50) {
-            console.log(`[YouTube] 方法二成功 (${text.length} chars)`);
-            return text;
-          }
-        }
-      }
-    }
-  } catch (e) {
-    console.log("[YouTube] 方法二失敗:", e.message);
-  }
+    const tracks = await tryInnerTube("WEB_EMBEDDED_PLAYER", "2.20240101.00.00", {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+      "Origin": "https://www.youtube.com",
+      "Referer": `https://www.youtube.com/watch?v=${videoId}`,
+    });
+    console.log(`[YouTube] WEB_EMBEDDED 字幕軌:`, tracks.map(t => t.languageCode));
+    if (tracks.length) { const t = await fetchTrackText(tracks); if (t) { console.log("[YouTube] 方法二成功"); return t; } }
+  } catch (e) { console.log("[YouTube] 方法二例外:", e.message); }
 
-  // --- 方法三：InnerTube TV client ---
-  console.log(`[YouTube] 方法三 InnerTube TVHTML5`);
+  // 方法三：iOS client（歷史上最不受限）
   try {
-    const tvRes = await fetch(
-      "https://www.youtube.com/youtubei/v1/player",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          videoId,
-          context: {
-            client: {
-              clientName: "TVHTML5",
-              clientVersion: "7.20240101.00.00",
-              hl: "en",
-              gl: "US",
-            },
-          },
-        }),
-        signal: AbortSignal.timeout(15000),
-      }
-    );
-    if (tvRes.ok) {
-      const data = await tvRes.json();
-      const tracks = data?.captions?.playerCaptionsTracklistRenderer?.captionTracks || [];
-      console.log(`[YouTube] 方法三字幕軌:`, tracks.map(t => t.languageCode));
-      const track = tracks.find(t => /^en/i.test(t.languageCode)) || tracks[0];
-      if (track?.baseUrl) {
-        const xmlRes = await fetch(track.baseUrl, { signal: AbortSignal.timeout(10000) });
-        if (xmlRes.ok) {
-          const text = xmlToText(await xmlRes.text());
-          if (text.length > 50) {
-            console.log(`[YouTube] 方法三成功 (${text.length} chars)`);
-            return text;
-          }
-        }
-      }
-    }
-  } catch (e) {
-    console.log("[YouTube] 方法三失敗:", e.message);
-  }
+    const tracks = await tryInnerTube("IOS", "19.09.3", {
+      "User-Agent": "com.google.ios.youtube/19.09.3 (iPhone16,2; U; CPU iOS 17_4 like Mac OS X)",
+      "X-YouTube-Client-Name": "5",
+      "X-YouTube-Client-Version": "19.09.3",
+    }, { deviceModel: "iPhone16,2", osName: "iPhone", osVersion: "17.4" });
+    console.log(`[YouTube] IOS 字幕軌:`, tracks.map(t => t.languageCode));
+    if (tracks.length) { const t = await fetchTrackText(tracks); if (t) { console.log("[YouTube] 方法三成功"); return t; } }
+  } catch (e) { console.log("[YouTube] 方法三例外:", e.message); }
 
-  throw new Error("此影片沒有可擷取的英文字幕（三種方法均失敗）");
+  // 方法四：ANDROID
+  try {
+    const tracks = await tryInnerTube("ANDROID", "19.09.37", {
+      "User-Agent": "com.google.android.youtube/19.09.37 (Linux; U; Android 11) gzip",
+      "X-YouTube-Client-Name": "3",
+      "X-YouTube-Client-Version": "19.09.37",
+    }, { androidSdkVersion: 30 });
+    console.log(`[YouTube] ANDROID 字幕軌:`, tracks.map(t => t.languageCode));
+    if (tracks.length) { const t = await fetchTrackText(tracks); if (t) { console.log("[YouTube] 方法四成功"); return t; } }
+  } catch (e) { console.log("[YouTube] 方法四例外:", e.message); }
+
+  throw new Error("此影片沒有可擷取的英文字幕");
 }
 
 // ====== URL 網頁內容抓取（代理，解決 CORS 問題）======
