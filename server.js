@@ -8,6 +8,7 @@ import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { YoutubeTranscript } from "youtube-transcript";
 
 // ESM 環境下取得 __dirname（CommonJS 才有內建，ESM 需自行計算）
 const __filename = fileURLToPath(import.meta.url);
@@ -195,18 +196,46 @@ app.post("/api", async (req, res) => {
   }
 });
 
+// ====== 工具：從 YouTube URL 取出 video ID ======
+function extractYouTubeId(url) {
+  const m = url.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([A-Za-z0-9_-]{11})/);
+  return m ? m[1] : null;
+}
+
 // ====== URL 網頁內容抓取（代理，解決 CORS 問題）======
 app.post("/scrape", async (req, res) => {
   const { url } = req.body || {};
   if (!url) return res.status(400).json({ ok: false, error: "缺少 url 欄位" });
 
+  // ── YouTube：使用 youtube-transcript 擷取字幕 ──
   if (/youtube\.com|youtu\.be/i.test(url)) {
-    return res.status(400).json({
-      ok: false,
-      error: "YouTube 暫不支援自動字幕擷取。\n請在 YouTube 頁面點選「⋯」→「開啟逐字稿」，手動複製後貼入輸入框。",
-    });
+    const videoId = extractYouTubeId(url);
+    if (!videoId) {
+      return res.status(400).json({ ok: false, error: "無法解析 YouTube 影片 ID，請確認網址格式。" });
+    }
+    try {
+      const segments = await YoutubeTranscript.fetchTranscript(videoId, { lang: "en" });
+      const text = segments
+        .map(s => s.text.trim())
+        .join(" ")
+        .replace(/\[.*?\]/g, "")   // 移除 [Music] [Applause] 等標記
+        .replace(/\s{2,}/g, " ")
+        .trim()
+        .slice(0, 8000);
+
+      if (text.length < 50) {
+        return res.status(400).json({ ok: false, error: "此影片沒有英文字幕（或字幕已停用）。" });
+      }
+      return res.json({ ok: true, text, source: "youtube" });
+    } catch (err) {
+      return res.status(400).json({
+        ok: false,
+        error: "無法取得字幕，可能原因：影片無英文字幕、影片為私人或受限。",
+      });
+    }
   }
 
+  // ── 一般網頁：抓 HTML 並清理 ──
   try {
     const response = await fetch(url, {
       headers: {

@@ -190,15 +190,6 @@ function bindEvents() {
     const url = $("urlInput")?.value.trim();
     if (!url) { _setUrlStatus("請輸入網址", "error"); return; }
 
-    // YouTube：無法自動擷取字幕，改顯示操作說明
-    if (/youtube\.com|youtu\.be/i.test(url)) {
-      _setUrlStatus(
-        "YouTube 影片無法自動擷取字幕。請至 YouTube 頁面點選「⋯更多」→「開啟逐字稿」，選取全文後複製，再切換到「手動輸入」貼上。",
-        "youtube"
-      );
-      return;
-    }
-
     const btn = $("urlFetchBtn");
     btn.textContent = "抓取中…";
     btn.disabled = true;
