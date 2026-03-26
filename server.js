@@ -203,21 +203,53 @@ function extractYouTubeId(url) {
 
 // ====== YouTube 字幕擷取（自製，不依賴第三方套件）======
 async function fetchYouTubeTranscript(videoId) {
-  // 1. 抓 YouTube 頁面 HTML
+  const commonHeaders = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "Accept-Language": "en-US,en;q=0.9",
+  };
+
+  // 方法一：先用 timedtext API 直接嘗試
+  const timedtextUrl = `https://www.youtube.com/api/timedtext?v=${videoId}&lang=en&fmt=json3`;
+  try {
+    const ttRes = await fetch(timedtextUrl, { headers: commonHeaders, signal: AbortSignal.timeout(10000) });
+    if (ttRes.ok) {
+      const ttData = await ttRes.json();
+      const events = ttData?.events || [];
+      const text = events
+        .flatMap(e => (e.segs || []).map(s => s.utf8 || ""))
+        .join(" ")
+        .replace(/\n/g, " ")
+        .replace(/\[.*?\]/g, "")
+        .replace(/\s{2,}/g, " ")
+        .trim();
+      if (text.length > 50) {
+        console.log(`[YouTube] timedtext API 成功 (${text.length} chars)`);
+        return text;
+      }
+    }
+  } catch (e) {
+    console.log("[YouTube] timedtext API 失敗，改用頁面解析:", e.message);
+  }
+
+  // 方法二：抓 YouTube 頁面 HTML，解析 captionTracks
+  console.log(`[YouTube] 嘗試頁面解析 videoId=${videoId}`);
   const pageRes = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
-    headers: {
-      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-      "Accept-Language": "en-US,en;q=0.9",
-    },
-    signal: AbortSignal.timeout(15000),
+    headers: { ...commonHeaders, "Accept": "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8" },
+    signal: AbortSignal.timeout(20000),
   });
   if (!pageRes.ok) throw new Error(`無法開啟 YouTube 頁面（HTTP ${pageRes.status}）`);
 
   const html = await pageRes.text();
+  console.log(`[YouTube] 頁面大小: ${html.length} bytes`);
 
-  // 2. 找 captionTracks 陣列（用括號計數法取完整 JSON）
   const idx = html.indexOf('"captionTracks":[');
-  if (idx === -1) throw new Error("此影片沒有字幕（或字幕已停用）");
+  if (idx === -1) {
+    // 檢查是否被機器人偵測
+    if (html.includes("captcha") || html.includes("unusual traffic")) {
+      throw new Error("YouTube 封鎖了伺服器請求（機器人偵測）");
+    }
+    throw new Error("此影片沒有字幕（captionTracks 不存在）");
+  }
 
   const arrStart = html.indexOf('[', idx);
   let depth = 0, arrEnd = arrStart;
@@ -227,16 +259,15 @@ async function fetchYouTubeTranscript(videoId) {
   }
 
   const tracks = JSON.parse(html.slice(arrStart, arrEnd));
+  console.log(`[YouTube] 找到 ${tracks.length} 條字幕軌:`, tracks.map(t => t.languageCode));
 
-  // 3. 優先選英文字幕，其次取第一條
   const track = tracks.find(t => /^en/i.test(t.languageCode)) || tracks[0];
   if (!track?.baseUrl) throw new Error("找不到可用的字幕軌");
 
-  // YouTube 在 HTML 裡用 \u0026 代替 &
   const captionUrl = track.baseUrl.replace(/\\u0026/g, "&");
+  console.log(`[YouTube] 選用字幕軌: ${track.languageCode}`);
 
-  // 4. 抓字幕 XML 並轉成純文字
-  const xmlRes = await fetch(captionUrl, { signal: AbortSignal.timeout(10000) });
+  const xmlRes = await fetch(captionUrl, { headers: commonHeaders, signal: AbortSignal.timeout(10000) });
   if (!xmlRes.ok) throw new Error("字幕資料擷取失敗");
   const xml = await xmlRes.text();
 
@@ -246,7 +277,7 @@ async function fetchYouTubeTranscript(videoId) {
     .replace(/<[^>]+>/g, "")
     .replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
     .replace(/&#39;/g, "'").replace(/&quot;/g, '"')
-    .replace(/\[.*?\]/g, "")   // 移除 [Music] [Applause] 等標記
+    .replace(/\[.*?\]/g, "")
     .replace(/\s{2,}/g, " ")
     .trim();
 }
@@ -269,9 +300,10 @@ app.post("/scrape", async (req, res) => {
       }
       return res.json({ ok: true, text: text.slice(0, 8000), source: "youtube" });
     } catch (err) {
+      console.error("[YouTube 字幕錯誤]", err.message);
       return res.status(400).json({
         ok: false,
-        error: "無法取得字幕，可能原因：影片無英文字幕、影片為私人或受限。",
+        error: `無法取得字幕：${err.message}`,
       });
     }
   }
