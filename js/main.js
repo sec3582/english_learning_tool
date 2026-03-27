@@ -2,6 +2,7 @@
 import * as UI from "./ui.js";
 import { initGSheetsHistory, saveArticleHistory, getRecentArticles, deleteArticleHistory } from "./gsheets_history.js";
 import { APPS_SCRIPT_URL, analyzeGrammar } from "./api.js";
+import { initPixelPet } from "./pixel_pet.js";
 
 // 由 APPS_SCRIPT_URL（http://localhost:3000/api）推導出 /scrape 端點
 const SCRAPE_URL = APPS_SCRIPT_URL.replace(/\/api$/, "/scrape");
@@ -552,6 +553,7 @@ document.addEventListener("DOMContentLoaded", () => {
   UI.refreshUsageUI?.();
   UI.renderSidebarLists?.();
   UI.refreshSyncUI?.();
+  initPixelPet();
 
   // Google Sheets History 模組初始化（靜默）
   initGSheetsHistory().catch(() => {});

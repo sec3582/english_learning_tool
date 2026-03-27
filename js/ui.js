@@ -1,9 +1,10 @@
 // js/ui.js（頂端 imports）
 import { analyzeArticle, extractJSON, getUsageSummary, getUsageBudget, setUsageBudget, resetUsageMonth, analyzeCustomWordAPI } from "./api.js";
-import { addWord, getAllWords, deleteWord, getTodayWords, getDueWords, getDueCount, saveAllWords, scheduleNext, ensureDueForAll, getMasteredCount, getDailyStats, getSyncMeta, clearDirtyAndSetLastSync } from "./storage.js";
+import { addWord, getAllWords, deleteWord, getTodayWords, getDueWords, getDueCount, saveAllWords, scheduleNext, ensureDueForAll, getMasteredCount, getSyncMeta, clearDirtyAndSetLastSync } from "./storage.js";
 import { speak, speakSequence } from "./speech.js";
 import { buildTypingQuestion, makeChoiceQuestion, makeDictationQuestion, grade, afterAnswerSpeech, pickExamplePair } from "./quiz.js";
 import { pushLocalStorageToSheets } from "./sheets_push.js";
+import { updatePetDisplay, onWordAdded, onReviewComplete } from "./pixel_pet.js";
 
 
 
@@ -319,6 +320,7 @@ export function handleSaveSelected(){
   const cbs = Array.from(document.querySelectorAll("input[name='word']:checked"));
   const current = getAllWords();
   const exists = new Set(current.map(w => (w.word||"").toLowerCase()));
+  let anyAdded = false;
 
   cbs.forEach(cb => {
     const { word, pos, definition, example1, example2, example2_zh, level } = cb.detail;
@@ -333,7 +335,7 @@ export function handleSaveSelected(){
       level: level || ""
     });
 
-    if (added) { markRowAsAdded(cb, false); } else { markRowAsAdded(cb, true); }
+    if (added) { markRowAsAdded(cb, false); anyAdded = true; } else { markRowAsAdded(cb, true); }
     exists.add(k);
   });
 
@@ -341,6 +343,7 @@ export function handleSaveSelected(){
 
   renderSidebarLists();
   hideFabBar();
+  if (anyAdded) onWordAdded();
 }
 
 /* ===== 右側列表 + 分頁 ===== */
@@ -1191,6 +1194,9 @@ function showQuizSummary(){
 
   document.getElementById("quizRetakeWrong")?.addEventListener("click", retakeWrong);
   document.getElementById("quizRetakeAll")?.addEventListener("click", retakeAll);
+
+  // PixelPet: react to quiz result (pass threshold: 60%)
+  onReviewComplete(acc >= 60, acc === 100);
 }
 
 
@@ -1253,12 +1259,7 @@ function startRetakeWith(queue){
 /* ===== Header／統計 ===== */
 function refreshMasteredAndChart(){
   const m = getMasteredCount(4); const badge = document.getElementById("masteredBadge"); if (badge) badge.textContent = m;
-  const svg = document.getElementById("statsSparkline"); if (!svg) return; const W = svg.viewBox.baseVal.width || 320, H = svg.viewBox.baseVal.height || 60, P = 4;
-  const data = getDailyStats(14); const maxY = Math.max(1, ...data.map(d => Math.max(d.added, d.reviewed))); const stepX = (W - P*2) / Math.max(1, data.length - 1); const y = v => H - P - (v / maxY) * (H - P*2);
-  function pathFor(key){ return data.map((d,i)=> `${i?"L":"M"}${P + i*stepX},${y(d[key])}`).join(" "); }
-  svg.innerHTML = ""; const mid = document.createElementNS("http://www.w3.org/2000/svg","line"); mid.setAttribute("x1","0"); mid.setAttribute("x2",String(W)); mid.setAttribute("y1",String(y(Math.ceil(maxY/2)))); mid.setAttribute("y2",String(y(Math.ceil(maxY/2)))); mid.setAttribute("stroke","#e5e7eb"); mid.setAttribute("stroke-dasharray","2 3"); svg.appendChild(mid);
-  const p1 = document.createElementNS("http://www.w3.org/2000/svg","path"); p1.setAttribute("d", pathFor("added")); p1.setAttribute("fill","none"); p1.setAttribute("stroke","#A3B18A"); p1.setAttribute("stroke-width","2"); svg.appendChild(p1);
-  const p2 = document.createElementNS("http://www.w3.org/2000/svg","path"); p2.setAttribute("d", pathFor("reviewed")); p2.setAttribute("fill","none"); p2.setAttribute("stroke","#BC9C7F"); p2.setAttribute("stroke-width","2"); svg.appendChild(p2);
+  updatePetDisplay();
 }
 
 /* ===== Sync 狀態（dirty / lastSync） ===== */

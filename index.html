@@ -765,14 +765,42 @@
 
         </div>
 
-      <!-- Stats card (14天) -->
-      <div id="statsCard" class="bg-white rounded-xl shadow p-6">
-          <div class="flex items-center justify-between mb-2">
-            <h3 class="sidebar-title">最近 14 天</h3>
-            <div class="text-xs text-gray-500">藍：新增　綠：複習</div>
+      <!-- PixelPet 像素電子雞 -->
+      <div id="pixelPetCard" class="bg-white rounded-xl shadow p-4">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="sidebar-title">像素電子雞</h3>
+          <div class="flex flex-col items-end gap-0.5">
+            <div id="petStageLabel" class="text-xs text-gray-500">小雞</div>
+            <div id="xpPct" class="font-bold tabular-nums text-gray-500" style="font-size:1rem;line-height:1.1">0/100</div>
           </div>
-          <svg id="statsSparkline" viewBox="0 0 320 60" class="w-full h-[60px]"></svg>
         </div>
+        <div class="flex justify-center mb-3" style="position:relative">
+          <div id="petBubble" class="pet-bubble" style="display:none"></div>
+          <div id="pixelPetArt" class="pet-art idle"></div>
+        </div>
+        <div class="space-y-1.5">
+          <div class="flex items-center gap-2 text-xs">
+            <span class="text-gray-400 shrink-0" style="width:2rem">飽食</span>
+            <div class="flex-1 rounded-full overflow-hidden" style="height:7px;background:#F0ECE6">
+              <div id="hungerBar" class="h-full rounded-full" style="background:#A3B18A;width:100%;transition:width .5s,background .5s"></div>
+            </div>
+            <span id="hungerPct" class="text-gray-400 shrink-0 tabular-nums" style="width:2.4rem;text-align:right">100%</span>
+          </div>
+          <div class="flex items-center gap-2 text-xs">
+            <span class="text-gray-400 shrink-0" style="width:2rem">心情</span>
+            <div class="flex-1 rounded-full overflow-hidden" style="height:7px;background:#F0ECE6">
+              <div id="moodBar" class="h-full rounded-full" style="background:#BC9C7F;width:100%;transition:width .5s,background .5s"></div>
+            </div>
+            <span id="moodPct" class="text-gray-400 shrink-0 tabular-nums" style="width:2.4rem;text-align:right">100%</span>
+          </div>
+          <div class="flex items-center gap-2 text-xs">
+            <span class="text-gray-400 shrink-0" style="width:2rem">XP</span>
+            <div class="flex-1 rounded-full overflow-hidden" style="height:7px;background:#F0ECE6">
+              <div id="xpBar" class="h-full rounded-full" style="background:#7BAEBA;width:0%;transition:width .5s"></div>
+            </div>
+          </div>
+        </div>
+      </div>
         <!-- Backup / Cloud card：匯入 / 匯出 / 雲端載入 / 雲端同步 -->
         <div id="backupCard" class="bg-white rounded-xl shadow p-6">
           <h3 class="sidebar-title mb-3">資料管理</h3>
@@ -988,6 +1016,7 @@
   <script type="module" src="js/main.js"></script>
 
 
+<div id="petPenalty" style="display:none"></div>
 </body>
 </html>
 

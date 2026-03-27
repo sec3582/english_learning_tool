@@ -160,3 +160,120 @@ button[title="播放"]:hover{ background:#eef1ea !important; color:#8d9b76 !impo
   }
 }
 
+
+/* ═══════════════════════════════════════════
+   PixelPet 像素電子雞
+   ═══════════════════════════════════════════ */
+
+.pixel-pet-frame {
+  background: #FAFAF5;
+  border: 3px solid #D4C4A0;
+  border-radius: 6px;
+  padding: 10px 18px 8px;
+  display: inline-block;
+  position: relative;
+}
+
+.pet-art {
+  width: 48px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pet-art svg {
+  width: 48px;
+  height: 60px;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* Idle: slow breathing bob */
+@keyframes pet-idle {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-4px); }
+}
+.pet-art.idle { animation: pet-idle 2s ease-in-out infinite; }
+
+/* Eating: fast peck */
+@keyframes pet-eating {
+  0%, 100% { transform: rotate(0deg) translateY(0); }
+  30%      { transform: rotate(-22deg) translateY(3px); }
+  60%      { transform: rotate(-8deg) translateY(1px); }
+}
+.pet-art.eating {
+  animation: pet-eating 0.35s ease-in-out infinite;
+  transform-origin: center bottom;
+}
+
+/* Happy: bounce + wiggle */
+@keyframes pet-happy {
+  0%, 100% { transform: translateY(0) scale(1) rotate(0deg); }
+  30%      { transform: translateY(-14px) scale(1.12) rotate(-8deg); }
+  60%      { transform: translateY(-10px) scale(1.08) rotate(8deg); }
+}
+.pet-art.happy { animation: pet-happy 0.55s ease-in-out infinite; }
+
+/* Slacking: droopy, desaturated */
+@keyframes pet-slacking {
+  0%, 100% { transform: translateY(4px) rotate(-4deg); }
+  50%      { transform: translateY(5px) rotate(-2deg); }
+}
+.pet-art.slacking {
+  animation: pet-slacking 3s ease-in-out infinite;
+  filter: saturate(0.55) brightness(0.9);
+}
+
+/* Sleeping: very slow breathe, dimmed */
+@keyframes pet-sleeping {
+  0%, 100% { transform: translateY(0) scaleY(1); }
+  50%      { transform: translateY(3px) scaleY(0.96); }
+}
+.pet-art.sleeping {
+  animation: pet-sleeping 3.5s ease-in-out infinite;
+  filter: saturate(0.2) brightness(0.72);
+}
+
+/* Head turn: quick horizontal flip */
+@keyframes pet-head-turn {
+  0%, 100% { transform: scaleX(1); }
+  35%, 65% { transform: scaleX(-1); }
+}
+.pet-art.head-turn { animation: pet-head-turn 0.7s ease-in-out; }
+
+
+/* Penalty corner decoration */
+#petPenalty {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.8;
+  display: none;
+  animation: pet-bubble-float 3s ease-in-out infinite;
+}
+
+/* Speech bubble (Zzz / ... / ♥) */
+.pet-bubble {
+  position: absolute;
+  top: 4px;
+  right: 95px;
+  background: #fff;
+  border: 2px solid #C8B899;
+  border-radius: 8px;
+  padding: 2px 7px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: monospace;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: pet-bubble-float 2s ease-in-out infinite;
+}
+
+@keyframes pet-bubble-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-3px); }
+}
+
