@@ -1286,14 +1286,14 @@ export function refreshSyncUI(){
 /* ===== Usage 面板 ===== */
 export function refreshUsageUI(){
   const s = getUsageSummary(); const budget = getUsageBudget(); const cost = (s.cost||0);
-  const badge = document.getElementById("usageCostBadge"); if (badge){ badge.textContent = cost.toFixed(2); const over = budget != null && cost >= budget; badge.parentElement?.classList.toggle("text-yellow-200", over && cost < (budget*1.2)); badge.parentElement?.classList.toggle("text-red-200", over && cost >= (budget*1.2)); }
+  const badge = document.getElementById("usageCostBadge"); if (badge){ badge.textContent = Math.ceil(cost); const over = budget != null && budget > 0 && cost >= budget; badge.parentElement?.classList.toggle("text-yellow-200", over && cost < (budget*1.2)); badge.parentElement?.classList.toggle("text-red-200", over && cost >= (budget*1.2)); }
   const elCost = document.getElementById("usageCostTotal"), elP = document.getElementById("usagePromptTokens"), elC = document.getElementById("usageCompletionTokens"), box = document.getElementById("usagePerModel");
-  if (elCost) elCost.textContent = cost.toFixed(2); if (elP) elP.textContent = (s.prompt_tokens||0).toLocaleString(); if (elC) elC.textContent = (s.completion_tokens||0).toLocaleString();
-  if (box){ box.innerHTML = ""; const models = s.perModel || {}; Object.keys(models).forEach(m=>{ const r = models[m]; const div = document.createElement("div"); div.textContent = `${m} — $${(r.cost||0).toFixed(2)} · P:${(r.prompt||0).toLocaleString()} / C:${(r.completion||0).toLocaleString()}`; box.appendChild(div); }); if (!Object.keys(models).length){ const div = document.createElement("div"); div.className="text-gray-500"; div.textContent = "尚無資料"; box.appendChild(div); } }
+  if (elCost) elCost.textContent = Math.ceil(cost); if (elP) elP.textContent = (s.prompt_tokens||0).toLocaleString(); if (elC) elC.textContent = (s.completion_tokens||0).toLocaleString();
+  if (box){ box.innerHTML = ""; const models = s.perModel || {}; Object.keys(models).forEach(m=>{ const r = models[m]; const div = document.createElement("div"); div.textContent = `${m} — NT$${Math.ceil(r.cost||0)} · P:${(r.prompt||0).toLocaleString()} / C:${(r.completion||0).toLocaleString()}`; box.appendChild(div); }); if (!Object.keys(models).length){ const div = document.createElement("div"); div.className="text-gray-500"; div.textContent = "尚無資料"; box.appendChild(div); } }
 }
 export function openUsageModal(){ const input = document.getElementById("usageBudgetInput"); const b = getUsageBudget(); if (input) input.value = b!=null?String(b):""; refreshUsageUI(); const m = document.getElementById("usageModal"); m?.classList.remove("hidden"); m?.classList.add("flex"); }
 export function closeUsageModal(){ const m = document.getElementById("usageModal"); m?.classList.add("hidden"); m?.classList.remove("flex"); }
-export function saveUsageBudget(){ const v = Number(document.getElementById("usageBudgetInput")?.value); if (isNaN(v)) return alert("請輸入數字（USD）"); setUsageBudget(v); refreshUsageUI(); alert("已儲存每月預算"); }
+export function saveUsageBudget(){ const v = Number(document.getElementById("usageBudgetInput")?.value); if (isNaN(v)) return alert("請輸入數字（TWD）"); setUsageBudget(v); refreshUsageUI(); alert("已儲存每月預算"); }
 export function resetUsage(){ resetUsageMonth(); refreshUsageUI(); alert("已重置本月估算（不影響 Gemini 真實用量）"); }
 
 // ===== 匯出 / 匯入 JSON：備份單字清單 =====

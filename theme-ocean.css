@@ -76,7 +76,10 @@ div.inline-flex.rounded-md.overflow-hidden.border > button:last-child{ border-ri
 
 /* Usage modal main close */
 #usageClose2{
-  background:#0b1020 !important; color:#fff !important; border-radius:12px; padding:.5rem .9rem; font-weight:600;
+  background:#8A9BA8 !important; color:#fff !important; border-radius:8px; padding:.5rem .9rem; font-weight:600;
+}
+#usageClose2:hover{
+  background:#7a8d9a !important;
 }
 
 /* Floating bar */

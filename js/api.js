@@ -6,6 +6,9 @@
 export const APPS_SCRIPT_URL = "http://localhost:3000/api";
 
 // ====== 用量統計（本機 localStorage）======
+// 匯率：1 USD = TWD
+const USD_TO_TWD = 32.5;
+
 // 模型單價（USD / 百萬 tokens）— 已從 OpenAI GPT-4o 改為 Google Gemini 系列費率
 // 參考：https://ai.google.dev/pricing
 const MODEL_PRICING = {
@@ -95,16 +98,16 @@ export function getUsageSummary() {
 
     const inputUSD = (inTok / 1_000_000) * price.inPerM;
     const outputUSD = (outTok / 1_000_000) * price.outPerM;
-    const sumUSD = inputUSD + outputUSD;
+    const sumTWD = (inputUSD + outputUSD) * USD_TO_TWD;
 
     prompt_tokens += inTok;
     completion_tokens += outTok;
-    cost += sumUSD;
+    cost += sumTWD;
 
     perModel[model] = {
       prompt: inTok,
       completion: outTok,
-      cost: sumUSD,
+      cost: sumTWD,
     };
   }
 
