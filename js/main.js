@@ -302,27 +302,16 @@ function bindEvents() {
   // 刪除復原
   on("undoBtn", "click", UI.undoLastDelete);
 
-  // —— 測驗（先開設定視窗） ——
-  on("startQuizBtn", "click", UI.openQuizModePicker);
-  on("quizClose", "click", UI.closeQuiz);                            // 關閉測驗視窗（原本就有）
-  on("qsCancel", "click", UI.closeQuizSettings);                     // 關閉設定
-  on("qsStart", "click", UI.startQuizFromSettings);                  // 用設定值開始測驗
+  // —— 測驗（直接開設定視窗） ——
+  on("startQuizBtn", "click", UI.openQuizSettings);
+  on("quizClose", "click", UI.closeQuiz);
+  on("qsCancel", "click", UI.closeQuizSettings);
+  on("qsStart", "click", UI.startQuizFromSettings);
   on("quizSubmit", "click", () => UI.submitQuizAnswer?.(false));
   on("quizIDK", "click", () => UI.submitQuizAnswer?.(true));
   on("quizNext", "click", () => {
     const modal = $("quizModal");
     if (modal) modal.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" }));
-  });
-  // 題型選擇視窗
-  on("qpClose", "click", UI.closeQuizModePicker);
-  document.getElementById("quizModePicker")?.addEventListener("click", (e) => {
-    const btn = e.target.closest("[data-mode]");
-    if (!btn) return;
-
-    e.preventDefault();
-    e.stopPropagation(); // ✅ 阻止同一次 click 觸發到其他「點背景關閉」的邏輯
-    
-    UI.startQuizFlowWithMode(btn.getAttribute("data-mode"));
   });
 
 
@@ -336,6 +325,12 @@ function bindEvents() {
   // —— 匯出 / 匯入 JSON 單字清單 ——
   on("exportJsonBtn", "click", UI.handleExportJson);
   on("importJsonBtn", "click", UI.handleImportJsonClick);
+
+  // —— AI 記憶輔助懸浮窗 ——
+  on("mnemonicClose", "click", UI.closeMnemonicModal);
+  $("mnemonicModal")?.addEventListener("click", (e) => {
+    if (e.target === $("mnemonicModal")) UI.closeMnemonicModal?.();
+  });
 
   // —— 反白選字浮動分析 FAB ——
   const selFab    = $("selectionFab");

@@ -88,12 +88,10 @@ export function startQuizFromSettings() {
   const cb = modal?.querySelector("#qs_showZh");
   QUIZ_PREF.audio = sel ? sel.value : "none";
   QUIZ_PREF.showZh = cb ? !!cb.checked : true;
+  QUIZ_PREF.mode = "typing";
   localStorage.setItem("quizPref", JSON.stringify(QUIZ_PREF));
 
-  // ✅ 先關掉設定視窗（讓畫面先更新）
   closeQuizSettings();
-
-  // ✅ 下一個 frame 再開始測驗，確保 modal 已消失
   requestAnimationFrame(() => startQuiz?.());
 }
 
@@ -163,6 +161,9 @@ export async function handleAnalyzeClick() {
   }
 }
 
+
+/* 語音圖示（主題色，用於 AI 建議列表「發音」按鈕） */
+const ICON_SPEAK = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>`;
 
 /* ===== AI 建議列表（整潔版；喇叭在第一行右側） ===== */
 export function renderWordSelection(words, articleText = "") {
@@ -391,7 +392,7 @@ function renderListDue(){
   if (duePage > totalPages) duePage = totalPages;
 
   const start = (duePage - 1) * DUE_PAGE_SIZE;
-  arr.slice(start, start + DUE_PAGE_SIZE).forEach(w => ul.appendChild(makeListItem(w, { showReview:true })));
+  arr.slice(start, start + DUE_PAGE_SIZE).forEach(w => ul.appendChild(makeListItem(w, { reviewMode: true })));
 
   const pager = document.getElementById("duePager");
   const info  = document.getElementById("duePageInfo");
@@ -517,10 +518,119 @@ export function gotoDueNext(){
 
 
 
+// ===== AI 記憶輔助懸浮窗 =====
+
+// 計算某單字的累計答錯次數（從 reviewLogs 讀取）
+function getWrongCount(word) {
+  try {
+    const logs = JSON.parse(localStorage.getItem("reviewLogs") || "[]");
+    const key = (word || "").toLowerCase();
+    return logs.filter(l => (l.word || "").toLowerCase() === key && !l.correct).length;
+  } catch { return 0; }
+}
+
+// 記憶輔助內容快取（localStorage）
+const _MNEMONIC_CACHE_KEY = "mnemonic_cache";
+function _getMnemonicCache() {
+  try { return JSON.parse(localStorage.getItem(_MNEMONIC_CACHE_KEY) || "{}"); } catch { return {}; }
+}
+function _setMnemonicCache(word, data) {
+  const c = _getMnemonicCache();
+  c[(word || "").toLowerCase()] = data;
+  localStorage.setItem(_MNEMONIC_CACHE_KEY, JSON.stringify(c));
+}
+
+async function _fetchMnemonic(word, options = {}) {
+  const { regen = false, prevMnemonic = null } = options;
+  const cache = _getMnemonicCache();
+  const hit = cache[(word || "").toLowerCase()];
+  if (hit && !regen) return hit;
+
+  const payload = { action: "mnemonicWord", term: word };
+  if (regen) payload.regen = true;
+  if (regen && prevMnemonic) payload.prevMnemonic = prevMnemonic;
+
+  const res = await fetch("http://localhost:3000/api", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  if (!data.ok) throw new Error(data.error || "API 錯誤");
+
+  const raw = typeof data.content === "string"
+    ? data.content.replace(/```(?:json)?/gi, "").replace(/```/g, "").trim()
+    : data.content;
+  const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+  _setMnemonicCache(word, parsed);
+  return parsed;
+}
+
+function _renderMnemonicBody(word, body, regenOptions = null) {
+  body.innerHTML = `<div class="mnemonic-loading"><span class="mnemonic-dot"></span><span class="mnemonic-dot"></span><span class="mnemonic-dot"></span></div>`;
+
+  const toChips = (str, cls) =>
+    (str || "").split(",")
+      .map(s => s.trim()).filter(s => s && s !== "無")
+      .map(s => `<span class="mnemonic-chip${cls ? " " + cls : ""}">${escapeHTML(s)}</span>`)
+      .join("");
+
+  _fetchMnemonic(word, regenOptions || {})
+    .then(d => {
+      const parts = (d.daily_example || "").split(" | ");
+      const eng = parts[0] || "";
+      const zh  = parts[1] || "";
+      const synChips = toChips(d.synonyms || "");
+      const antChips = toChips(d.antonyms || "", "mnemonic-chip--ant");
+
+      body.innerHTML = `
+        <div class="mnemonic-section">
+          <div class="mnemonic-label">語源拆解</div>
+          <div class="mnemonic-text">${escapeHTML(d.etymology || "")}</div>
+        </div>
+        <div class="mnemonic-section">
+          <div class="mnemonic-label">記憶口訣</div>
+          <div class="mnemonic-text mnemonic-highlight">${escapeHTML(d.mnemonic || "")}</div>
+        </div>
+        <div class="mnemonic-section">
+          <div class="mnemonic-label">生活例句</div>
+          <div class="mnemonic-text">${escapeHTML(eng)}</div>
+          ${zh ? `<div class="mnemonic-text mnemonic-zh">${escapeHTML(zh)}</div>` : ""}
+        </div>
+        ${synChips ? `<div class="mnemonic-section"><div class="mnemonic-label">同義字</div><div class="mnemonic-chips">${synChips}</div></div>` : ""}
+        ${antChips ? `<div class="mnemonic-section"><div class="mnemonic-label">反義字</div><div class="mnemonic-chips">${antChips}</div></div>` : ""}
+        <div class="mnemonic-regen-row">
+          <button class="mnemonic-regen" id="mnemonicRegen">沒感覺，換一個</button>
+        </div>`;
+
+      document.getElementById("mnemonicRegen")?.addEventListener("click", () => {
+        _renderMnemonicBody(word, body, { regen: true, prevMnemonic: d.mnemonic });
+      });
+    })
+    .catch(err => {
+      body.innerHTML = `<div class="mnemonic-error">無法生成輔助記憶：${escapeHTML(err.message)}</div>`;
+    });
+}
+
+export function showMnemonicModal(word) {
+  const modal = document.getElementById("mnemonicModal");
+  const title = document.getElementById("mnemonicTitle");
+  const body  = document.getElementById("mnemonicBody");
+  if (!modal) return;
+
+  title.textContent = word;
+  title.onclick = (e) => { e.stopPropagation(); speak(word); };
+  modal.classList.remove("hidden");
+  _renderMnemonicBody(word, body);
+}
+
+export function closeMnemonicModal() {
+  document.getElementById("mnemonicModal")?.classList.add("hidden");
+}
+
 // ===== 右側清單：可展開詳情（Morandi 扁平化） =====
 
 // SVG 圖示（Lucide outline 風格）
-const ICON_SPEAK = `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>`;
 const ICON_TRASH = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>`;
 const ICON_SAVE  = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>`;
 
@@ -551,11 +661,17 @@ function makeListItem(w, opts = {}) {
   titleArea.className = "wc-title";
   titleArea.style.cssText = "flex:1;min-width:0;";
   titleArea.innerHTML =
-    `<strong>${escapeHTML(w.word)}</strong>` +
+    `<strong class="wc-word">${escapeHTML(w.word)}</strong>` +
     `<div class="wc-meta">` +
       `<span class="wc-pos">${escapeHTML(posAbbr(w.pos) || "")}</span>` +
       `<span class="wc-def">— ${escapeHTML(w.definition || "")}</span>` +
     `</div>`;
+
+  // 單字文字點擊：播放發音；stopPropagation 防止觸發父層收闔
+  titleArea.querySelector(".wc-word").addEventListener("click", (e) => {
+    e.stopPropagation();
+    speak(w.word);
+  });
 
   // 展開箭頭
   const arrow = document.createElement("span");
@@ -573,16 +689,7 @@ function makeListItem(w, opts = {}) {
   const exMake    = w.example2 || w.example_ai || "";
   const exZh      = w.example2_zh || w.example_ai_zh || "";
 
-  // 1. 發音（SVG 喇叭，霧霾藍，無 emoji 無打字機字體）
-  const speakBtn = document.createElement("button");
-  speakBtn.type = "button";
-  speakBtn.className = "wc-speak";
-  speakBtn.title = "播放發音";
-  speakBtn.innerHTML = ICON_SPEAK;
-  speakBtn.addEventListener("click", (e) => { e.stopPropagation(); speak(w.word); });
-  details.appendChild(speakBtn);
-
-  // 2. 文章例句（正常字體，次要文字色 #7A7A7A，line-height 1.6）
+  // 1. 文章例句（正常字體，次要文字色 #7A7A7A，line-height 1.6）
   if (exArticle) {
     const artEx = document.createElement("p");
     artEx.className = "wc-article";
@@ -610,27 +717,31 @@ function makeListItem(w, opts = {}) {
     details.appendChild(aiSection);
   }
 
-  // 4. 底部操作列（淡分隔線；刪除 hover → 莫蘭迪紅 #D98C8C；存檔 hover → 霧霾藍）
-  const btnRow = document.createElement("div");
-  btnRow.className = "wc-footer";
+  // 4. 複習模式：AI 記憶輔助按鈕（全部顯示）
+  if (opts.reviewMode) {
+    const helpBtn = document.createElement("button");
+    helpBtn.type = "button";
+    helpBtn.className = "wc-ai-help";
+    helpBtn.textContent = "幫助複習";
+    helpBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      showMnemonicModal(w.word);
+    });
+    details.appendChild(helpBtn);
+  }
 
-  const delBtn = document.createElement("button");
-  delBtn.type = "button";
-  delBtn.setAttribute("data-act", "del");
-  delBtn.className = "wc-btn-del";
-  delBtn.innerHTML = `${ICON_TRASH} 刪除`;
-  btnRow.appendChild(delBtn);
-
-  if (opts.showReview) {
+  // 5. 底部操作列（僅在有存檔按鈕時才顯示，複習模式略過）
+  if (opts.showReview && !opts.reviewMode) {
+    const btnRow = document.createElement("div");
+    btnRow.className = "wc-footer";
     const saveBtn = document.createElement("button");
     saveBtn.type = "button";
     saveBtn.setAttribute("data-act", "review");
     saveBtn.className = "wc-btn-save";
     saveBtn.innerHTML = `${ICON_SAVE} 存檔`;
     btnRow.appendChild(saveBtn);
+    details.appendChild(btnRow);
   }
-
-  details.appendChild(btnRow);
 
   // 點標題行切換展開
   header.addEventListener("click", (e) => {
@@ -639,15 +750,6 @@ function makeListItem(w, opts = {}) {
     arrow.textContent = details.classList.contains("hidden") ? "▸" : "▾";
   });
 
-  delBtn.addEventListener("click", () => {
-    const deleted = deleteWord(w.word);
-    if (deleted) {
-      lastDeleted = deleted;
-      showUndoToast(`已刪除「${w.word}」`);
-      unmarkRowByWord(w.word);
-      renderSidebarLists();
-    }
-  });
   details.querySelector("[data-act='review']")?.addEventListener("click", () => {
     scheduleNext(w.word, true);
     renderSidebarLists();
@@ -657,6 +759,27 @@ function makeListItem(w, opts = {}) {
   row.className = "wc-card";
   row.appendChild(header);
   row.appendChild(details);
+
+  // 字卡右下角刪除按鈕（hover 才顯示；複習模式下不顯示）
+  if (!opts.reviewMode) {
+    const delBtn = document.createElement("button");
+    delBtn.type = "button";
+    delBtn.className = "wc-del-corner";
+    delBtn.title = "刪除此單字";
+    delBtn.innerHTML = ICON_TRASH;
+    delBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const deleted = deleteWord(w.word);
+      if (deleted) {
+        lastDeleted = deleted;
+        showUndoToast(`已刪除「${w.word}」`);
+        unmarkRowByWord(w.word);
+        renderSidebarLists();
+      }
+    });
+    row.appendChild(delBtn);
+  }
+
   li.appendChild(row);
   return li;
 }
@@ -831,7 +954,7 @@ function showQuizQuestion(){
     document.getElementById("quizPrompt").innerHTML = `
       <div class="space-y-2">
         <div class="flex items-center gap-2">
-          <button id="qPlay" class="px-2 py-1 rounded border">🔊 播放</button>
+          <button id="qPlay" class="px-2 py-1 rounded border inline-flex items-center gap-1" style="color:#8F9A78;border-color:#8F9A78;"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg> 播放</button>
           <span class="text-sm text-gray-500">聽完輸入答案</span>
         </div>
         ${q.hintZh ? `<div class="text-sm text-amber-700">提示：${q.hintZh}</div>` : ""}
@@ -917,10 +1040,10 @@ export function submitQuizAnswer(asWrong = false) {
     const fb = document.getElementById("quizFeedback");
     if (correct) {
       quizScore++;
-      if (fb) fb.innerHTML = `<span class="text-green-600">✅ 正確！</span>`;
+      if (fb) fb.innerHTML = `<span class="text-green-600">正確！</span>`;
     } else {
       if (fb) fb.innerHTML =
-        `<span class="text-red-600">❌ 錯誤，答案是 <strong>${w.word}</strong></span>`;
+        `<span class="text-red-600">錯誤，答案是 <strong>${w.word}</strong></span>`;
 
       const pairForWrong = pickExamplePair(w, { showZh: !!QUIZ_PREF.showZh });
       wrongAnswers.push({
@@ -1022,16 +1145,16 @@ function showQuizSummary(){
   const prompt = document.getElementById("quizPrompt");
   prompt.innerHTML = `
     <div class="space-y-3">
-      <div class="text-lg font-semibold">✅ 測驗完成</div>
+      <div class="text-lg sidebar-title">測驗完成</div>
       <div class="text-sm text-gray-700">
         總題數：${total}　答對：${right}　答錯：${wrong}　正確率：${acc}%
       </div>
       ${isChoiceMode
         ? "" // 選擇題不顯示任何錯題詳情
-        : (wrongHTML || `<div class="text-sm text-emerald-700">太強了！全對 👏</div>`)}
+        : (wrongHTML || `<div class="text-sm" style="color:#8F9A78;">太強了！全對</div>`)}
       <div class="flex gap-2 pt-2">
-        <button id="quizRetakeWrong" class="px-3 py-2 rounded bg-amber-500 text-white disabled:opacity-50" ${wrong===0?'disabled':''}>只重測錯題</button>
-        <button id="quizRetakeAll" class="px-3 py-2 rounded bg-blue-600 text-white">全部重測</button>
+        <button id="quizRetakeWrong" class="px-3 py-2 rounded quiz-btn-next disabled:opacity-50" ${wrong===0?'disabled':''}>只重測錯題</button>
+        <button id="quizRetakeAll" class="px-3 py-2 rounded quiz-btn-primary">全部重測</button>
       </div>
     </div>`;
 
@@ -1317,6 +1440,39 @@ export async function handleRunOcr() {
   await doOCR(_lastOcrFile);
 }
 
+// OCR 文字清理：移除排版產生的不正常斷行，還原自然段落結構
+function cleanOcrText(raw) {
+  const lines = raw.replace(/\r\n/g, "\n").split("\n").map(l => l.trim());
+  const paragraphs = [];
+  let current = [];
+
+  for (const line of lines) {
+    if (!line) {
+      // 空行 → 段落邊界
+      if (current.length) { paragraphs.push(current.join(" ")); current = []; }
+      continue;
+    }
+
+    if (current.length > 0) {
+      const prev = current[current.length - 1];
+      // 前一行以句末標點結尾，且本行以大寫或引號開頭 → 視為新段落
+      const prevEndsSentence = /[.!?]["'""»]?$/.test(prev);
+      const thisStartsUpper  = /^[A-Z"'"'(]/.test(line);
+      if (prevEndsSentence && thisStartsUpper) {
+        paragraphs.push(current.join(" "));
+        current = [line];
+        continue;
+      }
+    }
+
+    // 其餘情況：同一段落內的排版換行，合併為一行
+    current.push(line);
+  }
+
+  if (current.length) paragraphs.push(current.join(" "));
+  return paragraphs.join("\n\n");
+}
+
 async function doOCR(file) {
   const status = document.getElementById("ocrStatus");
   const runBtn = document.getElementById("ocrRunBtn");
@@ -1341,11 +1497,13 @@ async function doOCR(file) {
     const ret = await worker.recognize(file);
     await worker.terminate();
 
-    const text = (ret?.data?.text || "").trim();
-    if (!text) {
+    const rawText = (ret?.data?.text || "").trim();
+    if (!rawText) {
       status.textContent = "沒有辨識到文字，請換張更清晰的圖片";
       return;
     }
+
+    const text = cleanOcrText(rawText);
 
     const ta = document.getElementById("articleInput");
     if (!ta) return alert("找不到 articleInput");
@@ -1421,8 +1579,33 @@ const LIBRARY_PAGE_SIZE = 10;
 let _libraryAllArticles = [];
 let _libraryPage = 0;
 
+// ── 自訂標題覆寫（localStorage 持久化）──
+const _TITLE_KEY = "library_title_overrides";
+function _getTitleOverrides() {
+  try { return JSON.parse(localStorage.getItem(_TITLE_KEY) || "{}"); } catch { return {}; }
+}
+function _setTitleOverride(sheetRowIndex, newTitle, originalTitle) {
+  const map = _getTitleOverrides();
+  if (newTitle && newTitle !== originalTitle) map[sheetRowIndex] = newTitle;
+  else delete map[sheetRowIndex];
+  localStorage.setItem(_TITLE_KEY, JSON.stringify(map));
+  const a = _libraryAllArticles.find(x => x.sheetRowIndex === sheetRowIndex);
+  if (a) a.title = newTitle || originalTitle;
+}
+
 export function renderLibraryList(articles) {
-  _libraryAllArticles = articles || [];
+  // 依 savedAt 降冪排序（最新在前）
+  _libraryAllArticles = (articles || []).slice().sort((a, b) => {
+    const ta = a.savedAt ? new Date(a.savedAt).getTime() : 0;
+    const tb = b.savedAt ? new Date(b.savedAt).getTime() : 0;
+    return tb - ta;
+  });
+  // 套用 localStorage 標題覆寫，並保留原始標題供重置用
+  const overrides = _getTitleOverrides();
+  _libraryAllArticles.forEach(a => {
+    a._originalTitle = a.title;
+    if (overrides[a.sheetRowIndex]) a.title = overrides[a.sheetRowIndex];
+  });
   _libraryPage = 0;
   _renderLibraryPage_();
 }
@@ -1502,25 +1685,68 @@ function _renderLibraryPage_() {
       ? new Date(article.savedAt).toLocaleDateString("zh-TW", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
       : "";
 
+    // ── 左側文字區 ──
     const textArea = document.createElement("div");
-    textArea.className = "flex-1 min-w-0 cursor-pointer";
-    textArea.innerHTML = `
-      <div class="font-medium text-gray-800 truncate">${escapeHTML(article.title)}</div>
-      <div class="text-xs text-gray-400 mt-0.5">${escapeHTML(dateStr)}</div>
-    `;
-    textArea.addEventListener("click", () => showReaderMode(article));
+    textArea.className = "flex-1 min-w-0";
 
-    const trashBtn = document.createElement("button");
-    trashBtn.className = "flex-shrink-0 text-gray-300 hover:text-red-400 transition text-base px-1";
-    trashBtn.title = "刪除此文章";
-    trashBtn.textContent = "🗑️";
-    trashBtn.addEventListener("click", (e) => {
+    // 標題行（標題文字 + 鉛筆按鈕）
+    const titleRow = document.createElement("div");
+    titleRow.className = "flex items-center gap-1 min-w-0";
+
+    const titleEl = document.createElement("div");
+    titleEl.className = "font-medium text-gray-800 truncate flex-1 min-w-0 cursor-pointer";
+    titleEl.textContent = article.title;
+    titleEl.addEventListener("click", () => showReaderMode(article));
+
+    const pencilBtn = document.createElement("button");
+    pencilBtn.className = "lib-pencil";
+    pencilBtn.title = "編輯標題";
+    pencilBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+    pencilBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const originalTitle = article._originalTitle || article.title;
+      const input = document.createElement("input");
+      input.type = "text";
+      input.value = article.title;
+      input.className = "lib-title-input";
+      titleRow.replaceChild(input, titleEl);
+      pencilBtn.style.display = "none";
+      input.focus(); input.select();
+      const save = () => {
+        const val = input.value.trim() || originalTitle;
+        _setTitleOverride(article.sheetRowIndex, val, originalTitle);
+        _renderLibraryPage_();
+      };
+      input.addEventListener("blur", save);
+      input.addEventListener("keydown", ev => {
+        if (ev.key === "Enter") { ev.preventDefault(); save(); }
+        if (ev.key === "Escape") { ev.preventDefault(); _renderLibraryPage_(); }
+      });
+    });
+
+    titleRow.appendChild(titleEl);
+    titleRow.appendChild(pencilBtn);
+
+    const dateEl = document.createElement("div");
+    dateEl.className = "text-xs text-gray-400 mt-0.5 cursor-pointer";
+    dateEl.textContent = dateStr;
+    dateEl.addEventListener("click", () => showReaderMode(article));
+
+    textArea.appendChild(titleRow);
+    textArea.appendChild(dateEl);
+
+    // ── 右側刪除按鈕（hover 才顯示）──
+    const delBtn = document.createElement("button");
+    delBtn.className = "lib-delete";
+    delBtn.title = "刪除此文章";
+    delBtn.textContent = "×";
+    delBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       window.dispatchEvent(new CustomEvent("library-delete", { detail: { sheetRowIndex: article.sheetRowIndex, title: article.title } }));
     });
 
     item.appendChild(textArea);
-    item.appendChild(trashBtn);
+    item.appendChild(delBtn);
     container.appendChild(item);
   });
 

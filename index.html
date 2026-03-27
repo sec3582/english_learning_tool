@@ -111,11 +111,31 @@
   /* ─── 圖書館文章列表項 ─── */
   .library-item{
     display: flex; align-items: flex-start; gap: 10px;
-    padding: 10px 12px; border-radius: 10px;
-    border: 1px solid rgba(29,53,87,.08); background: #fafafa;
-    cursor: pointer; transition: background .15s, border-color .15s;
+    padding: 12px 14px; border-radius: 12px;
+    border: none; background: #fafafa;
+    box-shadow: 0 1px 4px rgba(29,53,87,.06);
+    cursor: pointer; transition: background .18s, box-shadow .18s;
   }
-  .library-item:hover{ background: #eef1ea; border-color: #A3B18A; }
+  .library-item:hover{ background: #eef1ea; box-shadow: 0 2px 10px rgba(29,53,87,.10); }
+  .lib-delete{
+    opacity: 0; transition: opacity .15s; flex-shrink: 0;
+    color: #9ca3af; font-size: 15px; line-height: 1;
+    padding: 0 3px; background: none; border: none; cursor: pointer;
+  }
+  .library-item:hover .lib-delete{ opacity: 1; }
+  .lib-delete:hover{ color: #ef4444; }
+  .lib-pencil{
+    opacity: 0; transition: opacity .15s; flex-shrink: 0;
+    color: #9ca3af; background: none; border: none; cursor: pointer;
+    padding: 1px 2px; display: flex; align-items: center;
+  }
+  .library-item:hover .lib-pencil{ opacity: 1; }
+  .lib-pencil:hover{ color: #6b7280; }
+  .lib-title-input{
+    flex: 1; min-width: 0; font-size: 0.875rem; font-weight: 500;
+    color: #1f2937; border: none; border-bottom: 1.5px solid #A3B18A;
+    background: transparent; outline: none; padding: 0 2px;
+  }
   </style>
   <style>
   /* ─── Color Tokens: Word Garden Morandi Palette ─── */
@@ -124,6 +144,7 @@
     --primary: #A3B18A;     /* 莫蘭迪灰綠（全站主色） */
     --primary-hover: #8d9b76;
     --primary-dark: #7a9068; /* Navbar 漸層深端 */
+    --theme-color: #8F9A78; /* 互動元素統一主題色（一改全改） */
     --active: #BC9C7F;      /* 大地駝色（選取/active） */
     --blue: #A3B18A;        /* 統一為 primary */
     --navy: #4a5940;        /* 深綠（文字重點） */
@@ -217,6 +238,7 @@
 
   /* ── 單字卡 (Word Card) Morandi 扁平化 — 易讀性修正版 ── */
   .wc-card{
+    position:relative;
     background:#fff;
     border:1px solid #EAECEE;
     border-radius:12px;
@@ -256,15 +278,22 @@
     display:flex; flex-direction:column; gap:8px;
   }
 
-  /* 發音按鈕：Ghost 樣式，灰綠主色 */
-  .wc-speak{
-    display:inline-flex; align-items:center; gap:5px;
-    color:#A3B18A; background:none; border:none;
-    cursor:pointer; padding:3px 6px; border-radius:6px;
-    font-size:.8125rem;
-    transition:background .15s, color .15s;
+  /* 單字文字點擊發音 */
+  .wc-title .wc-word{
+    cursor:pointer; transition:color .15s;
   }
-  .wc-speak:hover{ background:#eef1ea; color:#8d9b76; }
+  .wc-title .wc-word:hover{ color:#A3B18A; }
+
+  /* 字卡右下角刪除按鈕（hover 才顯示）*/
+  .wc-del-corner{
+    position:absolute; bottom:8px; right:8px;
+    opacity:0; transition:opacity .15s;
+    color:#9ca3af; background:none; border:none;
+    cursor:pointer; padding:3px; border-radius:4px;
+    display:flex; align-items:center;
+  }
+  .wc-card:hover .wc-del-corner{ opacity:1; }
+  .wc-del-corner:hover{ color:#C0392B; }
 
   /* 文章例句：主要閱讀文字，#333，text-base，leading-relaxed，無斜體 */
   .wc-article{
@@ -301,14 +330,6 @@
     padding-top:8px; margin-top:0;
     border-top:1px solid #EAECEE;
   }
-  .wc-btn-del{
-    display:inline-flex; align-items:center; gap:4px;
-    font-size:.8125rem; font-weight:400; color:#555555;
-    background:none; border:none; cursor:pointer;
-    padding:4px 8px; border-radius:6px;
-    transition:color .15s, background .15s;
-  }
-  .wc-btn-del:hover{ color:#C0392B; background:rgba(192,57,43,.07); }
   .wc-btn-save{
     display:inline-flex; align-items:center; gap:4px;
     font-size:.8125rem; font-weight:400; color:#555555;
@@ -317,6 +338,110 @@
     transition:color .15s, background .15s;
   }
   .wc-btn-save:hover{ color:#2C5282; background:rgba(44,82,130,.07); }
+
+  /* ─── 複習模式：AI 記憶輔助按鈕 ─── */
+  .wc-ai-help{
+    display:inline-flex; align-items:center;
+    font-size:.8125rem; font-weight:500;
+    color:#A3B18A; background:#eef1ea;
+    border:none; cursor:pointer; align-self:flex-end;
+    padding:5px 12px; border-radius:8px;
+    transition:background .15s, color .15s;
+  }
+  .wc-ai-help:hover{ background:#dde8d5; color:#7a9068; }
+
+  /* ─── AI 記憶輔助懸浮窗 ─── */
+  .mnemonic-overlay{
+    position:fixed; inset:0; z-index:1000;
+    background:rgba(0,0,0,.35);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .mnemonic-overlay.hidden{ display:none; }
+  .mnemonic-window{
+    background:#fff; border-radius:16px;
+    padding:24px; width:600px; max-width:calc(100vw - 32px);
+    box-shadow:0 12px 40px rgba(0,0,0,.18);
+    max-height:82vh; overflow-y:auto;
+  }
+  .mnemonic-header{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:18px;
+  }
+  .mnemonic-word-title{
+    font-size:1.25rem; font-weight:700; color:#333;
+    letter-spacing:.01em;
+  }
+  .mnemonic-close{
+    background:none; border:none; cursor:pointer;
+    color:#9ca3af; font-size:20px; line-height:1;
+    padding:2px 6px; border-radius:6px; transition:color .15s;
+  }
+  .mnemonic-close:hover{ color:#374151; }
+  .mnemonic-section{ margin-bottom:16px; }
+  .mnemonic-label{
+    font-size:.6875rem; font-weight:700; color:#A3B18A;
+    text-transform:uppercase; letter-spacing:.06em; margin-bottom:6px;
+  }
+  .mnemonic-text{
+    font-size:.9375rem; color:#374151;
+    line-height:1.7; white-space:pre-line;
+  }
+  .mnemonic-highlight{
+    background:#F8F7F2; border-radius:10px;
+    padding:10px 14px; color:#4a5940;
+  }
+  .mnemonic-zh{
+    color:#6B7280; font-size:.875rem;
+    margin-top:4px; line-height:1.6;
+  }
+  /* Loading 動畫 */
+  .mnemonic-loading{
+    display:flex; gap:7px; justify-content:center; padding:36px 0;
+  }
+  .mnemonic-dot{
+    width:8px; height:8px; border-radius:50%; background:#A3B18A;
+    animation:mnemonic-bounce .9s infinite ease-in-out;
+  }
+  .mnemonic-dot:nth-child(2){ animation-delay:.15s; }
+  .mnemonic-dot:nth-child(3){ animation-delay:.3s; }
+  @keyframes mnemonic-bounce{
+    0%,100%{ transform:translateY(0); opacity:.35; }
+    50%{ transform:translateY(-7px); opacity:1; }
+  }
+  .mnemonic-error{
+    color:#C0392B; font-size:.875rem;
+    padding:20px 0; text-align:center;
+  }
+  .mnemonic-word-title{ cursor:pointer; transition:color .15s; }
+  .mnemonic-word-title:hover{ color:#A3B18A; }
+  .mnemonic-chips{ display:flex; flex-wrap:wrap; gap:6px; margin-top:2px; }
+  .mnemonic-chip{ display:inline-block; padding:3px 10px; border-radius:999px; font-size:.8125rem; color:#4a5940; background:#eef1ea; border:1px solid #d4dece; }
+  .mnemonic-chip--ant{ color:#7a4a4a; background:#f5eaea; border-color:#e8d0d0; }
+  .mnemonic-regen-row{ display:flex; justify-content:flex-end; padding-top:12px; margin-top:4px; border-top:1px solid #f0f0ee; }
+  .mnemonic-regen{ font-size:.8rem; color:#9ca3af; background:none; border:1px solid #e5e7eb; cursor:pointer; padding:4px 12px; border-radius:8px; transition:all .15s; }
+  .mnemonic-regen:hover{ color:#6b7280; border-color:#d1d5db; background:#f9fafb; }
+
+  /* ── 右側欄位標題（去圖示後補足視覺重量） ── */
+  .sidebar-title{
+    font-weight:600;
+    letter-spacing:.05em;
+    color:#3d4a35;
+  }
+
+  /* ── 測驗按鈕（統一引用 --theme-color）── */
+  .quiz-btn-primary{
+    background:var(--theme-color);
+    color:#fff;
+    transition:background .15s;
+  }
+  .quiz-btn-primary:hover{ background:var(--primary-hover); }
+
+  .quiz-btn-next{
+    background:var(--navy);
+    color:#fff;
+    transition:background .15s;
+  }
+  .quiz-btn-next:hover{ background:#3a4833; }
   </style>
 
 
@@ -529,7 +654,7 @@
       <aside class="space-y-4">
         <div class="bg-white rounded-xl shadow p-6">
           <div class="flex items-center justify-between mb-3">
-            <h2 class="text-xl font-semibold whitespace-nowrap flex-shrink-0 mr-6">📚 單字清單</h2>
+            <h2 class="text-xl sidebar-title whitespace-nowrap flex-shrink-0 mr-6">單字清單</h2>
             <div class="inline-flex rounded-md overflow-hidden border">
               <button id="tabToday" class="px-4 py-2 text-sm bg-gray-100 whitespace-nowrap">今日新增</button>
               <button id="tabDue"   class="px-4 py-2 text-sm whitespace-nowrap">複習</button>
@@ -589,14 +714,14 @@
         <!-- Stats card -->
         <div class="bg-white rounded-xl shadow p-6">
           <div class="flex items-center justify-between mb-2">
-            <h3 class="font-semibold">📈 最近 14 天</h3>
+            <h3 class="sidebar-title">最近 14 天</h3>
             <div class="text-xs text-gray-500">藍：新增　綠：複習</div>
           </div>
           <svg id="statsSparkline" viewBox="0 0 320 60" class="w-full h-[60px]"></svg>
         </div>
         <!-- Backup / Cloud card：匯入 / 匯出 / 雲端載入 / 雲端同步 -->
         <div class="bg-white rounded-xl shadow p-6">
-          <h3 class="font-semibold mb-2">☁️ 資料管理</h3>
+          <h3 class="sidebar-title mb-3">資料管理</h3>
           <p class="text-sm text-gray-600 mb-3">
             預設只會儲存在本機。需要時再手動「雲端載入 / 雲端同步」。
           </p>
@@ -650,44 +775,17 @@
   <div id="quizModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
     <div class="bg-white w-full max-w-xl rounded-xl shadow p-6 space-y-4">
       <div class="flex justify-between items-center">
-        <h3 class="text-lg font-semibold">🧪 單字測驗 <span id="quizProgress" class="text-sm text-gray-500"></span></h3>
+        <h3 class="text-lg sidebar-title">單字測驗 <span id="quizProgress" class="text-sm font-normal text-gray-400"></span></h3>
         <button id="quizClose" class="text-gray-500 hover:text-gray-700">✕</button>
       </div>
       <div id="quizPrompt" class="text-gray-700"></div>
       <input id="quizAnswer" class="w-full p-3 border rounded" placeholder="輸入英文單字…"/>
       <div class="flex gap-2">
-        <button id="quizSubmit" class="px-4 py-2 bg-blue-600 text-white rounded" type="button">提交</button>
+        <button id="quizSubmit" class="px-4 py-2 quiz-btn-primary rounded" type="button">提交</button>
         <button id="quizIDK" class="px-4 py-2 bg-gray-200 rounded" type="button">不會</button>
-        <button id="quizNext" class="px-4 py-2 bg-emerald-600 text-white rounded hidden" type="button">下一題（Enter）</button>
+        <button id="quizNext" class="px-4 py-2 quiz-btn-next rounded hidden" type="button">下一題（Enter）</button>
       </div>
       <div id="quizFeedback" class="text-sm"></div>
-    </div>
-  </div>
-  <!-- Quiz mode picker -->
-  <div id="quizModePicker" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
-    <div class="bg-white w-full max-w-md rounded-xl shadow p-6 space-y-4">
-      <h3 class="text-lg font-semibold">選擇測驗題型</h3>
-      <div class="grid grid-cols-2 gap-3">
-        <button data-mode="typing" class="px-3 py-3 rounded border hover:bg-gray-50 text-left">
-          <div class="font-medium">填空</div>
-          <div class="text-sm text-gray-500">輸入英文單字</div>
-        </button>
-        <button data-mode="choice_en2zh" class="px-3 py-3 rounded border hover:bg-gray-50 text-left">
-          <div class="font-medium">英翻中</div>
-          <div class="text-sm text-gray-500">選中文意思</div>
-        </button>
-        <button data-mode="choice_zh2en" class="px-3 py-3 rounded border hover:bg-gray-50 text-left">
-          <div class="font-medium">中翻英</div>
-          <div class="text-sm text-gray-500">選英文單字</div>
-        </button>
-        <button data-mode="dictation" class="px-3 py-3 rounded border hover:bg-gray-50 text-left">
-          <div class="font-medium">聽力</div>
-          <div class="text-sm text-gray-500">聽發音再作答</div>
-        </button>
-      </div>
-      <div class="flex justify-end">
-        <button id="qpClose" class="px-3 py-2 rounded bg-gray-100">取消</button>
-      </div>
     </div>
   </div>
 
@@ -695,7 +793,7 @@
   <!-- Quiz settings modal -->
   <div id="quizSettings" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
     <div class="bg-white w-full max-w-md rounded-xl shadow p-6 space-y-4">
-      <h3 class="text-lg font-semibold">🛠️ 測驗設定</h3>
+      <h3 class="text-lg sidebar-title">測驗設定</h3>
 
       <div>
         <div class="font-medium mb-1">每題結束後自動播放</div>
@@ -714,7 +812,7 @@
 
       <div class="flex justify-end gap-2">
         <button id="qsCancel" class="px-3 py-2 rounded bg-gray-100">取消</button>
-        <button id="qsStart" class="px-3 py-2 rounded bg-emerald-600 text-white">開始測驗</button>
+        <button id="qsStart" class="px-3 py-2 rounded quiz-btn-primary">開始測驗</button>
       </div>
     </div>
   </div>
@@ -800,6 +898,17 @@
     max-width:350px; min-width:240px;
     max-height:450px; overflow-y:auto;
   "></div>
+
+  <!-- AI 記憶輔助懸浮窗 -->
+  <div id="mnemonicModal" class="mnemonic-overlay hidden">
+    <div class="mnemonic-window" id="mnemonicWindow">
+      <div class="mnemonic-header">
+        <span class="mnemonic-word-title" id="mnemonicTitle"></span>
+        <button class="mnemonic-close" id="mnemonicClose" aria-label="關閉">×</button>
+      </div>
+      <div id="mnemonicBody"></div>
+    </div>
+  </div>
 
   <!-- 原本主程式照常 -->
   <script type="module" src="js/main.js"></script>

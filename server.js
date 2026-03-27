@@ -8,6 +8,10 @@ import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleAIFileManager } from "@google/generative-ai/server";
+import { spawn } from "child_process";
+import { readdir, rm, mkdtemp } from "fs/promises";
+import { tmpdir } from "os";
 
 // ESM 環境下取得 __dirname（CommonJS 才有內建，ESM 需自行計算）
 const __filename = fileURLToPath(import.meta.url);
@@ -28,6 +32,9 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 // 使用 gemini-2.5-flash-lite 模型：穩定且免費額度高
 const geminiModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
+
+// Files API 客戶端（音訊 fallback 用）
+const fileManager = new GoogleAIFileManager(process.env.GEMINI_API_KEY);
 
 // ====== 中介層設定 ======
 app.use(cors()); // 允許前端跨域請求（開發時 file:// 或不同 port 都能存取）
@@ -110,6 +117,37 @@ Article context:
 ${article || "(no article provided)"}`;
 }
 
+/**
+ * 建構「AI 記憶輔助」用的 Prompt
+ * 目標：針對單一單字，生成語源拆解、諧音口訣、生活例句
+ * @param {string} word - 目標英文單字
+ */
+function buildMnemonicPrompt(word, options = {}) {
+  const { regen = false, prevMnemonic = null } = options;
+
+  const styleBlock = regen ? `
+STYLE REQUIREMENT (style: "humorous_and_witty"):
+- For the "mnemonic" field, you MUST use either 諧音法 (phonetic similarity trick) OR 荒謬故事法 (absurd/surreal short story). Do NOT use generic imagery or plain association.
+- Be bold, funny, and unexpected. Taiwanese pop culture, food, or internet humour references are welcome.` : "";
+
+  const avoidBlock = (regen && prevMnemonic)
+    ? `\nSTRICT RULE: The previous mnemonic was — "${prevMnemonic}" — you MUST use completely different logic, method, and wording this time. Do NOT recycle the same approach.`
+    : "";
+
+  return `You are an English vocabulary memory coach for Traditional Chinese learners.
+
+Create three memory aids for the English word "${word}":
+
+Return a JSON object with these exact fields:
+- "etymology": Brief word root/prefix/suffix breakdown in Traditional Chinese (2-3 sentences). Show how understanding the parts reveals the meaning.
+- "mnemonic": A fun, creative memory trick in Traditional Chinese. Use phonetic similarities (諧音), vivid imagery, or a short memorable story. Keep it playful!
+- "daily_example": One natural English sentence using "${word}" in a situation a Taiwanese person would encounter daily. Format exactly as: "English sentence | 繁體中文翻譯"
+- "synonyms": 3-5 English synonyms of "${word}", separated by commas only (e.g. "happy, glad, pleased")
+- "antonyms": 3-5 English antonyms of "${word}", separated by commas only (e.g. "sad, unhappy, gloomy"). If no clear antonyms exist, write "無"
+${styleBlock}${avoidBlock}
+Return ONLY a valid JSON object, no markdown, no code fences, no extra text.`;
+}
+
 
 // ====== 主要 API 端點 ======
 // 接受與原本 GAS proxy 相同的請求格式：POST /api
@@ -138,13 +176,22 @@ app.post("/api", async (req, res) => {
     // 自訂單字分析：傳入文章上下文與目標單字
     if (!term) return res.status(400).json({ ok: false, error: "缺少 term 欄位" });
     prompt = buildAnalyzeCustomWordPrompt(article, term);
+  } else if (action === "mnemonicWord") {
+    // AI 記憶輔助：語源 + 口訣 + 生活例句
+    if (!term) return res.status(400).json({ ok: false, error: "缺少 term 欄位" });
+    const isRegen = body.regen === true;
+    const prevMnemonic = typeof body.prevMnemonic === "string" ? body.prevMnemonic : null;
+    prompt = buildMnemonicPrompt(term, { regen: isRegen, prevMnemonic });
   } else {
     return res.status(400).json({ ok: false, error: `未知的 action：${action}` });
   }
 
   try {
-    // 呼叫 Gemini API 產生內容
-    const result = await geminiModel.generateContent(prompt);
+    // 呼叫 Gemini API 產生內容（regen 模式提升 temperature 增加創造力）
+    const activeModel = (action === "mnemonicWord" && body.regen === true)
+      ? genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite", generationConfig: { temperature: 0.9 } })
+      : geminiModel;
+    const result = await activeModel.generateContent(prompt);
     const responseText = result.response.text();
 
     // 從 Gemini 回應中取得 token 用量（用於前端的用量統計）
@@ -199,6 +246,73 @@ app.post("/api", async (req, res) => {
 function extractYouTubeId(url) {
   const m = url.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([A-Za-z0-9_-]{11})/);
   return m ? m[1] : null;
+}
+
+// ====== YouTube 音訊下載（yt-dlp fallback）======
+async function downloadYouTubeAudio(url) {
+  const tmpDir = await mkdtemp(path.join(tmpdir(), "yt-audio-"));
+  const outputTemplate = path.join(tmpDir, "%(id)s.%(ext)s");
+
+  return new Promise((resolve, reject) => {
+    const proc = spawn("yt-dlp", [
+      "--format", "bestaudio[ext=m4a][abr<=128]/bestaudio[ext=m4a]/bestaudio/best",
+      "--match-filter", "duration<=1200",   // 限制 20 分鐘以內
+      "--output", outputTemplate,
+      "--no-playlist",
+      "--quiet",
+      url,
+    ]);
+
+    let stderr = "";
+    proc.stderr.on("data", d => { stderr += d; });
+    proc.stdout.on("data", () => {});
+
+    proc.on("error", async (err) => {
+      await rm(tmpDir, { recursive: true }).catch(() => {});
+      reject(new Error(`yt-dlp 未安裝或無法執行：${err.message}`));
+    });
+
+    proc.on("close", async (code) => {
+      if (code !== 0) {
+        await rm(tmpDir, { recursive: true }).catch(() => {});
+        const msg = stderr.includes("does not pass filter") || stderr.includes("duration")
+          ? "影片超過 20 分鐘，不支援音訊下載。"
+          : `yt-dlp 下載失敗：${stderr.slice(0, 200)}`;
+        reject(new Error(msg));
+        return;
+      }
+      try {
+        const files = await readdir(tmpDir);
+        const audio = files.find(f => !f.endsWith(".part") && !f.endsWith(".ytdl") && !f.endsWith(".json"));
+        if (!audio) {
+          await rm(tmpDir, { recursive: true }).catch(() => {});
+          reject(new Error("找不到下載的音訊檔案"));
+          return;
+        }
+        const ext = path.extname(audio).slice(1).toLowerCase();
+        const mimeMap = { mp3: "audio/mpeg", m4a: "audio/mp4", webm: "audio/webm", ogg: "audio/ogg", opus: "audio/ogg", wav: "audio/wav" };
+        resolve({ audioPath: path.join(tmpDir, audio), mimeType: mimeMap[ext] || "audio/mp4", tmpDir });
+      } catch (e) {
+        await rm(tmpDir, { recursive: true }).catch(() => {});
+        reject(e);
+      }
+    });
+  });
+}
+
+// ====== Gemini 音訊轉錄 ======
+async function transcribeAudioWithGemini(audioPath, mimeType) {
+  console.log(`[Audio] 上傳音訊：${path.basename(audioPath)}`);
+  const uploadResult = await fileManager.uploadFile(audioPath, {
+    mimeType,
+    displayName: path.basename(audioPath),
+  });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
+  const result = await model.generateContent([
+    { fileData: { fileUri: uploadResult.file.uri, mimeType: uploadResult.file.mimeType } },
+    { text: "Please transcribe this audio completely and accurately. Return only the transcription text, no commentary or formatting." },
+  ]);
+  return result.response.text().trim();
 }
 
 // ====== YouTube 字幕擷取（多方法備援）======
@@ -319,18 +433,39 @@ app.post("/scrape", async (req, res) => {
     if (!videoId) {
       return res.status(400).json({ ok: false, error: "無法解析 YouTube 影片 ID，請確認網址格式。" });
     }
+    // 第一步：嘗試字幕擷取
+    let captionText = null;
     try {
-      const text = await fetchYouTubeTranscript(videoId);
-      if (!text || text.length < 50) {
-        return res.status(400).json({ ok: false, error: "此影片沒有英文字幕（或字幕已停用）。" });
+      captionText = await fetchYouTubeTranscript(videoId);
+      if (!captionText || captionText.length < 50) captionText = null;
+    } catch (e) {
+      console.log(`[YouTube] 字幕失敗，改用 yt-dlp：${e.message}`);
+    }
+
+    if (captionText) {
+      return res.json({ ok: true, text: captionText.slice(0, 8000), source: "youtube" });
+    }
+
+    // 第二步：yt-dlp 下載音訊 → Gemini 轉錄
+    let tmpDir = null;
+    try {
+      console.log(`[YouTube] 啟動 yt-dlp fallback…`);
+      const { audioPath, mimeType, tmpDir: td } = await downloadYouTubeAudio(`https://www.youtube.com/watch?v=${videoId}`);
+      tmpDir = td;
+      const transcript = await transcribeAudioWithGemini(audioPath, mimeType);
+      if (!transcript || transcript.length < 50) {
+        return res.status(400).json({ ok: false, error: "音訊轉錄結果太短，無法分析。" });
       }
-      return res.json({ ok: true, text: text.slice(0, 8000), source: "youtube" });
+      console.log(`[YouTube] yt-dlp fallback 成功，轉錄 ${transcript.length} 字元`);
+      return res.json({ ok: true, text: transcript.slice(0, 8000), source: "youtube-audio" });
     } catch (err) {
-      console.error("[YouTube 字幕錯誤]", err.message);
+      console.error("[YouTube fallback 錯誤]", err.message);
       return res.status(400).json({
         ok: false,
-        error: `無法取得字幕：${err.message}`,
+        error: `無法處理此影片：${err.message}`,
       });
+    } finally {
+      if (tmpDir) await rm(tmpDir, { recursive: true }).catch(() => {});
     }
   }
 
