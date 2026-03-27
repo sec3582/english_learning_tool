@@ -1,7 +1,7 @@
 // /js/main.js — ESM 入口：事件綁定 + 啟動（含測驗設定開關）
 import * as UI from "./ui.js";
 import { initGSheetsHistory, saveArticleHistory, getRecentArticles, deleteArticleHistory } from "./gsheets_history.js";
-import { APPS_SCRIPT_URL } from "./api.js";
+import { APPS_SCRIPT_URL, analyzeGrammar } from "./api.js";
 
 // 由 APPS_SCRIPT_URL（http://localhost:3000/api）推導出 /scrape 端點
 const SCRAPE_URL = APPS_SCRIPT_URL.replace(/\/api$/, "/scrape");
@@ -11,6 +11,8 @@ const SCRAPE_URL = APPS_SCRIPT_URL.replace(/\/api$/, "/scrape");
 
 const $ = (id) => document.getElementById(id);
 let _starredRowIndex = null; // tracks sheetRowIndex of currently starred article
+let _grammarPoints = {};          // { gN: { name, sentenceId, explanation, context } }
+let _grammarHighlightedSentence = null; // currently highlighted sentence id
 
 const on = (id, evt, fn) => {
   const el = $(id);
@@ -73,6 +75,52 @@ function initInputTabs() {
       $(panel)?.classList.remove("hidden");
     });
   });
+}
+
+function _esc(s) {
+  return String(s ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
+}
+function _escReg(s) {
+  return String(s ?? "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+// 根據 AI 傳回的 sentences + points，產生帶 grammar-tag 的 HTML
+function buildGrammarHTML(sentences, points) {
+  const bysentence = {};
+  for (const p of points) {
+    if (!bysentence[p.sentenceId]) bysentence[p.sentenceId] = [];
+    bysentence[p.sentenceId].push(p);
+  }
+  return sentences.map(s => {
+    const pts = bysentence[s.id] || [];
+    // Find each grammar word/phrase's position in the sentence
+    const spans = [];
+    for (const p of pts) {
+      const escaped = _escReg(p.word);
+      // Use word boundary only at positions that are actually word chars;
+      // this handles both single words and multi-word phrases reliably.
+      const re = new RegExp(`(?<![\\w])${escaped}(?![\\w])`, "i");
+      const m = re.exec(s.text);
+      if (m) spans.push({ start: m.index, end: m.index + m[0].length, id: p.id, matched: m[0] });
+    }
+    // Sort by start position, remove overlaps
+    spans.sort((a, b) => a.start - b.start);
+    const clean = [];
+    let lastEnd = 0;
+    for (const sp of spans) {
+      if (sp.start >= lastEnd) { clean.push(sp); lastEnd = sp.end; }
+    }
+    // Build HTML by interleaving plain text and grammar-tags
+    let html = "";
+    let pos = 0;
+    for (const sp of clean) {
+      html += _esc(s.text.slice(pos, sp.start));
+      html += `<grammar-tag id="${_esc(sp.id)}">${_esc(sp.matched)}</grammar-tag>`;
+      pos = sp.end;
+    }
+    html += _esc(s.text.slice(pos));
+    return `<span data-id="${_esc(s.id)}">${html}</span>`;
+  }).join(" ");
 }
 
 function bindEvents() {
@@ -164,11 +212,82 @@ function bindEvents() {
     if (btn) { _setStarBtn(btn, false); btn.disabled = false; }
   });
 
-  // —— 文法重點分析（功能開發中，先給提示） ——
-  on("grammarBtn", "click", () => {
-    const text = document.getElementById("articleInput")?.value.trim();
+  // —— 文法重點分析 ——
+  on("grammarBtn", "click", async () => {
+    const text = $("articleInput")?.value.trim();
     if (!text) return alert("請先在文字框貼上英文文章");
-    alert("📝 文法重點分析功能開發中，敬請期待！");
+
+    const loading = $("loading");
+    if (loading) { loading.textContent = "文法分析中，請稍後…"; loading.classList.remove("hidden"); }
+    const btn = $("grammarBtn");
+    if (btn) btn.disabled = true;
+
+    try {
+      const data = await analyzeGrammar(text);
+      if (!data || !Array.isArray(data.sentences) || !Array.isArray(data.points)) {
+        throw new Error("AI 回傳格式錯誤");
+      }
+      _grammarPoints = {};
+      _grammarHighlightedSentence = null;
+      for (const p of data.points) _grammarPoints[p.id] = p;
+
+      const viewer = $("grammarArticleViewer");
+      if (viewer) viewer.innerHTML = buildGrammarHTML(data.sentences, data.points);
+      const panel = $("grammarExplanationPanel");
+      if (panel) panel.innerHTML = `<p class="text-sm text-center" style="color:#9CA3AF; padding-top:1.75rem;">點擊文章中的藍色標籤，查看文法解析</p>`;
+
+      const modal = $("grammarModal");
+      if (modal) { modal.classList.remove("hidden"); modal.classList.add("flex"); }
+    } catch (err) {
+      console.error("[文法分析]", err);
+      alert(`文法分析失敗：${err.message}`);
+    } finally {
+      if (loading) { loading.textContent = "AI 分析中，請稍後…"; loading.classList.add("hidden"); }
+      if (btn) btn.disabled = false;
+    }
+  });
+
+  // 關閉文法 Modal
+  on("grammarModalClose", "click", () => {
+    const modal = $("grammarModal");
+    if (modal) { modal.classList.add("hidden"); modal.classList.remove("flex"); }
+    _grammarHighlightedSentence = null;
+  });
+
+  // 文法標籤點擊（事件委託）
+  $("grammarArticleViewer")?.addEventListener("click", (e) => {
+    const tag = e.target.closest("grammar-tag");
+    if (!tag) return;
+    const point = _grammarPoints[tag.id];
+    if (!point) return;
+
+    // 移除上一個句子的高亮與 active 標籤
+    if (_grammarHighlightedSentence) {
+      $("grammarArticleViewer")?.querySelector(`[data-id="${_grammarHighlightedSentence}"]`)
+        ?.classList.remove("highlight-sentence");
+    }
+    $("grammarArticleViewer")?.querySelectorAll("grammar-tag.active")
+      .forEach(t => t.classList.remove("active"));
+
+    // 套用新高亮
+    const sentenceEl = $("grammarArticleViewer")?.querySelector(`[data-id="${point.sentenceId}"]`);
+    if (sentenceEl) {
+      sentenceEl.classList.add("highlight-sentence");
+      _grammarHighlightedSentence = point.sentenceId;
+    }
+    tag.classList.add("active");
+
+    // 更新解說區
+    const panel = $("grammarExplanationPanel");
+    if (panel) {
+      panel.innerHTML = `
+        <div style="display:flex; flex-direction:column; gap:6px;">
+          <div style="font-weight:600; font-size:.9375rem; color:#1e293b;">${_esc(point.name)}</div>
+          <div style="font-size:.875rem; color:#475569; line-height:1.7;">${_esc(point.explanation)}</div>
+          <div style="font-size:.8125rem; color:#64748b; line-height:1.65;
+                      border-left:2px solid #93c5fd; padding-left:10px; margin-top:4px;">${_esc(point.context)}</div>
+        </div>`;
+    }
   });
 
   // —— 網址抓取 ——

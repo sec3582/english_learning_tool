@@ -244,6 +244,11 @@ export async function analyzeArticle(text) {
   return normalizeToJSON_(data?.content);
 }
 
+export async function analyzeGrammar(text) {
+  const data = await callAppsScript("analyzeGrammar", { text: String(text || "") });
+  return normalizeToJSON_(data?.content);
+}
+
 // ====== 主要 API：查單字（自訂詞） ======
 export async function analyzeCustomWordAPI(article, term) {
   const data = await callAppsScript("analyzeCustomWord", {

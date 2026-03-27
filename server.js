@@ -149,6 +149,51 @@ Return ONLY a valid JSON object, no markdown, no code fences, no extra text.`;
 }
 
 
+/**
+ * 建構「文法重點分析」用的 Prompt
+ * 目標：識別文章中 5~10 個文法重點，標記所在句子，並提供繁體中文詳細解析
+ * @param {string} text - 使用者輸入的英文文章
+ */
+function buildAnalyzeGrammarPrompt(text) {
+  return `You are an English grammar teaching assistant for Traditional Chinese learners.
+
+Analyze the following English article and identify 6 to 12 key grammar points AND phrase patterns that would be valuable for a learner to understand.
+
+Coverage should include a MIX of both:
+- Grammar structures: verb tenses, voice (active/passive), clause types, conditionals, modal verbs, articles, gerunds/infinitives, etc.
+- Phrase patterns: phrasal verbs (e.g., "give up", "look forward to"), prepositional phrases, common collocations, idiomatic expressions, fixed phrases.
+
+First, split the article into individual sentences. Then, for each point, identify the specific word or phrase (can be 1–5 words) that best demonstrates the concept.
+
+Return ONLY a valid JSON object with this exact structure:
+{
+  "sentences": [
+    { "id": "s1", "text": "The complete original sentence, preserved exactly." },
+    { "id": "s2", "text": "Another sentence." }
+  ],
+  "points": [
+    {
+      "id": "g1",
+      "sentenceId": "s1",
+      "word": "exact word or multi-word phrase copied verbatim from the sentence",
+      "name": "文法或片語名稱（繁體中文，例如：現在完成式、動詞片語 give up、介系詞片語）",
+      "explanation": "清楚說明此文法規則或片語用法，用繁體中文，2至3句話",
+      "context": "結合本句語境的解析，說明為何此處使用這個文法或片語，用繁體中文"
+    }
+  ]
+}
+
+STRICT RULES:
+1. "sentences" must contain ALL sentences from the article, preserving the original text exactly.
+2. "word" must be a substring that appears verbatim (exact same characters and case) in the referenced sentence. For phrasal verbs or multi-word phrases, include the complete phrase as it appears.
+3. Aim for roughly half grammar points and half phrase/collocation points.
+4. All Chinese fields ("name", "explanation", "context") MUST be in Traditional Chinese (繁體中文).
+5. Return ONLY a valid JSON object — no markdown, no code fences, no extra text.
+
+Article:
+${text}`;
+}
+
 // ====== 主要 API 端點 ======
 // 接受與原本 GAS proxy 相同的請求格式：POST /api
 // Body 可以是 JSON 或 text/plain（前端舊版格式）
@@ -176,6 +221,10 @@ app.post("/api", async (req, res) => {
     // 自訂單字分析：傳入文章上下文與目標單字
     if (!term) return res.status(400).json({ ok: false, error: "缺少 term 欄位" });
     prompt = buildAnalyzeCustomWordPrompt(article, term);
+  } else if (action === "analyzeGrammar") {
+    // 文法重點分析：傳入文章文字
+    if (!text) return res.status(400).json({ ok: false, error: "缺少 text 欄位" });
+    prompt = buildAnalyzeGrammarPrompt(text);
   } else if (action === "mnemonicWord") {
     // AI 記憶輔助：語源 + 口訣 + 生活例句
     if (!term) return res.status(400).json({ ok: false, error: "缺少 term 欄位" });

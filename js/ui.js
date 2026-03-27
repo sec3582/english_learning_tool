@@ -17,6 +17,7 @@ let quizQueue = []; let quizIndex = 0; let quizScore = 0; let _quizEnterHandlerB
 let quizAwaitingNext = false; let wrongAnswers = [];
 let lastQuizQueue = []; // 本輪題庫快照（用於重測）
 let _submittingAnswer = false;
+let _currentSidebarTab = "today"; // 追蹤目前分頁：'today' | 'due' | 'all'（預設與 HTML 初始 tab 一致）
 
 
 function escapeHTML(s=""){
@@ -92,7 +93,7 @@ export function startQuizFromSettings() {
   localStorage.setItem("quizPref", JSON.stringify(QUIZ_PREF));
 
   closeQuizSettings();
-  requestAnimationFrame(() => startQuiz?.());
+  requestAnimationFrame(() => startQuiz?.(_currentSidebarTab));
 }
 
 
@@ -128,7 +129,7 @@ export function startQuizFlowWithMode(mode){
       QUIZ_PREF.showZh = false;
       localStorage.setItem("quizPref", JSON.stringify(QUIZ_PREF));
     }
-    startQuiz();
+    startQuiz(_currentSidebarTab);
   }
 }
 
@@ -428,6 +429,8 @@ function renderListAll(){
 }
 function readAllFilters(){ return { q: document.getElementById("allSearch")?.value.trim() || "", pos: document.getElementById("allPos")?.value || "", level: document.getElementById("allLevel")?.value || "", sort: document.getElementById("allSort")?.value || "recent" }; }
 export function switchSidebarTab(which){
+  _currentSidebarTab = which === "today" ? "today" : which === "due" ? "due" : which === "all" ? "all" : "mixed";
+
   const tToday = document.getElementById("tabToday");
   const tDue   = document.getElementById("tabDue");
   const tAll   = document.getElementById("tabAll");
@@ -837,8 +840,10 @@ export function unmarkRowByWord(word) {
 function findCbByWord(word){ const v = (window.CSS && CSS.escape) ? CSS.escape(word) : String(word).replace(/["\\]/g, "\\$&"); return document.querySelector(`input[name="word"][value="${v}"]`); }
 
 /* ===== 測驗（集中：buildTypingQuestion 來自 quiz.js） ===== */
-export function startQuiz(){
+export function startQuiz(mode){
+const resolvedMode = mode || _currentSidebarTab || "mixed";
 const DESIRED = 15;
+const DESIRED_ALL = 20;
 
 // Fisher–Yates shuffle
 const shuffle = (arr) => {
@@ -849,32 +854,51 @@ const shuffle = (arr) => {
   return arr;
 };
 
-// 先排序（保留優先複習），再從前面取一段做隨機抽題
-const dueSorted = getDueWords()
-  .sort((a, b) => new Date(a.dueAt || 0) - new Date(b.dueAt || 0));
-
-const duePool = shuffle(dueSorted.slice(0, Math.max(DESIRED * 4, 60)));
-const todayPool = shuffle(getTodayWords().slice());
-const allPool = shuffle(getAllWords().slice());
-
-const queue = [];
-const seen = new Set();
-
-const pushUnique = (pool) => {
+const pushUnique = (pool, queue, seen, limit) => {
   for (const w of pool) {
     const k = (w.word || "").toLowerCase();
     if (!k || seen.has(k)) continue;
     seen.add(k);
     queue.push(w);
-    if (queue.length >= DESIRED) break;
+    if (queue.length >= limit) break;
   }
 };
 
-pushUnique(duePool);
-if (queue.length < DESIRED) pushUnique(todayPool);
-if (queue.length < DESIRED) pushUnique(allPool);
+const queue = [];
+const seen = new Set();
+
+if (resolvedMode === "today") {
+  // 僅測今日新增單字
+  const todayPool = shuffle(getTodayWords().slice());
+  if (!todayPool.length) return alert("今日尚無新增單字");
+  pushUnique(todayPool, queue, seen, DESIRED);
+
+} else if (resolvedMode === "all") {
+  // 從全部單字隨機抽 20 筆
+  const allPool = shuffle(getAllWords().slice());
+  if (!allPool.length) return alert("清單是空的，先新增幾個單字吧！");
+  pushUnique(allPool, queue, seen, DESIRED_ALL);
+
+} else {
+  // 'due' 或 'mixed'：優先複習到期，不足再補今日、全部
+  const dueSorted = getDueWords()
+    .sort((a, b) => new Date(a.dueAt || 0) - new Date(b.dueAt || 0));
+  const duePool   = shuffle(dueSorted.slice(0, Math.max(DESIRED * 4, 60)));
+  const todayPool = shuffle(getTodayWords().slice());
+  const allPool   = shuffle(getAllWords().slice());
+
+  pushUnique(duePool,   queue, seen, DESIRED);
+  if (queue.length < DESIRED) pushUnique(todayPool, queue, seen, DESIRED);
+  if (queue.length < DESIRED) pushUnique(allPool,   queue, seen, DESIRED);
+  if (!queue.length) return alert("清單是空的，先新增幾個單字吧！");
+}
 
 if (!queue.length) return alert("清單是空的，先新增幾個單字吧！");
+
+// 更新測驗 modal 標題標籤
+const LABEL_MAP = { today: "今日挑戰", due: "複習模式", all: "全能抽測", mixed: "複習模式" };
+const labelEl = document.getElementById("quizModeLabel");
+if (labelEl) labelEl.textContent = LABEL_MAP[resolvedMode] || "";
 
 
   quizQueue = queue;

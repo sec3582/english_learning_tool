@@ -442,6 +442,60 @@
     transition:background .15s;
   }
   .quiz-btn-next:hover{ background:#3a4833; }
+
+  /* ─── RWD: 768px 斷點 ─── */
+
+  /* 手機版 (<768px)：
+     aside 解包 → 子卡片直接參與 grid 排序
+     statsCard (14天) 靠 order:-1 移到最上方
+     標籤列撐滿寬度 */
+  @media (max-width: 767px) {
+    aside {
+      display: contents; /* 解包 aside，讓子卡片成為 grid 直接子項 */
+    }
+    #statsCard { order: -1; }
+
+    #wordListHeader {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 10px;
+    }
+    #tabGroup {
+      display: flex;
+      width: 100%;
+    }
+    #tabGroup button {
+      flex: 1;
+      text-align: center;
+      padding: .45rem .25rem;
+      font-size: .8125rem;
+    }
+  }
+  /* ─── 文法重點分析 Modal ─── */
+  grammar-tag {
+    display: inline;
+    background: #dbeafe;
+    color: #1d4ed8;
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 0.875em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  grammar-tag:hover { background: #bfdbfe; }
+  grammar-tag.active { background: #93c5fd; color: #1e3a8a; }
+
+  .highlight-sentence {
+    background: #fef9c3;
+    border-radius: 3px;
+    padding: 1px 2px;
+  }
+  .article-viewer {
+    font-size: 1rem;
+    line-height: 2.1;
+    color: #1e293b;
+  }
   </style>
 
 
@@ -473,13 +527,13 @@
     </div>
   </header>
 
-  <main class="max-w-6xl mx-auto py-8">
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <main class="max-w-6xl mx-auto py-8 px-4 md:px-6 lg:px-0">
+    <div id="mainGrid" class="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
 
 
 
       <!-- Left: main content -->
-      <div class="lg:col-span-2 space-y-6">
+      <div id="mainContent" class="md:col-span-2 space-y-6">
         <!-- Article Input -->
         <section id="articleInputSection" class="bg-white rounded-xl shadow p-6">
 
@@ -650,12 +704,12 @@
 
       </div>
 
-      <!-- Right: sidebar with tabs -->
+      <!-- Right: sidebar -->
       <aside class="space-y-4">
-        <div class="bg-white rounded-xl shadow p-6">
-          <div class="flex items-center justify-between mb-3">
+      <div id="wordListCard" class="bg-white rounded-xl shadow p-6">
+          <div id="wordListHeader" class="flex items-center justify-between mb-3">
             <h2 class="text-xl sidebar-title whitespace-nowrap flex-shrink-0 mr-6">單字清單</h2>
-            <div class="inline-flex rounded-md overflow-hidden border">
+            <div id="tabGroup" class="inline-flex rounded-md overflow-hidden border">
               <button id="tabToday" class="px-4 py-2 text-sm bg-gray-100 whitespace-nowrap">今日新增</button>
               <button id="tabDue"   class="px-4 py-2 text-sm whitespace-nowrap">複習</button>
               <button id="tabAll"   class="px-4 py-2 text-sm whitespace-nowrap">全部</button>
@@ -711,8 +765,8 @@
 
         </div>
 
-        <!-- Stats card -->
-        <div class="bg-white rounded-xl shadow p-6">
+      <!-- Stats card (14天) -->
+      <div id="statsCard" class="bg-white rounded-xl shadow p-6">
           <div class="flex items-center justify-between mb-2">
             <h3 class="sidebar-title">最近 14 天</h3>
             <div class="text-xs text-gray-500">藍：新增　綠：複習</div>
@@ -720,7 +774,7 @@
           <svg id="statsSparkline" viewBox="0 0 320 60" class="w-full h-[60px]"></svg>
         </div>
         <!-- Backup / Cloud card：匯入 / 匯出 / 雲端載入 / 雲端同步 -->
-        <div class="bg-white rounded-xl shadow p-6">
+        <div id="backupCard" class="bg-white rounded-xl shadow p-6">
           <h3 class="sidebar-title mb-3">資料管理</h3>
           <p class="text-sm text-gray-600 mb-3">
             預設只會儲存在本機。需要時再手動「雲端載入 / 雲端同步」。
@@ -775,7 +829,7 @@
   <div id="quizModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
     <div class="bg-white w-full max-w-xl rounded-xl shadow p-6 space-y-4">
       <div class="flex justify-between items-center">
-        <h3 class="text-lg sidebar-title">單字測驗 <span id="quizProgress" class="text-sm font-normal text-gray-400"></span></h3>
+        <h3 class="text-lg sidebar-title">單字測驗 <span id="quizModeLabel" class="text-sm font-normal" style="color:var(--theme-color)"></span> <span id="quizProgress" class="text-sm font-normal text-gray-400"></span></h3>
         <button id="quizClose" class="text-gray-500 hover:text-gray-700">✕</button>
       </div>
       <div id="quizPrompt" class="text-gray-700"></div>
@@ -907,6 +961,26 @@
         <button class="mnemonic-close" id="mnemonicClose" aria-label="關閉">×</button>
       </div>
       <div id="mnemonicBody"></div>
+    </div>
+  </div>
+
+  <!-- 文法重點分析 Modal -->
+  <div id="grammarModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+    <div class="bg-white w-full max-w-3xl rounded-xl shadow-xl flex flex-col mx-4" style="max-height:82vh;">
+      <!-- Header -->
+      <div class="flex justify-between items-center px-6 py-4 border-b border-gray-100 flex-shrink-0">
+        <h3 class="text-base font-semibold" style="color:#4A4A4A;">文法重點分析</h3>
+        <button id="grammarModalClose" class="text-gray-400 hover:text-gray-600 transition-colors" aria-label="關閉">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <!-- Article Viewer（可捲動） -->
+      <div class="article-viewer overflow-y-auto px-6 py-5 flex-1 min-h-0" id="grammarArticleViewer" style="min-height:180px;"></div>
+      <!-- Explanation Panel（固定高度） -->
+      <div class="px-6 py-4 border-t border-gray-100 flex-shrink-0" id="grammarExplanationPanel"
+           style="background:#F8F9FA; min-height:130px; max-height:200px; overflow-y:auto;">
+        <p class="text-sm text-center" style="color:#9CA3AF; padding-top:1.75rem;">點擊文章中的藍色標籤，查看文法解析</p>
+      </div>
     </div>
   </div>
 
