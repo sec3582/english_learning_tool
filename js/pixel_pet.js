@@ -2,13 +2,17 @@
  * js/pixel_pet.js — 像素電子雞 PixelPet
  *
  * localStorage 鍵值：
- *   lastAddWordTime  — 最後新增單字的時間戳 (ms)
- *   lastReviewTime   — 最後複習的時間戳 (ms)
- *   currentXP        — 目前等級內的 XP
- *   level            — 目前等級 (從 1 起)
+ *   lastAddWordTime    — 最後新增單字的時間戳 (ms)
+ *   lastReviewTime     — 最後複習的時間戳 (ms)
+ *   currentXP          — 目前等級內的 XP
+ *   level              — 目前等級 (從 1 起)
  *   pet_last_active_ts — 最後互動時間（用於判斷睡眠）
+ *   petHunger          — 目前飽食度 (0–100)
+ *   petHungerDecayTs   — 上次飽食度衰減計算時間戳
+ *   petMood            — 目前心情度 (0–100)
+ *   petMoodDecayTs     — 上次心情度衰減計算時間戳
  */
-import { getAllWords, getDueCount } from './storage.js';
+import { getDueCount } from './storage.js';
 
 // ─── Color palette ────────────────────────────────────────────────────────────
 const _ = null;
@@ -100,9 +104,10 @@ function gridToSVG(grid, px = 3) {
 }
 
 // ─── Stage helpers ────────────────────────────────────────────────────────────
-function getPetStage(wordCount) {
-  if (wordCount < 50)   return 'egg';
-  if (wordCount <= 200) return 'chick';
+// 進化條件綁定等級：LV1–5 = 蛋、LV6–15 = 小雞、LV16+ = 大公雞
+function getPetStage(lv) {
+  if (lv <= 5)  return 'egg';
+  if (lv <= 15) return 'chick';
   return 'rooster';
 }
 function getStageSVG(stage) {
@@ -144,37 +149,81 @@ export function addXP(amount) {
 
 // ─── Stat calculations ────────────────────────────────────────────────────────
 /**
- * 飽食度
- * 公式：70% − (距離上次新增的小時數 × rate%)
+ * 飽食度（持久化儲存 + 時間衰減）
  * rate = 5%/hr (蛋/小雞)；7%/hr (大公雞)
+ * 恢復來源：新增單字 +30%、通過複習 +10%
  */
-function getHunger() {
-  const ts = localStorage.getItem('lastAddWordTime');
-  if (!ts) return 0; // 從未新增過單字
+function computeHungerDecay() {
+  const lv    = Number(localStorage.getItem('level') || 1);
+  const stage = getPetStage(lv);
+  const rate  = stage === 'rooster' ? 7 : 5;
 
-  const wordCount = getAllWords().length;
-  const stage     = getPetStage(wordCount);
-  const rate      = stage === 'rooster' ? 7 : 5;
-  const hours     = (Date.now() - Number(ts)) / 3_600_000;
-  return Math.max(0, Math.min(100, Math.round(70 - hours * rate)));
+  let hunger = Number(localStorage.getItem('petHunger') ?? -1);
+  if (hunger < 0) {
+    // 首次或遷移：用舊公式推算初始值
+    const ts = localStorage.getItem('lastAddWordTime');
+    if (!ts) {
+      localStorage.setItem('petHunger', '0');
+      localStorage.setItem('petHungerDecayTs', String(Date.now()));
+      return 0;
+    }
+    const hours = (Date.now() - Number(ts)) / 3_600_000;
+    hunger = Math.max(0, Math.min(100, Math.round(70 - hours * rate)));
+  }
+
+  const decayTs = Number(localStorage.getItem('petHungerDecayTs') || Date.now());
+  const hours   = (Date.now() - decayTs) / 3_600_000;
+  hunger = Math.max(0, Math.min(100, Math.round(hunger - hours * rate)));
+  localStorage.setItem('petHunger', String(hunger));
+  localStorage.setItem('petHungerDecayTs', String(Date.now()));
+  return hunger;
+}
+
+function getHunger() { return computeHungerDecay(); }
+
+function addHunger(amount) {
+  const current = computeHungerDecay();
+  localStorage.setItem('petHunger', String(Math.min(100, current + amount)));
 }
 
 /**
- * 心情度
- * 若待複習 > 50 且距上次複習 > 12 小時，每小時 −10%；否則 100%
+ * 心情度（持久化儲存 + 時間衰減）
+ * 扣除條件：待複習 > 50 且距上次複習超過 24 小時
+ * 衰減速率：每小時 −2%
+ * 恢復：任何複習完成後 +20%
  */
-function getMood() {
-  let dueCount = 0;
-  try { dueCount = getDueCount(); } catch { dueCount = 0; }
-  if (dueCount <= 50) return 100;
+function computeMoodDecay() {
+  let mood = Number(localStorage.getItem('petMood') ?? -1);
+  if (mood < 0) {
+    mood = 100;
+    localStorage.setItem('petMood', '100');
+    localStorage.setItem('petMoodDecayTs', String(Date.now()));
+    return mood;
+  }
 
-  const ts   = localStorage.getItem('lastReviewTime');
-  const base = ts
-    ? Number(ts)
-    : Number(localStorage.getItem('pet_last_active_ts') || Date.now());
-  const hours = (Date.now() - base) / 3_600_000;
-  if (hours < 12) return 100;
-  return Math.max(0, Math.round(100 - (hours - 12) * 10));
+  let dueCount = 0;
+  try { dueCount = getDueCount(); } catch {}
+  const reviewTs          = localStorage.getItem('lastReviewTime');
+  const hoursSinceReview  = reviewTs
+    ? (Date.now() - Number(reviewTs)) / 3_600_000
+    : Infinity;
+
+  if (dueCount > 50 && hoursSinceReview > 24) {
+    const decayTs = Number(localStorage.getItem('petMoodDecayTs') || Date.now());
+    const hours   = (Date.now() - decayTs) / 3_600_000;
+    mood = Math.max(0, Math.min(100, Math.round(mood - hours * 2)));
+  }
+
+  localStorage.setItem('petMood', String(mood));
+  localStorage.setItem('petMoodDecayTs', String(Date.now()));
+  return mood;
+}
+
+function getMood() { return computeMoodDecay(); }
+
+function addMood(amount) {
+  const current = computeMoodDecay();
+  localStorage.setItem('petMood', String(Math.min(100, current + amount)));
 }
 
 // ─── Penalty decorations ──────────────────────────────────────────────────────
@@ -286,15 +335,14 @@ export function updatePetDisplay() {
   const xpPctEl      = document.getElementById('xpPct');
   if (!artEl) return;
 
-  // ── Stage ──
-  const wordCount = getAllWords().length;
-  const stage     = getPetStage(wordCount);
-
   // ── Level + XP ──
   const lv    = Number(localStorage.getItem('level')     || 1);
   const xp    = Number(localStorage.getItem('currentXP') || 0);
   const xpMax = xpNeeded(lv);
   const xpPct = Math.round((xp / xpMax) * 100);
+
+  // ── Stage（依等級決定）──
+  const stage = getPetStage(lv);
 
   if (stageLabelEl) stageLabelEl.textContent = `${getStageLabel(stage)} · LV${lv}`;
   if (xpBarEl) xpBarEl.style.width = xpPct + '%';
@@ -317,13 +365,11 @@ export function updatePetDisplay() {
   if (moodPctEl) moodPctEl.textContent = mood + '%';
 
   // ── Auto-state (priority: sleeping > slacking > idle) ──
-  const hour             = new Date().getHours();
-  const isNightTime      = hour >= 23 || hour < 7;
   const lastActive       = Number(localStorage.getItem('pet_last_active_ts') || Date.now());
   const hoursSinceActive = (Date.now() - lastActive) / 3_600_000;
 
   let autoState = 'idle';
-  if (isNightTime || (hoursSinceActive >= 24 && hunger < 30)) {
+  if (hoursSinceActive >= 12) {
     autoState = 'sleeping';
   } else if (mood < 30 || hunger < 30) {
     autoState = 'slacking';
@@ -344,11 +390,12 @@ export function updatePetDisplay() {
 }
 
 // ─── Lifecycle hooks ──────────────────────────────────────────────────────────
-/** 新增單字：+10 XP，觸發啄食動畫，補飽食度 */
+/** 新增單字：+10 XP、飽食度 +30%，觸發啄食動畫 */
 export function onWordAdded() {
   localStorage.setItem('lastAddWordTime',    String(Date.now()));
   localStorage.setItem('pet_last_active_ts', String(Date.now()));
   addXP(10);
+  addHunger(30);
   triggerPetAnim('eating', 2000);
 }
 
@@ -360,12 +407,14 @@ export function onWordAdded() {
 export function onReviewComplete(passed, perfect = false) {
   localStorage.setItem('lastReviewTime',     String(Date.now()));
   localStorage.setItem('pet_last_active_ts', String(Date.now()));
+  addMood(20); // 任何複習完成，心情 +20%
 
   if (perfect) {
     addXP(50);
     triggerPetAnim('happy', 3000);
   } else if (passed) {
-    addXP(2);
+    addXP(15);
+    addHunger(10); // 通過測驗，飽食度 +10%
     triggerPetAnim('happy', 3000);
   } else {
     _animActive = false;
