@@ -1599,6 +1599,35 @@ export function showToast(message, { duration = 3000, type = "success" } = {}) {
 }
 
 
+/* ===== 文章增益資料（翻譯 + 文法，存 localStorage） ===== */
+const _ENRICHMENTS_KEY = 'article_enrichments';
+
+export function getEnrichment(rowIndex) {
+  try {
+    const all = JSON.parse(localStorage.getItem(_ENRICHMENTS_KEY) || '{}');
+    return all[String(rowIndex)] || {};
+  } catch { return {}; }
+}
+
+export function saveEnrichment(rowIndex, patch) {
+  if (!rowIndex) return;
+  try {
+    const all = JSON.parse(localStorage.getItem(_ENRICHMENTS_KEY) || '{}');
+    const key = String(rowIndex);
+    all[key] = { ...(all[key] || {}), ...patch };
+    localStorage.setItem(_ENRICHMENTS_KEY, JSON.stringify(all));
+  } catch {}
+}
+
+export function deleteEnrichment(rowIndex) {
+  if (!rowIndex) return;
+  try {
+    const all = JSON.parse(localStorage.getItem(_ENRICHMENTS_KEY) || '{}');
+    delete all[String(rowIndex)];
+    localStorage.setItem(_ENRICHMENTS_KEY, JSON.stringify(all));
+  } catch {}
+}
+
 /* ===== 圖書館列表（含搜尋 + 分頁） ===== */
 const LIBRARY_PAGE_SIZE = 10;
 let _libraryAllArticles = [];
@@ -1721,7 +1750,7 @@ function _renderLibraryPage_() {
     const titleEl = document.createElement("div");
     titleEl.className = "font-medium text-gray-800 truncate flex-1 min-w-0 cursor-pointer";
     titleEl.textContent = article.title;
-    titleEl.addEventListener("click", () => showReaderMode(article));
+    titleEl.addEventListener("click", () => showReaderMode(article, getEnrichment(article.sheetRowIndex)));
 
     const pencilBtn = document.createElement("button");
     pencilBtn.className = "lib-pencil";
@@ -1752,10 +1781,30 @@ function _renderLibraryPage_() {
     titleRow.appendChild(titleEl);
     titleRow.appendChild(pencilBtn);
 
+    // ── Enrichment 徽章（翻譯 / 文法）──
+    const enrichment = getEnrichment(article.sheetRowIndex);
+    if (enrichment.translatedContent || enrichment.grammarAnalysis) {
+      const badgeWrap = document.createElement("span");
+      badgeWrap.className = "enrich-badges";
+      if (enrichment.translatedContent) {
+        const b = document.createElement("span");
+        b.className = "enrich-badge enrich-badge--tr";
+        b.textContent = "譯";
+        badgeWrap.appendChild(b);
+      }
+      if (enrichment.grammarAnalysis) {
+        const b = document.createElement("span");
+        b.className = "enrich-badge enrich-badge--gr";
+        b.textContent = "文";
+        badgeWrap.appendChild(b);
+      }
+      titleRow.appendChild(badgeWrap);
+    }
+
     const dateEl = document.createElement("div");
     dateEl.className = "text-xs text-gray-400 mt-0.5 cursor-pointer";
     dateEl.textContent = dateStr;
-    dateEl.addEventListener("click", () => showReaderMode(article));
+    dateEl.addEventListener("click", () => showReaderMode(article, getEnrichment(article.sheetRowIndex)));
 
     textArea.appendChild(titleRow);
     textArea.appendChild(dateEl);
@@ -1787,7 +1836,95 @@ function _renderLibraryPage_() {
 }
 
 
+/* ===== 文法標記 HTML 建構（同時供 main.js 的 modal 與 reader 使用）===== */
+export function buildGrammarHTML(sentences, points) {
+  const bysentence = {};
+  for (const p of points) {
+    if (!bysentence[p.sentenceId]) bysentence[p.sentenceId] = [];
+    bysentence[p.sentenceId].push(p);
+  }
+  return sentences.map(s => {
+    const pts = bysentence[s.id] || [];
+    const spans = [];
+    for (const p of pts) {
+      const re = new RegExp(`(?<![\\w])${escapeReg(p.word)}(?![\\w])`, "i");
+      const m = re.exec(s.text);
+      if (m) spans.push({ start: m.index, end: m.index + m[0].length, id: p.id, matched: m[0] });
+    }
+    spans.sort((a, b) => a.start - b.start);
+    const clean = [];
+    let lastEnd = 0;
+    for (const sp of spans) {
+      if (sp.start >= lastEnd) { clean.push(sp); lastEnd = sp.end; }
+    }
+    let html = "";
+    let pos = 0;
+    for (const sp of clean) {
+      html += escapeHTML(s.text.slice(pos, sp.start));
+      html += `<grammar-tag id="${escapeHTML(sp.id)}">${escapeHTML(sp.matched)}</grammar-tag>`;
+      pos = sp.end;
+    }
+    html += escapeHTML(s.text.slice(pos));
+    return `<span data-id="${escapeHTML(s.id)}">${html}</span>`;
+  }).join(" ");
+}
+
+/** 將文法標籤套用到中英對照 HTML 的英文段落上 */
+function _applyGrammarTagsToTranslation_(translatedHTML, grammarData) {
+  const { sentences, points } = grammarData;
+  const bysentence = {};
+  for (const p of points) {
+    if (!bysentence[p.sentenceId]) bysentence[p.sentenceId] = [];
+    bysentence[p.sentenceId].push(p);
+  }
+
+  // 預先為每個有文法點的句子建立標記後的 HTML
+  const taggedMap = {}; // origText → taggedHTML
+  for (const s of sentences) {
+    const pts = bysentence[s.id] || [];
+    if (!pts.length) continue;
+    const spans = [];
+    for (const p of pts) {
+      const re = new RegExp(`(?<![\\w])${escapeReg(p.word)}(?![\\w])`, "i");
+      const m = re.exec(s.text);
+      if (m) spans.push({ start: m.index, end: m.index + m[0].length, id: p.id, matched: m[0] });
+    }
+    spans.sort((a, b) => a.start - b.start);
+    const clean = []; let lastEnd = 0;
+    for (const sp of spans) {
+      if (sp.start >= lastEnd) { clean.push(sp); lastEnd = sp.end; }
+    }
+    let html = ""; let pos = 0;
+    for (const sp of clean) {
+      html += escapeHTML(s.text.slice(pos, sp.start));
+      html += `<grammar-tag id="${escapeHTML(sp.id)}">${escapeHTML(sp.matched)}</grammar-tag>`;
+      pos = sp.end;
+    }
+    html += escapeHTML(s.text.slice(pos));
+    taggedMap[s.text] = `<span data-id="${escapeHTML(s.id)}">${html}</span>`;
+  }
+  if (!Object.keys(taggedMap).length) return translatedHTML;
+
+  // 將標記套用到 eng-text 段落
+  const tmp = document.createElement("div");
+  tmp.innerHTML = translatedHTML;
+  tmp.querySelectorAll("p.eng-text").forEach(p => {
+    let inner = p.innerHTML;
+    for (const [origText, tagged] of Object.entries(taggedMap)) {
+      const escapedOrig = escapeHTML(origText);
+      if (inner.includes(escapedOrig)) {
+        inner = inner.replace(escapedOrig, tagged);
+      }
+    }
+    p.innerHTML = inner;
+  });
+  return tmp.innerHTML;
+}
+
 /* ===== 閱讀模式 ===== */
+let _readerArticle = null;
+export function getCurrentReaderArticle() { return _readerArticle; }
+
 function highlightKnownWords_(text, knownWords) {
   if (!knownWords.length) {
     // 無已知詞時直接轉段落
@@ -1814,7 +1951,10 @@ function highlightKnownWords_(text, knownWords) {
   }).join("");
 }
 
-export function showReaderMode(article) {
+export function showReaderMode(article, enrichment = {}) {
+  // 記住目前的閱讀文章（供 main.js 讀取以執行 API）
+  _readerArticle = article;
+
   // 隱藏輸入區、顯示閱讀區
   document.getElementById("articleInputSection")?.classList.add("hidden");
   const readerSection = document.getElementById("readerSection");
@@ -1827,6 +1967,44 @@ export function showReaderMode(article) {
     dateEl.textContent = "存檔時間：" + new Date(article.savedAt).toLocaleString("zh-TW");
   }
 
+  // ── 工具列：顯示已有的增益資料 + 提供未有者的執行按鈕 ──
+  const statusDiv        = document.getElementById("readerEnrichStatus");
+  const translateBtn     = document.getElementById("readerTranslateBtn");
+  const grammarBtn2      = document.getElementById("readerGrammarBtn");
+  if (statusDiv) {
+    statusDiv.innerHTML = "";
+    if (enrichment.translatedContent) {
+      const tag = document.createElement("span");
+      tag.className = "reader-enrich-tag reader-enrich-tag--tr";
+      tag.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg> 已翻譯`;
+      statusDiv.appendChild(tag);
+    }
+    if (enrichment.grammarAnalysis) {
+      const tag = document.createElement("span");
+      tag.className = "reader-enrich-tag reader-enrich-tag--gr";
+      tag.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg> 文法分析`;
+      statusDiv.appendChild(tag);
+    }
+  }
+  // 翻譯按鈕：無翻譯時顯示
+  if (translateBtn) translateBtn.classList.toggle("hidden", !!enrichment.translatedContent);
+  // 文法按鈕：無文法分析時顯示
+  if (grammarBtn2) grammarBtn2.classList.toggle("hidden", !!enrichment.grammarAnalysis);
+
+  // 重置文法面板
+  const grammarPanel        = document.getElementById("readerGrammarPanel");
+  const grammarPanelContent = document.getElementById("readerGrammarPanelContent");
+  if (grammarPanel) grammarPanel.classList.add("hidden");
+
+  // 解構 enrichment
+  const { translatedContent, grammarAnalysis } = enrichment;
+
+  // 建立文法點查找表
+  const grammarPoints = {};
+  if (grammarAnalysis?.points) {
+    for (const p of grammarAnalysis.points) grammarPoints[p.id] = p;
+  }
+
   // 取得已知單字（for 高亮）
   const knownWords = getAllWords().map(w => ({
     word: w.word || "",
@@ -1834,27 +2012,54 @@ export function showReaderMode(article) {
     definition: w.definition || "",
   })).filter(w => w.word);
 
-  // 渲染內文
-  const content = document.getElementById("readerContent");
-  content.innerHTML = highlightKnownWords_(article.fullText || "", knownWords);
+  // 重建 content 元素以清除舊的事件監聽器
+  const oldContent = document.getElementById("readerContent");
+  const content = oldContent.cloneNode(false);
+  oldContent.replaceWith(content);
 
-  // 已知單字點擊 → 顯示提示卡 + 右側字卡跳轉
-  content.querySelectorAll(".reader-word").forEach(el => {
-    el.addEventListener("click", (e) => {
-      e.stopPropagation();
-      showReaderTooltip_(el, {
-        word: el.dataset.word,
-        pos:  el.dataset.pos,
-        definition: el.dataset.def,
+  // ── 渲染內文（優先順序：翻譯+文法 > 純翻譯 > 純文法 > 原文）──
+  if (translatedContent && grammarAnalysis) {
+    // 兩者兼有：將文法標籤套用到中英對照段落
+    content.innerHTML = _applyGrammarTagsToTranslation_(translatedContent, grammarAnalysis);
+  } else if (translatedContent) {
+    content.innerHTML = translatedContent;
+  } else if (grammarAnalysis) {
+    content.innerHTML = `<div class="article-viewer">${buildGrammarHTML(grammarAnalysis.sentences, grammarAnalysis.points)}</div>`;
+  } else {
+    // 純原文 + 已知單字高亮
+    content.innerHTML = highlightKnownWords_(article.fullText || "", knownWords);
+    content.querySelectorAll(".reader-word").forEach(el => {
+      el.addEventListener("click", (e) => {
+        e.stopPropagation();
+        showReaderTooltip_(el, { word: el.dataset.word, pos: el.dataset.pos, definition: el.dataset.def });
+        jumpToWordCard(el.dataset.word);
       });
-      jumpToWordCard(el.dataset.word);
     });
-  });
+  }
 
-  // 點擊其他地方關閉提示
-  content.addEventListener("click", () => {
-    document.getElementById("readerTooltip")?.remove();
-  }, { once: false });
+  // ── 文法標籤點擊 → 顯示解析面板 ──
+  if (grammarAnalysis && grammarPanel && grammarPanelContent) {
+    content.addEventListener("click", (e) => {
+      const tag = e.target.closest("grammar-tag");
+      if (tag) {
+        e.stopPropagation();
+        const point = grammarPoints[tag.id];
+        if (point) {
+          grammarPanel.classList.remove("hidden");
+          grammarPanelContent.innerHTML =
+            `<div class="font-medium mb-1" style="color:#4A4A4A;">${escapeHTML(point.name)}</div>` +
+            `<div class="text-gray-600 mb-1">${escapeHTML(point.explanation)}</div>` +
+            `<div style="color:#A3B18A;font-size:0.85em;">${escapeHTML(point.context)}</div>`;
+        }
+        return;
+      }
+      document.getElementById("readerTooltip")?.remove();
+    });
+  } else {
+    content.addEventListener("click", () => {
+      document.getElementById("readerTooltip")?.remove();
+    });
+  }
 
   readerSection.scrollIntoView({ behavior: "smooth", block: "start" });
 }

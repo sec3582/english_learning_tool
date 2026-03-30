@@ -3,6 +3,8 @@ import * as UI from "./ui.js";
 import { initGSheetsHistory, saveArticleHistory, getRecentArticles, deleteArticleHistory } from "./gsheets_history.js";
 import { APPS_SCRIPT_URL, analyzeGrammar } from "./api.js";
 import { initPixelPet } from "./pixel_pet.js";
+// enrichment helpers re-exported from ui.js
+const { getEnrichment, saveEnrichment, deleteEnrichment } = UI;
 
 // 由 APPS_SCRIPT_URL（http://localhost:3000/api）推導出 /scrape 端點
 const SCRAPE_URL = APPS_SCRIPT_URL.replace(/\/api$/, "/scrape");
@@ -11,9 +13,11 @@ const SCRAPE_URL = APPS_SCRIPT_URL.replace(/\/api$/, "/scrape");
 
 
 const $ = (id) => document.getElementById(id);
-let _starredRowIndex = null; // tracks sheetRowIndex of currently starred article
-let _grammarPoints = {};          // { gN: { name, sentenceId, explanation, context } }
-let _grammarHighlightedSentence = null; // currently highlighted sentence id
+let _starredRowIndex = null;          // tracks sheetRowIndex of currently starred article
+let _grammarPoints = {};              // { gN: { name, sentenceId, explanation, context } }
+let _grammarHighlightedSentence = null;
+let _currentTranslatedContent = null; // 當前翻譯 HTML（用於情境 B 收藏時一起存）
+let _currentGrammarData = null;       // 當前文法資料 { sentences, points }（用於情境 B）
 
 const on = (id, evt, fn) => {
   const el = $(id);
@@ -85,44 +89,7 @@ function _escReg(s) {
   return String(s ?? "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-// 根據 AI 傳回的 sentences + points，產生帶 grammar-tag 的 HTML
-function buildGrammarHTML(sentences, points) {
-  const bysentence = {};
-  for (const p of points) {
-    if (!bysentence[p.sentenceId]) bysentence[p.sentenceId] = [];
-    bysentence[p.sentenceId].push(p);
-  }
-  return sentences.map(s => {
-    const pts = bysentence[s.id] || [];
-    // Find each grammar word/phrase's position in the sentence
-    const spans = [];
-    for (const p of pts) {
-      const escaped = _escReg(p.word);
-      // Use word boundary only at positions that are actually word chars;
-      // this handles both single words and multi-word phrases reliably.
-      const re = new RegExp(`(?<![\\w])${escaped}(?![\\w])`, "i");
-      const m = re.exec(s.text);
-      if (m) spans.push({ start: m.index, end: m.index + m[0].length, id: p.id, matched: m[0] });
-    }
-    // Sort by start position, remove overlaps
-    spans.sort((a, b) => a.start - b.start);
-    const clean = [];
-    let lastEnd = 0;
-    for (const sp of spans) {
-      if (sp.start >= lastEnd) { clean.push(sp); lastEnd = sp.end; }
-    }
-    // Build HTML by interleaving plain text and grammar-tags
-    let html = "";
-    let pos = 0;
-    for (const sp of clean) {
-      html += _esc(s.text.slice(pos, sp.start));
-      html += `<grammar-tag id="${_esc(sp.id)}">${_esc(sp.matched)}</grammar-tag>`;
-      pos = sp.end;
-    }
-    html += _esc(s.text.slice(pos));
-    return `<span data-id="${_esc(s.id)}">${html}</span>`;
-  }).join(" ");
-}
+// buildGrammarHTML 已移至 ui.js 統一管理，使用 UI.buildGrammarHTML
 
 function bindEvents() {
   // —— 左側：AI 分析 & 自訂新增 ——
@@ -162,6 +129,7 @@ function bindEvents() {
       btn.disabled = true;
       btn.textContent = "刪除中…";
       try {
+        deleteEnrichment(_starredRowIndex); // 同步刪除 enrichment
         await deleteArticleHistory(_starredRowIndex);
         UI.removeLibraryArticle(_starredRowIndex);
         _starredRowIndex = null;
@@ -190,6 +158,12 @@ function bindEvents() {
       _setStarBtn(btn, true);
       btn.disabled = false;
 
+      // 情境 B：收藏時，將畫面上已有的翻譯/文法資料一起存入 enrichment
+      const enrichPatch = {};
+      if (_currentTranslatedContent) enrichPatch.translatedContent = _currentTranslatedContent;
+      if (_currentGrammarData)       enrichPatch.grammarAnalysis    = _currentGrammarData;
+      if (Object.keys(enrichPatch).length) saveEnrichment(_starredRowIndex, enrichPatch);
+
       if (result.duplicate) {
         UI.showToast("這篇文章已在圖書館中", { type: "info", duration: 4000 });
       } else {
@@ -206,9 +180,11 @@ function bindEvents() {
     }
   });
 
-  // 文章內容變動時重置收藏按鈕狀態
+  // 文章內容變動時重置收藏按鈕與當前 enrichment 狀態
   $("articleInput")?.addEventListener("input", () => {
     _starredRowIndex = null;
+    _currentTranslatedContent = null;
+    _currentGrammarData = null;
     const btn = $("saveArticleBtn");
     if (btn) { _setStarBtn(btn, false); btn.disabled = false; }
   });
@@ -232,8 +208,16 @@ function bindEvents() {
       _grammarHighlightedSentence = null;
       for (const p of data.points) _grammarPoints[p.id] = p;
 
+      // 儲存當前文法資料（供情境 B 收藏用）
+      _currentGrammarData = { sentences: data.sentences, points: data.points };
+
+      // 情境 A：文章已收藏 → 靜默更新 enrichment
+      if (_starredRowIndex !== null) {
+        saveEnrichment(_starredRowIndex, { grammarAnalysis: _currentGrammarData });
+      }
+
       const viewer = $("grammarArticleViewer");
-      if (viewer) viewer.innerHTML = buildGrammarHTML(data.sentences, data.points);
+      if (viewer) viewer.innerHTML = UI.buildGrammarHTML(data.sentences, data.points);
       const panel = $("grammarExplanationPanel");
       if (panel) panel.innerHTML = `<p class="text-sm text-center" style="color:#9CA3AF; padding-top:1.75rem;">點擊文章中的藍色標籤，查看文法解析</p>`;
 
@@ -266,25 +250,24 @@ function bindEvents() {
     btn.disabled = true;
 
     try {
-      const res = await fetch("/translate", {
+      const res = await fetch("/api", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({ action: "translateArticle", text }),
       });
-
-      // 防護：若回傳非 JSON（如 Render cold-start 的 HTML 503 頁），給出明確提示
-      const contentType = res.headers.get("content-type") || "";
-      if (!contentType.includes("application/json")) {
-        throw new Error("伺服器尚未就緒，請稍後再試。");
-      }
-
       const data = await res.json();
-
-      if (res.status === 401) throw new Error("尚未設定 API Key，請至設定頁面完成設定。");
       if (!data.ok) throw new Error(data.error || "翻譯失敗");
 
+      // 儲存當前翻譯結果（供情境 B 收藏用）
+      _currentTranslatedContent = data.content;
+
+      // 情境 A：文章已收藏 → 靜默更新 enrichment
+      if (_starredRowIndex !== null) {
+        saveEnrichment(_starredRowIndex, { translatedContent: _currentTranslatedContent });
+      }
+
       const content = $("translateContent");
-      if (content) content.innerHTML = data.html;
+      if (content) content.innerHTML = data.content;
 
       const modal = $("translateModal");
       if (modal) { modal.classList.remove("hidden"); modal.classList.add("flex"); }
@@ -441,6 +424,47 @@ function bindEvents() {
 
   // —— 閱讀模式：返回編輯 ——
   on("readerBackBtn", "click", () => UI.hideReaderMode?.());
+
+  // —— 閱讀模式：翻譯此文 ——
+  on("readerTranslateBtn", "click", async () => {
+    const article = UI.getCurrentReaderArticle?.();
+    if (!article?.fullText) return;
+    const btn = $("readerTranslateBtn");
+    const orig = btn.textContent.trim();
+    btn.textContent = "翻譯中…"; btn.disabled = true;
+    try {
+      const res = await fetch("/api", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "translateArticle", text: article.fullText }),
+      });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || "翻譯失敗");
+      saveEnrichment(article.sheetRowIndex, { translatedContent: data.content });
+      UI.showReaderMode(article, getEnrichment(article.sheetRowIndex));
+    } catch (err) {
+      UI.showToast("翻譯失敗：" + err.message, { type: "warn", duration: 5000 });
+      btn.textContent = orig; btn.disabled = false;
+    }
+  });
+
+  // —— 閱讀模式：文法分析 ——
+  on("readerGrammarBtn", "click", async () => {
+    const article = UI.getCurrentReaderArticle?.();
+    if (!article?.fullText) return;
+    const btn = $("readerGrammarBtn");
+    const orig = btn.textContent.trim();
+    btn.textContent = "分析中…"; btn.disabled = true;
+    try {
+      const data = await analyzeGrammar(article.fullText);
+      if (!data?.sentences || !data?.points) throw new Error("AI 回傳格式錯誤");
+      saveEnrichment(article.sheetRowIndex, { grammarAnalysis: { sentences: data.sentences, points: data.points } });
+      UI.showReaderMode(article, getEnrichment(article.sheetRowIndex));
+    } catch (err) {
+      UI.showToast("文法分析失敗：" + err.message, { type: "warn", duration: 5000 });
+      btn.textContent = orig; btn.disabled = false;
+    }
+  });
 
   on("customWordInput", "keydown", (e) => {
     if (e.key === "Enter") { e.preventDefault(); UI.handleAnalyzeCustom?.(); }

@@ -194,6 +194,17 @@ Article:
 ${text}`;
 }
 
+/**
+ * 建構「全文中英對照翻譯」用的 Prompt
+ * @param {string} text - 英文文章內容
+ */
+function buildTranslateArticlePrompt(text) {
+  return `你是一個專業的英文翻譯助理。請將以下英文文章翻譯成繁體中文。為了幫助使用者學習，請採用「段落式中英對照」的格式回傳。請先輸出一段原始的英文段落，接著在下一段輸出對應的繁體中文翻譯。請使用 HTML 格式排版，英文段落請用 <p class="eng-text"> 包覆，中文翻譯請用 <p class="cht-text" style="color: #666; margin-bottom: 20px;"> 包覆。請確保每一段都有對應的翻譯，不要遺漏。只回傳 HTML 內容，不要加入任何說明文字或 code fence。
+
+文章內容：
+${text}`;
+}
+
 // ====== 主要 API 端點 ======
 // 接受與原本 GAS proxy 相同的請求格式：POST /api
 // Body 可以是 JSON 或 text/plain（前端舊版格式）
@@ -231,6 +242,10 @@ app.post("/api", async (req, res) => {
     const isRegen = body.regen === true;
     const prevMnemonic = typeof body.prevMnemonic === "string" ? body.prevMnemonic : null;
     prompt = buildMnemonicPrompt(term, { regen: isRegen, prevMnemonic });
+  } else if (action === "translateArticle") {
+    // 全文中英對照翻譯
+    if (!text) return res.status(400).json({ ok: false, error: "缺少 text 欄位" });
+    prompt = buildTranslateArticlePrompt(text);
   } else {
     return res.status(400).json({ ok: false, error: `未知的 action：${action}` });
   }
@@ -470,30 +485,6 @@ async function fetchYouTubeTranscript(videoId) {
 
   throw new Error("此影片沒有可擷取的英文字幕");
 }
-
-// ====== 全文翻譯端點 ======
-app.post("/translate", async (req, res) => {
-  const { text } = req.body || {};
-  if (!text) return res.status(400).json({ ok: false, error: "缺少 text 欄位" });
-
-  if (!process.env.GEMINI_API_KEY) {
-    return res.status(401).json({ ok: false, error: "伺服器尚未設定 GEMINI_API_KEY，請聯繫管理員。" });
-  }
-
-  const prompt = `你是一個專業的英文翻譯助理。請將以下英文文章翻譯成繁體中文。為了幫助使用者學習，請採用「段落式中英對照」的格式回傳。請先輸出一段原始的英文段落，接著在下一段輸出對應的繁體中文翻譯。請使用 HTML 格式排版，英文段落請用 <p class="eng-text"> 包覆，中文翻譯請用 <p class="cht-text" style="color: #666; margin-bottom: 20px;"> 包覆。請確保每一段都有對應的翻譯，不要遺漏。只回傳 HTML 內容，不要加入任何說明文字或 code fence。
-
-文章內容：
-${text}`;
-
-  try {
-    const result = await geminiModel.generateContent(prompt);
-    const html = result.response.text().trim();
-    res.json({ ok: true, html });
-  } catch (err) {
-    console.error("[翻譯 API 錯誤]", err);
-    res.status(500).json({ ok: false, error: err.message || "翻譯失敗" });
-  }
-});
 
 // ====== URL 網頁內容抓取（代理，解決 CORS 問題）======
 app.post("/scrape", async (req, res) => {

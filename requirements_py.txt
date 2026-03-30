@@ -1,0 +1,15 @@
+# Python 依賴套件（collector.py 專用）
+# 安裝指令：pip install -r requirements_py.txt
+
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+google-generativeai>=0.7.0
+python-dotenv>=1.0.0
+yt-dlp>=2024.1.0
+
+# 系統需求（非 pip，需另行安裝）：
+# ffmpeg — YouTube 音訊轉換成 mp3 時需要（可選；若無 ffmpeg，會保留原始格式）
+# 下載：https://ffmpeg.org/download.html
+#   Windows：winget install ffmpeg
+#   macOS：brew install ffmpeg
+#   Ubuntu：sudo apt install ffmpeg
