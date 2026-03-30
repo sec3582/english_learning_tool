@@ -354,7 +354,7 @@ function bindEvents() {
     } catch (e) {
       _setUrlStatus(
         navigator.onLine
-          ? "無法連接本機伺服器，請確認 server.js 已啟動（node server.js）。"
+          ? "無法連接伺服器，請稍後再試。"
           : "無網路連線，請檢查網路狀態。",
         "error"
       );

@@ -3,7 +3,7 @@
 
 // 本機代理伺服器端點（server.js 啟動後的位址）
 // 原本是 GAS Web App URL，現在改為本機 Express 伺服器
-export const APPS_SCRIPT_URL = "http://localhost:3000/api";
+export const APPS_SCRIPT_URL = "/api";
 
 // ====== 用量統計（本機 localStorage）======
 // 匯率：1 USD = TWD
