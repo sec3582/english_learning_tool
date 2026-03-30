@@ -271,6 +271,13 @@ function bindEvents() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text }),
       });
+
+      // 防護：若回傳非 JSON（如 Render cold-start 的 HTML 503 頁），給出明確提示
+      const contentType = res.headers.get("content-type") || "";
+      if (!contentType.includes("application/json")) {
+        throw new Error("伺服器尚未就緒，請稍後再試。");
+      }
+
       const data = await res.json();
 
       if (res.status === 401) throw new Error("尚未設定 API Key，請至設定頁面完成設定。");
