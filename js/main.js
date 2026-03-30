@@ -255,6 +255,47 @@ function bindEvents() {
     _grammarHighlightedSentence = null;
   });
 
+  // —— 全文翻譯 ——
+  on("translateBtn", "click", async () => {
+    const text = $("articleInput")?.value.trim();
+    if (!text) return alert("請先在文字框貼上英文文章");
+
+    const btn = $("translateBtn");
+    const origLabel = btn.textContent.trim();
+    btn.textContent = "翻譯中，請稍候...";
+    btn.disabled = true;
+
+    try {
+      const res = await fetch("/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+      const data = await res.json();
+
+      if (res.status === 401) throw new Error("尚未設定 API Key，請至設定頁面完成設定。");
+      if (!data.ok) throw new Error(data.error || "翻譯失敗");
+
+      const content = $("translateContent");
+      if (content) content.innerHTML = data.html;
+
+      const modal = $("translateModal");
+      if (modal) { modal.classList.remove("hidden"); modal.classList.add("flex"); }
+    } catch (err) {
+      console.error("[全文翻譯]", err);
+      alert(`翻譯失敗：${err.message}`);
+    } finally {
+      btn.textContent = origLabel;
+      btn.disabled = false;
+    }
+  });
+
+  // 關閉翻譯 Modal
+  on("translateModalClose", "click", () => {
+    const modal = $("translateModal");
+    if (modal) { modal.classList.add("hidden"); modal.classList.remove("flex"); }
+  });
+
   // 文法標籤點擊（事件委託）
   $("grammarArticleViewer")?.addEventListener("click", (e) => {
     const tag = e.target.closest("grammar-tag");
