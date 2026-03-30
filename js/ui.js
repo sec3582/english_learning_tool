@@ -1297,28 +1297,48 @@ export function closeUsageModal(){ const m = document.getElementById("usageModal
 export function saveUsageBudget(){ const v = Number(document.getElementById("usageBudgetInput")?.value); if (isNaN(v)) return alert("請輸入數字（TWD）"); setUsageBudget(v); refreshUsageUI(); alert("已儲存每月預算"); }
 export function resetUsage(){ resetUsageMonth(); refreshUsageUI(); alert("已重置本月估算（不影響 Gemini 真實用量）"); }
 
-// ===== 匯出 / 匯入 JSON：備份單字清單 =====
+// ===== 匯出 / 匯入 JSON：完整備份 =====
+const _PET_KEYS = [
+  'currentXP','level','petHunger','petHungerDecayTs',
+  'petMood','petMoodDecayTs','lastAddWordTime','lastReviewTime','pet_last_active_ts'
+];
+
+function _tryParseJSON(key, fallback) {
+  try { return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback)); } catch { return fallback; }
+}
+
 export function handleExportJson() {
   const words = getAllWords();
-  if (!words.length) {
-    alert("目前沒有任何單字可以匯出。");
-    return;
+
+  const petData = {};
+  for (const k of _PET_KEYS) {
+    const v = localStorage.getItem(k);
+    if (v !== null) petData[k] = v;
   }
 
-  const blob = new Blob([JSON.stringify(words, null, 2)], {
-    type: "application/json",
-  });
+  const backup = {
+    version: 2,
+    exportedAt: new Date().toISOString(),
+    words,
+    addedLogs:      _tryParseJSON('addedLogs', []),
+    reviewLogs:     _tryParseJSON('reviewLogs', []),
+    enrichments:    _tryParseJSON('article_enrichments', {}),
+    petData,
+    titleOverrides: _tryParseJSON('library_title_overrides', {}),
+    mnemonicCache:  _tryParseJSON('mnemonic_cache', {}),
+  };
 
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
 
   const now = new Date();
-  const y = now.getFullYear();
-  const m = String(now.getMonth() + 1).padStart(2, "0");
-  const d = String(now.getDate()).padStart(2, "0");
+  const y  = now.getFullYear();
+  const mo = String(now.getMonth() + 1).padStart(2, "0");
+  const d  = String(now.getDate()).padStart(2, "0");
 
   a.href = url;
-  a.download = `word-garden-${y}${m}${d}.json`;
+  a.download = `word-garden-${y}${mo}${d}.json`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -1371,7 +1391,7 @@ export async function handleLoadSheets(){
 
 export async function handlePushSheets() {
   const ok = confirm(
-    "這會用「本機資料（localStorage）」覆蓋 Google Sheet（Words/AddedLogs/ReviewLogs）。\n\n確定要同步到 Google 嗎？"
+    "這會用「本機資料（localStorage）」覆蓋 Google Sheet（Words / AddedLogs / ReviewLogs / Misc / Enrichments）。\n\n確定要同步到 Google 嗎？"
   );
   if (!ok) return;
 
@@ -1379,7 +1399,11 @@ export async function handlePushSheets() {
     const r = await pushLocalStorageToSheets();
     clearDirtyAndSetLastSync(Date.now());
     refreshSyncUI();
-    alert(`已同步到 Google Sheet：\nWords=${r.words}\nAddedLogs=${r.addedLogs}\nReviewLogs=${r.reviewLogs}`);
+    alert(
+      `已同步到 Google Sheet：\n` +
+      `Words=${r.words}　AddedLogs=${r.addedLogs}　ReviewLogs=${r.reviewLogs}\n` +
+      `翻譯／文法=${r.enrichments} 篇　電子雞、標題已同步`
+    );
   } catch (e) {
     console.error(e);
     alert("同步失敗，請看 Console 錯誤訊息。");
@@ -1394,41 +1418,84 @@ function importJsonFile(file) {
       const text = String(e.target.result || "");
       const data = JSON.parse(text);
 
+      // ── v2：完整備份格式 ──
+      if (data && typeof data === 'object' && !Array.isArray(data) && Number(data.version) >= 2) {
+        // 單字：合併（現有優先，不覆寫重複）
+        const wordsArr = Array.isArray(data.words) ? data.words : [];
+        const existing = getAllWords();
+        const map = new Map(existing.map(w => [String(w.word || '').toLowerCase(), w]));
+        let added = 0, skipped = 0;
+        for (const obj of wordsArr) {
+          const key = String(obj.word || '').toLowerCase().trim();
+          if (!key) { skipped++; continue; }
+          if (map.has(key)) { skipped++; continue; }
+          map.set(key, obj);
+          added++;
+        }
+        saveAllWords(Array.from(map.values()));
+
+        // 翻譯／文法：合併（現有 key 優先）
+        if (data.enrichments && typeof data.enrichments === 'object') {
+          try {
+            const cur = _tryParseJSON('article_enrichments', {});
+            localStorage.setItem('article_enrichments', JSON.stringify({ ...data.enrichments, ...cur }));
+          } catch {}
+        }
+
+        // 圖書館標題覆寫：合併（現有優先）
+        if (data.titleOverrides && typeof data.titleOverrides === 'object') {
+          try {
+            const cur = _tryParseJSON('library_title_overrides', {});
+            localStorage.setItem('library_title_overrides', JSON.stringify({ ...data.titleOverrides, ...cur }));
+          } catch {}
+        }
+
+        // 記憶法快取：合併（現有優先）
+        if (data.mnemonicCache && typeof data.mnemonicCache === 'object') {
+          try {
+            const cur = _tryParseJSON('mnemonic_cache', {});
+            localStorage.setItem('mnemonic_cache', JSON.stringify({ ...data.mnemonicCache, ...cur }));
+          } catch {}
+        }
+
+        // 電子雞：只在本機尚無進度時還原
+        if (data.petData && typeof data.petData === 'object') {
+          if (localStorage.getItem('level') === null) {
+            for (const [k, v] of Object.entries(data.petData)) localStorage.setItem(k, v);
+          }
+        }
+
+        renderSidebarLists?.();
+        alert(
+          `匯入完成！\n` +
+          `單字：新增 ${added} 筆，略過 ${skipped} 筆（重複）。\n` +
+          `翻譯／文法、圖書館標題、記憶法已合併還原。\n` +
+          (localStorage.getItem('level') !== null ? `電子雞已有進度，略過覆寫。` : `電子雞已還原。`)
+        );
+        return;
+      }
+
+      // ── v1：舊格式（純單字陣列）──
       if (!Array.isArray(data)) {
-        throw new Error("JSON 根節點不是陣列");
+        throw new Error("JSON 格式不符");
       }
 
       const existing = getAllWords();
-      const map = new Map(
-        existing.map((w) => [String(w.word || "").toLowerCase(), w])
-      );
-
-      let added = 0;
-      let skipped = 0;
+      const map = new Map(existing.map(w => [String(w.word || "").toLowerCase(), w]));
+      let added = 0, skipped = 0;
 
       for (const obj of data) {
         const key = String(obj.word || "").toLowerCase().trim();
-        if (!key) {
-          skipped++;
-          continue;
-        }
-        if (map.has(key)) {
-          // 已有同樣單字 → 略過（保留現有資料）
-          skipped++;
-          continue;
-        }
+        if (!key) { skipped++; continue; }
+        if (map.has(key)) { skipped++; continue; }
         map.set(key, obj);
         added++;
       }
 
-      const merged = Array.from(map.values());
-      saveAllWords(merged);     // 目前只寫入本機（localStorage）
-      renderSidebarLists?.();   // 更新右側清單與統計
+      saveAllWords(Array.from(map.values()));
+      renderSidebarLists?.();
+      alert(`匯入完成：新增 ${added} 筆，略過 ${skipped} 筆（重複或無效）。`);
 
-      alert(
-      `匯入完成：新增 ${added} 筆，略過 ${skipped} 筆（重複或無效）。\n\n` +
-      `注意：目前只匯入到本機（localStorage）。若要同步到 Google Sheet，需要再做「寫回雲端」功能。`);
-  
     } catch (err) {
       console.error(err);
       alert("匯入失敗：檔案內容可能不是此工具匯出的 JSON 格式。");
@@ -1925,6 +1992,53 @@ function _applyGrammarTagsToTranslation_(translatedHTML, grammarData) {
 let _readerArticle = null;
 export function getCurrentReaderArticle() { return _readerArticle; }
 
+/**
+ * 在已渲染的 container 內疊加已知單字高亮（reader-word）。
+ * 只走訪文字節點，跳過 grammar-tag 和既有 reader-word 內部，避免破壞現有標記。
+ */
+function _overlayKnownWords_(container, knownWords) {
+  if (!knownWords.length) return;
+  const sorted = [...knownWords].sort((a, b) => b.word.length - a.word.length);
+
+  const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, {
+    acceptNode(node) {
+      let p = node.parentElement;
+      while (p && p !== container) {
+        const tag = p.tagName?.toLowerCase();
+        if (tag === 'grammar-tag' || p.classList?.contains('reader-word')) {
+          return NodeFilter.FILTER_REJECT;
+        }
+        p = p.parentElement;
+      }
+      return NodeFilter.FILTER_ACCEPT;
+    },
+  });
+
+  const textNodes = [];
+  let node;
+  while ((node = walker.nextNode())) textNodes.push(node);
+
+  for (const textNode of textNodes) {
+    let html = escapeHTML(textNode.textContent);
+    let modified = false;
+    for (const w of sorted) {
+      const re = new RegExp(`\\b${escapeReg(escapeHTML(w.word))}\\b`, 'gi');
+      if (re.test(html)) {
+        html = html.replace(re, match =>
+          `<span class="reader-word" data-word="${escapeHTML(w.word)}" ` +
+          `data-pos="${escapeHTML(w.pos)}" data-def="${escapeHTML(w.definition)}">${match}</span>`
+        );
+        modified = true;
+      }
+    }
+    if (modified) {
+      const span = document.createElement('span');
+      span.innerHTML = html;
+      textNode.parentNode.replaceChild(span, textNode);
+    }
+  }
+}
+
 function highlightKnownWords_(text, knownWords) {
   if (!knownWords.length) {
     // 無已知詞時直接轉段落
@@ -2019,23 +2133,27 @@ export function showReaderMode(article, enrichment = {}) {
 
   // ── 渲染內文（優先順序：翻譯+文法 > 純翻譯 > 純文法 > 原文）──
   if (translatedContent && grammarAnalysis) {
-    // 兩者兼有：將文法標籤套用到中英對照段落
     content.innerHTML = _applyGrammarTagsToTranslation_(translatedContent, grammarAnalysis);
+    _overlayKnownWords_(content, knownWords);
   } else if (translatedContent) {
     content.innerHTML = translatedContent;
+    _overlayKnownWords_(content, knownWords);
   } else if (grammarAnalysis) {
     content.innerHTML = `<div class="article-viewer">${buildGrammarHTML(grammarAnalysis.sentences, grammarAnalysis.points)}</div>`;
+    _overlayKnownWords_(content, knownWords);
   } else {
-    // 純原文 + 已知單字高亮
+    // 純原文：highlightKnownWords_ 已處理高亮，不需再疊加
     content.innerHTML = highlightKnownWords_(article.fullText || "", knownWords);
-    content.querySelectorAll(".reader-word").forEach(el => {
-      el.addEventListener("click", (e) => {
-        e.stopPropagation();
-        showReaderTooltip_(el, { word: el.dataset.word, pos: el.dataset.pos, definition: el.dataset.def });
-        jumpToWordCard(el.dataset.word);
-      });
-    });
   }
+
+  // ── 已知單字點擊 → 提示卡 + 右側字卡跳轉（所有模式共用）──
+  content.querySelectorAll(".reader-word").forEach(el => {
+    el.addEventListener("click", (e) => {
+      e.stopPropagation();
+      showReaderTooltip_(el, { word: el.dataset.word, pos: el.dataset.pos, definition: el.dataset.def });
+      jumpToWordCard(el.dataset.word);
+    });
+  });
 
   // ── 文法標籤點擊 → 顯示解析面板 ──
   if (grammarAnalysis && grammarPanel && grammarPanelContent) {

@@ -5,9 +5,11 @@ const CLIENT_ID = "604882659298-ru334ffd6ai9rh5s5kkbp96fs9l7hsn9.apps.googleuser
 const SPREADSHEET_ID = "1N_3dZjoFr-lEeaR0hkd6q2YfVho74JpCrXVxRdj2BsQ";
 const SCOPES = "https://www.googleapis.com/auth/spreadsheets.readonly";
 
-const SHEET_WORDS = "Words";
-const SHEET_ADDED = "AddedLogs";
-const SHEET_REVIEW = "ReviewLogs";
+const SHEET_WORDS       = "Words";
+const SHEET_ADDED       = "AddedLogs";
+const SHEET_REVIEW      = "ReviewLogs";
+const SHEET_MISC        = "Misc";
+const SHEET_ENRICHMENTS = "Enrichments";
 
 async function waitSdk() {
   await new Promise((resolve, reject) => {
@@ -162,11 +164,51 @@ export async function bootstrapFromSheetsToLocalStorage() {
   localStorage.setItem("addedLogs", JSON.stringify(addedLogs));
   localStorage.setItem("reviewLogs", JSON.stringify(reviewLogs));
 
+  // ── Misc sheet：電子雞、標題覆寫、記憶法快取 ──
+  let miscPulled = {};
+  try {
+    const miscRows = await getValues(`${SHEET_MISC}!A2:B`);
+    const miscMap = Object.fromEntries(
+      miscRows.filter(r => r[0] && r[1] != null).map(r => [r[0], r[1]])
+    );
+    if (miscMap.petData) {
+      try {
+        const pet = JSON.parse(miscMap.petData);
+        for (const [k, v] of Object.entries(pet)) localStorage.setItem(k, v);
+      } catch {}
+    }
+    if (miscMap.titleOverrides) localStorage.setItem('library_title_overrides', miscMap.titleOverrides);
+    if (miscMap.mnemonicCache)  localStorage.setItem('mnemonic_cache', miscMap.mnemonicCache);
+    miscPulled = miscMap;
+  } catch (err) {
+    console.warn("[SheetsBootstrap] Misc sheet not found or failed:", err.message);
+  }
+
+  // ── Enrichments sheet：翻譯 + 文法 ──
+  let enrichmentCount = 0;
+  try {
+    const enrichmentRows = await getValues(`${SHEET_ENRICHMENTS}!A2:B`);
+    const enrichments = {};
+    for (const r of enrichmentRows) {
+      if (r[0] && r[1]) {
+        try { enrichments[r[0]] = JSON.parse(r[1]); } catch {}
+      }
+    }
+    if (Object.keys(enrichments).length > 0) {
+      localStorage.setItem('article_enrichments', JSON.stringify(enrichments));
+      enrichmentCount = Object.keys(enrichments).length;
+    }
+  } catch (err) {
+    console.warn("[SheetsBootstrap] Enrichments sheet not found or failed:", err.message);
+  }
+
   console.log("[SheetsBootstrap] pulled:", {
     myWords: myWords.length,
     addedLogs: addedLogs.length,
     reviewLogs: reviewLogs.length,
     hasAllHeader: hasAll,
     header,
+    misc: Object.keys(miscPulled),
+    enrichments: enrichmentCount,
   });
 }
