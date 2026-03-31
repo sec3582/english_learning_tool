@@ -1757,7 +1757,24 @@ export function removeLibraryArticle(sheetRowIndex) {
       // All rows after the deleted row shift up by 1 in the sheet
       sheetRowIndex: a.sheetRowIndex > sheetRowIndex ? a.sheetRowIndex - 1 : a.sheetRowIndex,
     }));
+  // 同步重新索引 localStorage，避免翻譯/文法/自訂標題對應到錯誤的文章
+  _shiftStorageKeys_(_ENRICHMENTS_KEY, sheetRowIndex);
+  _shiftStorageKeys_(_TITLE_KEY, sheetRowIndex);
   _renderLibraryPage_();
+}
+
+// 刪除指定 sheetRowIndex 的鍵，並將所有大於該值的鍵往下移 1
+function _shiftStorageKeys_(storageKey, deletedIndex) {
+  try {
+    const map = JSON.parse(localStorage.getItem(storageKey) || '{}');
+    const updated = {};
+    for (const [key, value] of Object.entries(map)) {
+      const idx = parseInt(key, 10);
+      if (idx === deletedIndex) continue;
+      updated[String(idx > deletedIndex ? idx - 1 : idx)] = value;
+    }
+    localStorage.setItem(storageKey, JSON.stringify(updated));
+  } catch {}
 }
 
 function _renderLibraryPage_() {
@@ -1904,13 +1921,14 @@ function _renderLibraryPage_() {
 
 
 /* ===== 文法標記 HTML 建構（同時供 main.js 的 modal 與 reader 使用）===== */
-export function buildGrammarHTML(sentences, points) {
+export function buildGrammarHTML(sentences, points, originalText = "") {
   const bysentence = {};
   for (const p of points) {
     if (!bysentence[p.sentenceId]) bysentence[p.sentenceId] = [];
     bysentence[p.sentenceId].push(p);
   }
-  return sentences.map(s => {
+
+  function buildSentenceSpan(s) {
     const pts = bysentence[s.id] || [];
     const spans = [];
     for (const p of pts) {
@@ -1933,7 +1951,40 @@ export function buildGrammarHTML(sentences, points) {
     }
     html += escapeHTML(s.text.slice(pos));
     return `<span data-id="${escapeHTML(s.id)}">${html}</span>`;
-  }).join(" ");
+  }
+
+  // 依原文段落分組：若有 \n\n 則尊重使用者分段；否則每 5 句自動分一段
+  const rawParas = originalText.split(/\n\n+/).map(p => p.trim()).filter(Boolean);
+  let groups;
+  if (rawParas.length > 1) {
+    groups = rawParas.map(() => []);
+    let paraIdx = 0;
+    for (const s of sentences) {
+      let found = false;
+      for (let i = paraIdx; i < rawParas.length; i++) {
+        const normPara = rawParas[i].replace(/\s+/g, " ");
+        const normSent = s.text.trim().replace(/\s+/g, " ");
+        if (normPara.includes(normSent)) {
+          groups[i].push(s);
+          paraIdx = i;
+          found = true;
+          break;
+        }
+      }
+      if (!found) groups[paraIdx].push(s);
+    }
+  } else {
+    const CHUNK = 5;
+    groups = [];
+    for (let i = 0; i < sentences.length; i += CHUNK) {
+      groups.push(sentences.slice(i, i + CHUNK));
+    }
+  }
+
+  return groups
+    .filter(g => g.length)
+    .map(g => `<p>${g.map(buildSentenceSpan).join(" ")}</p>`)
+    .join("");
 }
 
 /** 將文法標籤套用到中英對照 HTML 的英文段落上 */
@@ -2139,7 +2190,7 @@ export function showReaderMode(article, enrichment = {}) {
     content.innerHTML = translatedContent;
     _overlayKnownWords_(content, knownWords);
   } else if (grammarAnalysis) {
-    content.innerHTML = `<div class="article-viewer">${buildGrammarHTML(grammarAnalysis.sentences, grammarAnalysis.points)}</div>`;
+    content.innerHTML = `<div class="article-viewer">${buildGrammarHTML(grammarAnalysis.sentences, grammarAnalysis.points, article.fullText || "")}</div>`;
     _overlayKnownWords_(content, knownWords);
   } else {
     // 純原文：highlightKnownWords_ 已處理高亮，不需再疊加
@@ -2151,7 +2202,6 @@ export function showReaderMode(article, enrichment = {}) {
     el.addEventListener("click", (e) => {
       e.stopPropagation();
       showReaderTooltip_(el, { word: el.dataset.word, pos: el.dataset.pos, definition: el.dataset.def });
-      jumpToWordCard(el.dataset.word);
     });
   });
 
@@ -2185,29 +2235,63 @@ export function showReaderMode(article, enrichment = {}) {
 function showReaderTooltip_(el, wordData) {
   document.getElementById("readerTooltip")?.remove();
 
+  // 從 localStorage 撈完整資料
+  const full = getAllWords().find(w => (w.word || "").toLowerCase() === (wordData.word || "").toLowerCase());
+
+  const example1 = full?.example1 || "";
+  const example2 = full?.example2 || "";
+  const example2_zh = full?.example2_zh || "";
+
+  const exampleHTML = example2
+    ? `<div style="margin-top:8px;padding-top:8px;border-top:1px solid #e2e8f0;">
+        <div style="font-size:.78rem;color:#94a3b8;margin-bottom:2px;">例句</div>
+        <div style="font-size:.85rem;color:#334155;line-height:1.5;">${escapeHTML(example2)}</div>
+        ${example2_zh ? `<div style="font-size:.8rem;color:#94a3b8;margin-top:2px;">${escapeHTML(example2_zh)}</div>` : ""}
+      </div>`
+    : example1
+    ? `<div style="margin-top:8px;padding-top:8px;border-top:1px solid #e2e8f0;">
+        <div style="font-size:.78rem;color:#94a3b8;margin-bottom:2px;">例句</div>
+        <div style="font-size:.85rem;color:#334155;line-height:1.5;">${escapeHTML(example1)}</div>
+      </div>`
+    : "";
+
   const tip = document.createElement("div");
   tip.id = "readerTooltip";
   tip.className = "reader-tooltip";
   tip.innerHTML = `
     <button onclick="document.getElementById('readerTooltip').remove()"
-      style="position:absolute;top:6px;right:10px;color:#94a3b8;font-size:14px;">✕</button>
-    <div style="font-weight:700">${escapeHTML(wordData.word)}
-      <span style="font-weight:400;color:#64748b;font-size:.85rem"> (${escapeHTML(wordData.pos)})</span>
+      style="position:absolute;top:6px;right:10px;color:#94a3b8;font-size:14px;background:none;border:none;cursor:pointer;padding:0;">✕</button>
+    <div style="font-weight:700;padding-right:20px;">${escapeHTML(wordData.word)}
+      <span style="font-weight:400;color:#64748b;font-size:.85rem;"> (${escapeHTML(wordData.pos)})</span>
     </div>
-    <div style="margin-top:4px;font-size:.9rem;color:#334155">${escapeHTML(wordData.definition)}</div>
+    <div style="margin-top:4px;font-size:.9rem;color:#334155;">${escapeHTML(wordData.definition)}</div>
+    ${exampleHTML}
+    <div style="margin-top:8px;text-align:right;">
+      <button id="_readerJumpBtn"
+        style="font-size:.78rem;color:#A3B18A;background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;">
+        → 查看完整字卡
+      </button>
+    </div>
   `;
 
   document.body.appendChild(tip);
 
+  document.getElementById("_readerJumpBtn")?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    tip.remove();
+    jumpToWordCard(wordData.word);
+  });
+
   const rect = el.getBoundingClientRect();
-  const tipW = 250;
+  const tipW = 280;
   let left = rect.left + window.scrollX;
   if (left + tipW > window.innerWidth - 16) left = window.innerWidth - tipW - 16;
+  if (left < 8) left = 8;
   tip.style.top  = `${rect.bottom + window.scrollY + 6}px`;
   tip.style.left = `${left}px`;
 
-  // 4 秒後自動消失
-  setTimeout(() => tip.remove(), 4000);
+  // 8 秒後自動消失（內容變多，給更多時間閱讀）
+  setTimeout(() => tip.remove(), 8000);
 }
 
 export function hideReaderMode() {

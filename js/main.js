@@ -78,6 +78,7 @@ function initInputTabs() {
       // 點選的 tab → active + 顯示 panel
       btnEl.classList.add("input-tab--active");
       $(panel)?.classList.remove("hidden");
+
     });
   });
 }
@@ -99,7 +100,14 @@ function bindEvents() {
   on("customAddBtn", "click", UI.handleCustomAdd);
   on("ocrPickBtn", "click", UI.handlePickOcrFile);
   on("ocrRunBtn", "click", UI.handleRunOcr);
-  on("loadSheetsBtn", "click", UI.handleLoadSheets);
+  on("loadSheetsBtn", "click", async () => {
+    await UI.handleLoadSheets();
+    // 雲端載入完成後，同步更新圖書館列表
+    try {
+      const articles = await getRecentArticles(50);
+      UI.renderLibraryList(articles);
+    } catch { /* 靜默：圖書館載入失敗不影響主流程 */ }
+  });
   on("pushSheetsBtn", "click", UI.handlePushSheets);
 
   // —— 收藏此文 / 取消收藏 ——
@@ -217,7 +225,7 @@ function bindEvents() {
       }
 
       const viewer = $("grammarArticleViewer");
-      if (viewer) viewer.innerHTML = UI.buildGrammarHTML(data.sentences, data.points);
+      if (viewer) viewer.innerHTML = UI.buildGrammarHTML(data.sentences, data.points, text);
       const panel = $("grammarExplanationPanel");
       if (panel) panel.innerHTML = `<p class="text-sm text-center" style="color:#9CA3AF; padding-top:1.75rem;">點擊文章中的藍色標籤，查看文法解析</p>`;
 
