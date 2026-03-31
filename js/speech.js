@@ -98,8 +98,8 @@ export function speakZh(text, opts = {}) {
   speak(text, { ...opts, lang: "zh-TW" });
 }
 
-// seq: Array<string | {text, lang?}>
-export function speakSequence(seq = []) {
+// seq: Array<string | {text, lang?}>, onEnd?: () => void
+export function speakSequence(seq = [], onEnd) {
   if (!Array.isArray(seq) || !seq.length) return;
   stopAll();
   queue = seq.map(item => {
@@ -111,7 +111,7 @@ export function speakSequence(seq = []) {
   playing = true;
 
   const next = () => {
-    if (!queue.length) { playing = false; return; }
+    if (!queue.length) { playing = false; if (typeof onEnd === "function") onEnd(); return; }
     const cur = queue.shift();
     const u = _utterFor(cur.text, cur.lang);
     u.onend = () => next();

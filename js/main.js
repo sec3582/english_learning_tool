@@ -3,6 +3,7 @@ import * as UI from "./ui.js";
 import { initGSheetsHistory, saveArticleHistory, getRecentArticles, deleteArticleHistory } from "./gsheets_history.js";
 import { APPS_SCRIPT_URL, analyzeGrammar } from "./api.js";
 import { initPixelPet } from "./pixel_pet.js";
+import { stopAll, speakSequence } from "./speech.js";
 // enrichment helpers re-exported from ui.js
 const { getEnrichment, saveEnrichment, deleteEnrichment } = UI;
 
@@ -431,7 +432,31 @@ function bindEvents() {
   });
 
   // —— 閱讀模式：返回編輯 ——
-  on("readerBackBtn", "click", () => UI.hideReaderMode?.());
+  on("readerBackBtn", "click", () => { stopAll(); _resetSpeakBtn(); UI.hideReaderMode?.(); });
+
+  // —— 閱讀模式：朗讀全文 ——
+  let _readerSpeaking = false;
+  function _resetSpeakBtn() {
+    const btn = $("readerSpeakBtn");
+    if (!btn) return;
+    btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg> 朗讀全文`;
+    btn.disabled = false;
+    _readerSpeaking = false;
+  }
+  on("readerSpeakBtn", "click", () => {
+    if (_readerSpeaking) {
+      stopAll();
+      _resetSpeakBtn();
+      return;
+    }
+    const article = UI.getCurrentReaderArticle?.();
+    if (!article?.fullText) return;
+    const paragraphs = article.fullText.split(/\n\n+/).map(p => p.trim()).filter(Boolean);
+    _readerSpeaking = true;
+    const btn = $("readerSpeakBtn");
+    btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg> 停止朗讀`;
+    speakSequence(paragraphs.map(p => ({ text: p, lang: "en-US" })), _resetSpeakBtn);
+  });
 
   // —— 閱讀模式：翻譯此文 ——
   on("readerTranslateBtn", "click", async () => {
