@@ -1058,7 +1058,7 @@ export function submitQuizAnswer(asWrong = false) {
       const g = grade(q, asWrong ? "" : userInput);
       correct = !!g.correct || (!asWrong && userInput === (w.word || "").toLowerCase());
     }
- 
+
 
     // ✅ 間隔複習排程
     scheduleNext(w.word, !!correct);

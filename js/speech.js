@@ -8,7 +8,7 @@ let queue = [];
 let playing = false;
 
 const prefs = {
-  rate: 0.7,
+  rate: 0.9,
   pitch: 1.0,
   volume: 1.0,
   voiceEn: null,  // 指定英文 voice.name（可選）
