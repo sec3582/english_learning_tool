@@ -1,7 +1,7 @@
 // js/ui.js（頂端 imports）
 import { analyzeArticle, extractJSON, getUsageSummary, getUsageBudget, setUsageBudget, resetUsageMonth, analyzeCustomWordAPI } from "./api.js";
 import { addWord, getAllWords, deleteWord, getTodayWords, getDueWords, getDueCount, saveAllWords, scheduleNext, ensureDueForAll, getMasteredCount, getSyncMeta, clearDirtyAndSetLastSync } from "./storage.js";
-import { speak, speakSequence } from "./speech.js";
+import { speak, speakEn, speakSequence } from "./speech.js";
 import { buildTypingQuestion, makeChoiceQuestion, makeDictationQuestion, grade, afterAnswerSpeech, pickExamplePair } from "./quiz.js";
 import { pushLocalStorageToSheets } from "./sheets_push.js";
 import { updatePetDisplay, onWordAdded, onReviewComplete } from "./pixel_pet.js";
@@ -2201,6 +2201,7 @@ export function showReaderMode(article, enrichment = {}) {
   content.querySelectorAll(".reader-word").forEach(el => {
     el.addEventListener("click", (e) => {
       e.stopPropagation();
+      speakEn(el.dataset.word);
       showReaderTooltip_(el, { word: el.dataset.word, pos: el.dataset.pos, definition: el.dataset.def });
     });
   });
@@ -2235,26 +2236,6 @@ export function showReaderMode(article, enrichment = {}) {
 function showReaderTooltip_(el, wordData) {
   document.getElementById("readerTooltip")?.remove();
 
-  // 從 localStorage 撈完整資料
-  const full = getAllWords().find(w => (w.word || "").toLowerCase() === (wordData.word || "").toLowerCase());
-
-  const example1 = full?.example1 || "";
-  const example2 = full?.example2 || "";
-  const example2_zh = full?.example2_zh || "";
-
-  const exampleHTML = example2
-    ? `<div style="margin-top:8px;padding-top:8px;border-top:1px solid #e2e8f0;">
-        <div style="font-size:.78rem;color:#94a3b8;margin-bottom:2px;">例句</div>
-        <div style="font-size:.85rem;color:#334155;line-height:1.5;">${escapeHTML(example2)}</div>
-        ${example2_zh ? `<div style="font-size:.8rem;color:#94a3b8;margin-top:2px;">${escapeHTML(example2_zh)}</div>` : ""}
-      </div>`
-    : example1
-    ? `<div style="margin-top:8px;padding-top:8px;border-top:1px solid #e2e8f0;">
-        <div style="font-size:.78rem;color:#94a3b8;margin-bottom:2px;">例句</div>
-        <div style="font-size:.85rem;color:#334155;line-height:1.5;">${escapeHTML(example1)}</div>
-      </div>`
-    : "";
-
   const tip = document.createElement("div");
   tip.id = "readerTooltip";
   tip.className = "reader-tooltip";
@@ -2265,7 +2246,6 @@ function showReaderTooltip_(el, wordData) {
       <span style="font-weight:400;color:#64748b;font-size:.85rem;"> (${escapeHTML(wordData.pos)})</span>
     </div>
     <div style="margin-top:4px;font-size:.9rem;color:#334155;">${escapeHTML(wordData.definition)}</div>
-    ${exampleHTML}
     <div style="margin-top:8px;text-align:right;">
       <button id="_readerJumpBtn"
         style="font-size:.78rem;color:#A3B18A;background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;">
