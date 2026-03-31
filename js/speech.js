@@ -8,7 +8,7 @@ let queue = [];
 let playing = false;
 
 const prefs = {
-  rate: 1.0,
+  rate: 0.7,
   pitch: 1.0,
   volume: 1.0,
   voiceEn: null,  // 指定英文 voice.name（可選）
@@ -35,22 +35,35 @@ function isChinese(text = "") {
   return /[\u4E00-\u9FFF]/.test(text);
 }
 
-function pickVoice(langWanted, specifiedName) {
+const _MALE_NAME_HINTS = ["david", "mark", "daniel", "alex", "fred", "james", "george", "arthur", "thomas", "richard", "oliver", "guy", "bruce", "aaron", "ryan", "lee"];
+
+function _isMaleVoice(v) {
+  const n = (v.name || "").toLowerCase();
+  if (n.includes("female")) return false;
+  if (n.includes("male")) return true;
+  return _MALE_NAME_HINTS.some(h => n.includes(h));
+}
+
+function pickVoice(langWanted, specifiedName, preferMale = false) {
   if (!ready) return null;
   if (specifiedName) {
     const v = voices.find(v => v.name === specifiedName);
     if (v) return v;
   }
+
+  const tag = (langWanted || "").split("-")[0];
+  const inLang = voices.filter(v => (v.lang || "").toLowerCase().startsWith(tag));
+  const pool = inLang.length ? inLang : voices;
+
+  if (preferMale) {
+    const male = pool.find(v => _isMaleVoice(v));
+    if (male) return male;
+  }
+
   // 優先完全相符，再找同語系
   const exact = voices.find(v => (v.lang || "").toLowerCase() === (langWanted || "").toLowerCase());
   if (exact) return exact;
-
-  const tag = (langWanted || "").split("-")[0];
-  const sameLang = voices.find(v => (v.lang || "").toLowerCase().startsWith(tag));
-  if (sameLang) return sameLang;
-
-  // 兜底：第一個可用
-  return voices[0] || null;
+  return pool[0] || voices[0] || null;
 }
 
 function _utterFor(text, lang) {
@@ -59,9 +72,9 @@ function _utterFor(text, lang) {
   u.rate = prefs.rate;
   u.pitch = prefs.pitch;
   u.volume = prefs.volume;
-  // 指定 voice
+  // 指定 voice（英文優先男聲）
   if (lang?.startsWith("zh")) u.voice = pickVoice(lang, prefs.voiceZh);
-  else u.voice = pickVoice(lang, prefs.voiceEn);
+  else u.voice = pickVoice(lang, prefs.voiceEn, true);
   return u;
 }
 
