@@ -2073,6 +2073,7 @@ function _applyGrammarTagsToTranslation_(translatedHTML, grammarData) {
 /* ===== 閱讀模式 ===== */
 let _readerArticle = null;
 export function getCurrentReaderArticle() { return _readerArticle; }
+let _readerCurrentGrammarPoint = null;
 
 /**
  * 在已渲染的 container 內疊加已知單字高亮（reader-word）。
@@ -2259,7 +2260,7 @@ export function showReaderMode(article, enrichment = {}) {
   });
 
   // ── 文法標籤點擊 → 顯示解析面板 ──
-  let _readerCurrentGrammarPoint = null;
+  _readerCurrentGrammarPoint = null;
 
   // 用事件委託處理「加入／移除文法練習」按鈕
   const readerGrammarPanelEl = document.getElementById("readerGrammarPanel");
