@@ -289,7 +289,8 @@ export function buildTypingQuestion(wordObj, opts = { showZh: true }) {
   const pair = pickExamplePair(wordObj, { showZh: !!opts.showZh });
   const expectedVariant = detectExpectedVariant(wordObj.word, pair.en);
   const expected = (expectedVariant || (wordObj.word || '')).toLowerCase();
-  const maskedExample = pair.en ? maskWordInText(expected || wordObj.word, pair.en) : "";
+  const _masked = pair.en ? maskWordInText(expected || wordObj.word, pair.en) : "";
+  const maskedExample = (_masked && _masked !== pair.en) ? _masked : "";
   return {
     type: "typing",
     expected,
