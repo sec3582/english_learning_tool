@@ -135,11 +135,17 @@ export async function pushLocalStorageToSheets() {
     const v = localStorage.getItem(k);
     if (v !== null) petData[k] = v;
   }
+  const now = new Date();
+  const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const usageKey = `wordgarden_usage_${monthKey}`;
+
   const miscRows = [
     ["key", "value"],
     ["petData",       JSON.stringify(petData)],
     ["titleOverrides", localStorage.getItem('library_title_overrides') || '{}'],
     ["mnemonicCache",  localStorage.getItem('mnemonic_cache') || '{}'],
+    ["wordgarden_budget", localStorage.getItem('wordgarden_budget') || "0"],
+    [usageKey,            localStorage.getItem(usageKey) || "{}"],
   ];
   await clearRange(`${SHEET_MISC}!A1:B`);
   await updateValues(`${SHEET_MISC}!A1`, miscRows);

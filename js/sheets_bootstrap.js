@@ -180,6 +180,10 @@ export async function bootstrapFromSheetsToLocalStorage() {
     }
     if (miscMap.titleOverrides) localStorage.setItem('library_title_overrides', miscMap.titleOverrides);
     if (miscMap.mnemonicCache)  localStorage.setItem('mnemonic_cache', miscMap.mnemonicCache);
+    if (miscMap.wordgarden_budget != null) localStorage.setItem('wordgarden_budget', miscMap.wordgarden_budget);
+    for (const [k, v] of Object.entries(miscMap)) {
+      if (k.startsWith('wordgarden_usage_')) localStorage.setItem(k, v);
+    }
     miscPulled = miscMap;
   } catch (err) {
     console.warn("[SheetsBootstrap] Misc sheet not found or failed:", err.message);
