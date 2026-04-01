@@ -1306,7 +1306,7 @@ function _tryParseJSON(key, fallback) {
   try { return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback)); } catch { return fallback; }
 }
 
-export function handleExportJson() {
+export async function handleExportJson() {
   const words = getAllWords();
 
   const petData = {};
@@ -1315,16 +1315,34 @@ export function handleExportJson() {
     if (v !== null) petData[k] = v;
   }
 
+  const usageData = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith('wordgarden_usage_')) usageData[k] = localStorage.getItem(k);
+  }
+
+  let articles = [];
+  try {
+    const mod = await import("./gsheets_history.js");
+    articles = await mod.getAllArticles();
+  } catch (e) {
+    console.warn("[Export] 無法從 Google Sheets 取得文章：", e.message);
+  }
+
   const backup = {
     version: 2,
     exportedAt: new Date().toISOString(),
     words,
-    addedLogs:      _tryParseJSON('addedLogs', []),
-    reviewLogs:     _tryParseJSON('reviewLogs', []),
-    enrichments:    _tryParseJSON('article_enrichments', {}),
+    addedLogs:           _tryParseJSON('addedLogs', []),
+    reviewLogs:          _tryParseJSON('reviewLogs', []),
+    enrichments:         _tryParseJSON('article_enrichments', {}),
     petData,
-    titleOverrides: _tryParseJSON('library_title_overrides', {}),
-    mnemonicCache:  _tryParseJSON('mnemonic_cache', {}),
+    titleOverrides:      _tryParseJSON('library_title_overrides', {}),
+    mnemonicCache:       _tryParseJSON('mnemonic_cache', {}),
+    grammarPoints:       _tryParseJSON('grammarPracticePoints', []),
+    articles,
+    wordgarden_budget:   localStorage.getItem('wordgarden_budget') ?? null,
+    usageData,
   };
 
   const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
@@ -1345,6 +1363,11 @@ export function handleExportJson() {
 }
 
 export function handleImportJsonClick() {
+  const ok = confirm(
+    "這會用「備份 JSON 檔」覆蓋所有本機資料（單字、記錄、翻譯、記憶法、電子雞、預算等）。\n\n確定要匯入嗎？"
+  );
+  if (!ok) return;
+
   const input = document.getElementById("importJsonFile");
   if (!input) {
     alert("找不到匯入用的檔案選擇器（importJsonFile）。");
@@ -1413,64 +1436,72 @@ export async function handlePushSheets() {
 function importJsonFile(file) {
   const reader = new FileReader();
 
-  reader.onload = (e) => {
+  reader.onload = async (e) => {
     try {
       const text = String(e.target.result || "");
       const data = JSON.parse(text);
 
       // ── v2：完整備份格式 ──
       if (data && typeof data === 'object' && !Array.isArray(data) && Number(data.version) >= 2) {
-        // 單字：合併（現有優先，不覆寫重複）
+        // 單字：覆蓋本機
         const wordsArr = Array.isArray(data.words) ? data.words : [];
-        const existing = getAllWords();
-        const map = new Map(existing.map(w => [String(w.word || '').toLowerCase(), w]));
-        let added = 0, skipped = 0;
-        for (const obj of wordsArr) {
-          const key = String(obj.word || '').toLowerCase().trim();
-          if (!key) { skipped++; continue; }
-          if (map.has(key)) { skipped++; continue; }
-          map.set(key, obj);
-          added++;
-        }
-        saveAllWords(Array.from(map.values()));
+        saveAllWords(wordsArr);
 
-        // 翻譯／文法：合併（現有 key 優先）
+        // addedLogs / reviewLogs：覆蓋
+        if (Array.isArray(data.addedLogs))  localStorage.setItem('addedLogs',  JSON.stringify(data.addedLogs));
+        if (Array.isArray(data.reviewLogs)) localStorage.setItem('reviewLogs', JSON.stringify(data.reviewLogs));
+
+        // 翻譯／文法：覆蓋
         if (data.enrichments && typeof data.enrichments === 'object') {
-          try {
-            const cur = _tryParseJSON('article_enrichments', {});
-            localStorage.setItem('article_enrichments', JSON.stringify({ ...data.enrichments, ...cur }));
-          } catch {}
+          localStorage.setItem('article_enrichments', JSON.stringify(data.enrichments));
         }
 
-        // 圖書館標題覆寫：合併（現有優先）
+        // 圖書館標題覆寫：覆蓋
         if (data.titleOverrides && typeof data.titleOverrides === 'object') {
-          try {
-            const cur = _tryParseJSON('library_title_overrides', {});
-            localStorage.setItem('library_title_overrides', JSON.stringify({ ...data.titleOverrides, ...cur }));
-          } catch {}
+          localStorage.setItem('library_title_overrides', JSON.stringify(data.titleOverrides));
         }
 
-        // 記憶法快取：合併（現有優先）
+        // 記憶法快取：覆蓋
         if (data.mnemonicCache && typeof data.mnemonicCache === 'object') {
-          try {
-            const cur = _tryParseJSON('mnemonic_cache', {});
-            localStorage.setItem('mnemonic_cache', JSON.stringify({ ...data.mnemonicCache, ...cur }));
-          } catch {}
+          localStorage.setItem('mnemonic_cache', JSON.stringify(data.mnemonicCache));
         }
 
-        // 電子雞：只在本機尚無進度時還原
+        // 電子雞：覆蓋
         if (data.petData && typeof data.petData === 'object') {
-          if (localStorage.getItem('level') === null) {
-            for (const [k, v] of Object.entries(data.petData)) localStorage.setItem(k, v);
+          for (const [k, v] of Object.entries(data.petData)) localStorage.setItem(k, v);
+        }
+
+        // 文法考點：覆蓋
+        if (Array.isArray(data.grammarPoints)) {
+          localStorage.setItem('grammarPracticePoints', JSON.stringify(data.grammarPoints));
+        }
+
+        // 文章收藏：覆蓋 Google Sheets
+        if (Array.isArray(data.articles) && data.articles.length > 0) {
+          try {
+            const mod = await import("./gsheets_history.js");
+            await mod.replaceAllArticles(data.articles);
+          } catch (e) {
+            console.warn("[Import] 文章寫回 Google Sheets 失敗：", e.message);
+            alert(`警告：文章（${data.articles.length} 篇）寫回 Google Sheets 失敗，其他資料已還原。\n錯誤：${e.message}`);
+          }
+        }
+
+        // API 預算：覆蓋
+        if (data.wordgarden_budget != null) localStorage.setItem('wordgarden_budget', String(data.wordgarden_budget));
+
+        // 用量估算：覆蓋
+        if (data.usageData && typeof data.usageData === 'object') {
+          for (const [k, v] of Object.entries(data.usageData)) {
+            if (k.startsWith('wordgarden_usage_')) localStorage.setItem(k, v);
           }
         }
 
         renderSidebarLists?.();
         alert(
-          `匯入完成！\n` +
-          `單字：新增 ${added} 筆，略過 ${skipped} 筆（重複）。\n` +
-          `翻譯／文法、圖書館標題、記憶法已合併還原。\n` +
-          (localStorage.getItem('level') !== null ? `電子雞已有進度，略過覆寫。` : `電子雞已還原。`)
+          `匯入完成！所有資料已覆蓋還原。\n` +
+          `單字：${wordsArr.length} 筆　文法考點：${data.grammarPoints?.length ?? 0} 筆\n` +
+          `文章收藏：${data.articles?.length ?? 0} 篇　記錄：addedLogs ${data.addedLogs?.length ?? 0}、reviewLogs ${data.reviewLogs?.length ?? 0} 筆。`
         );
         return;
       }

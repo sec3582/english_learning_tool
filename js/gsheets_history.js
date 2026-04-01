@@ -169,6 +169,42 @@ export async function getRecentArticles(n = 10) {
   }
 }
 
+// 匯出用：抓取所有文章（需互動式授權）
+export async function getAllArticles() {
+  const ok = await ensureAuthed_(true);
+  if (!ok) throw new Error("未授權 Google");
+  await ensureHistorySheet_();
+  const res = await gapi.client.sheets.spreadsheets.values.get({
+    spreadsheetId: SPREADSHEET_ID,
+    range: `${SHEET_HISTORY}!A2:C`,
+  });
+  const rows = res.result.values || [];
+  return rows.map(r => ({
+    title:    r[0] || "(untitled)",
+    fullText: r[1] || "",
+    savedAt:  r[2] || "",
+  }));
+}
+
+// 匯入用：覆蓋全部文章（清空後重寫）
+export async function replaceAllArticles(articles) {
+  const ok = await ensureAuthed_(true);
+  if (!ok) throw new Error("未授權 Google");
+  await ensureHistorySheet_();
+  await gapi.client.sheets.spreadsheets.values.clear({
+    spreadsheetId: SPREADSHEET_ID,
+    range: `${SHEET_HISTORY}!A2:C`,
+  });
+  if (!articles.length) return;
+  const rows = articles.map(a => [a.title || "(untitled)", a.fullText || "", a.savedAt || ""]);
+  await gapi.client.sheets.spreadsheets.values.update({
+    spreadsheetId: SPREADSHEET_ID,
+    range: `${SHEET_HISTORY}!A2`,
+    valueInputOption: "RAW",
+    resource: { values: rows },
+  });
+}
+
 // 刪除指定列（sheetRowIndex 為 1-based，含 header；資料從第 2 列起）
 export async function deleteArticleHistory(sheetRowIndex) {
   if (!sheetRowIndex || sheetRowIndex < 2) throw new Error("無效的列索引");
