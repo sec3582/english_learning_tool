@@ -328,7 +328,7 @@ function bindEvents() {
       exampleSentence: sentenceEl?.textContent?.trim() || point.word,
     };
 
-    // 更新解說區（含「加入文法練習」按鈕）
+    // 更新解說區（含「加入／移除文法練習」toggle 按鈕）
     const panel = $("grammarExplanationPanel");
     if (panel) {
       panel.innerHTML = `
@@ -339,15 +339,17 @@ function bindEvents() {
                       border-left:2px solid #93c5fd; padding-left:10px; margin-top:4px;">${_esc(point.context)}</div>
           <div style="margin-top:8px; text-align:right;">
             <button id="grammarModalAddPracticeBtn"
-              style="font-size:.78rem;color:#4F46E5;background:#EEF2FF;border:1px solid #C7D2FE;
-                     border-radius:6px;padding:3px 10px;cursor:pointer;">
-              + 加入文法練習
+              style="font-size:.78rem;border-radius:6px;padding:3px 10px;cursor:pointer;border:1px solid;">
             </button>
           </div>
         </div>`;
-      $("grammarModalAddPracticeBtn")?.addEventListener("click", () => {
-        if (_grammarModalCurrentPoint) UI.addGrammarPointFromPanel(_grammarModalCurrentPoint);
-      });
+      const practiceBtn = $("grammarModalAddPracticeBtn");
+      if (practiceBtn && _grammarModalCurrentPoint) {
+        UI._syncGrammarPracticeBtnState(practiceBtn, _grammarModalCurrentPoint);
+        practiceBtn.addEventListener("click", () => {
+          UI._toggleGrammarPracticeBtn(practiceBtn, _grammarModalCurrentPoint);
+        });
+      }
     }
   });
 

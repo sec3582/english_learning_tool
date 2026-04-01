@@ -1,6 +1,6 @@
 // js/ui.js（頂端 imports）
 import { analyzeArticle, extractJSON, getUsageSummary, getUsageBudget, setUsageBudget, resetUsageMonth, analyzeCustomWordAPI, generateGrammarQuiz, gradeGrammarAnswer } from "./api.js";
-import { getGrammarPracticePoints, addGrammarPoint, recordGrammarPractice } from "./grammarStorage.js";
+import { getGrammarPracticePoints, addGrammarPoint, removeGrammarPoint, recordGrammarPractice } from "./grammarStorage.js";
 import { addWord, getAllWords, deleteWord, getTodayWords, getDueWords, getDueCount, saveAllWords, scheduleNext, ensureDueForAll, getMasteredCount, getSyncMeta, clearDirtyAndSetLastSync } from "./storage.js";
 import { speak, speakEn, speakSequence } from "./speech.js";
 import { buildTypingQuestion, makeChoiceQuestion, makeDictationQuestion, grade, afterAnswerSpeech, pickExamplePair } from "./quiz.js";
@@ -2208,14 +2208,14 @@ export function showReaderMode(article, enrichment = {}) {
   // ── 文法標籤點擊 → 顯示解析面板 ──
   let _readerCurrentGrammarPoint = null;
 
-  // 用事件委託處理「加入文法練習」按鈕，避免 cloneNode 後變數失效的問題
-  const readerGrammarPanel = document.getElementById("readerGrammarPanel");
-  if (readerGrammarPanel && !readerGrammarPanel._addBtnBound) {
-    readerGrammarPanel._addBtnBound = true;
-    readerGrammarPanel.addEventListener("click", (e) => {
-      if (e.target.closest("#readerAddGrammarPracticeBtn") && _readerCurrentGrammarPoint) {
-        addGrammarPointFromPanel(_readerCurrentGrammarPoint);
-      }
+  // 用事件委託處理「加入／移除文法練習」按鈕
+  const readerGrammarPanelEl = document.getElementById("readerGrammarPanel");
+  if (readerGrammarPanelEl && !readerGrammarPanelEl._addBtnBound) {
+    readerGrammarPanelEl._addBtnBound = true;
+    readerGrammarPanelEl.addEventListener("click", (e) => {
+      const btn = e.target.closest("#readerAddGrammarPracticeBtn");
+      if (!btn || !_readerCurrentGrammarPoint) return;
+      _toggleGrammarPracticeBtn(btn, _readerCurrentGrammarPoint);
     });
   }
 
@@ -2239,8 +2239,11 @@ export function showReaderMode(article, enrichment = {}) {
             `<div class="font-medium mb-1" style="color:#4A4A4A;">${escapeHTML(point.name)}</div>` +
             `<div class="text-gray-600 mb-1">${escapeHTML(point.explanation)}</div>` +
             `<div style="color:#A3B18A;font-size:0.85em;">${escapeHTML(point.context)}</div>`;
-          // 直接從 DOM 取得最新的按鈕元素再顯示
-          document.getElementById("readerAddGrammarPracticeBtn")?.classList.remove("hidden");
+          const btn = document.getElementById("readerAddGrammarPracticeBtn");
+          if (btn) {
+            btn.classList.remove("hidden");
+            _syncGrammarPracticeBtnState(btn, _readerCurrentGrammarPoint);
+          }
         }
         return;
       }
@@ -2504,15 +2507,50 @@ export function grammarQuizShowHint() {
   _gqEl("grammarQuizShowHint").classList.add("hidden");
 }
 
-// ── "加入文法練習" 按鈕的共用處理 ──
-// pointData: { name, explanation, context, word, exampleSentence }
-export function addGrammarPointFromPanel(pointData) {
-  const { added } = addGrammarPoint(pointData);
-  if (added) {
-    showToast(`已將「${pointData.name}」加入文法練習`, { type: "success", duration: 2500 });
+// ── 文法練習按鈕共用工具 ──
+
+function _isInPractice(pointData) {
+  const key = `${(pointData.name || "").trim()}||${(pointData.word || "").trim()}`;
+  return getGrammarPracticePoints().some(
+    p => `${(p.name || "").trim()}||${(p.word || "").trim()}` === key
+  );
+}
+
+// 根據目前收藏狀態同步按鈕外觀
+export function _syncGrammarPracticeBtnState(btn, pointData) {
+  if (!btn) return;
+  const saved = _isInPractice(pointData);
+  if (saved) {
+    btn.textContent = "已加入 ✕";
+    btn.style.color          = "#DC2626";
+    btn.style.borderColor    = "#FECACA";
+    btn.style.background     = "#FFF1F2";
   } else {
-    showToast(`「${pointData.name}」已在練習清單中`, { type: "info", duration: 2000 });
+    btn.textContent = "+ 加入文法練習";
+    btn.style.color          = "#4F46E5";
+    btn.style.borderColor    = "#C7D2FE";
+    btn.style.background     = "#EEF2FF";
   }
+}
+
+// 切換加入／移除，並更新按鈕外觀
+export function _toggleGrammarPracticeBtn(btn, pointData) {
+  if (_isInPractice(pointData)) {
+    const points = getGrammarPracticePoints();
+    const key = `${(pointData.name || "").trim()}||${(pointData.word || "").trim()}`;
+    const found = points.find(p => `${(p.name || "").trim()}||${(p.word || "").trim()}` === key);
+    if (found) removeGrammarPoint(found.id);
+    showToast(`已移除「${pointData.name}」`, { type: "info", duration: 2000 });
+  } else {
+    addGrammarPoint(pointData);
+    showToast(`已將「${pointData.name}」加入文法練習`, { type: "success", duration: 2500 });
+  }
+  if (btn) _syncGrammarPracticeBtnState(btn, pointData);
+}
+
+// 保留給舊呼叫點（main.js grammarModal）
+export function addGrammarPointFromPanel(pointData, btn = null) {
+  _toggleGrammarPracticeBtn(btn, pointData);
 }
 
 function _extractSentence(text, word) {
