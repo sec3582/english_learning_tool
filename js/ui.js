@@ -1,5 +1,6 @@
 // js/ui.js（頂端 imports）
-import { analyzeArticle, extractJSON, getUsageSummary, getUsageBudget, setUsageBudget, resetUsageMonth, analyzeCustomWordAPI } from "./api.js";
+import { analyzeArticle, extractJSON, getUsageSummary, getUsageBudget, setUsageBudget, resetUsageMonth, analyzeCustomWordAPI, generateGrammarQuiz, gradeGrammarAnswer } from "./api.js";
+import { getGrammarPracticePoints, addGrammarPoint, recordGrammarPractice } from "./grammarStorage.js";
 import { addWord, getAllWords, deleteWord, getTodayWords, getDueWords, getDueCount, saveAllWords, scheduleNext, ensureDueForAll, getMasteredCount, getSyncMeta, clearDirtyAndSetLastSync } from "./storage.js";
 import { speak, speakEn, speakSequence } from "./speech.js";
 import { buildTypingQuestion, makeChoiceQuestion, makeDictationQuestion, grade, afterAnswerSpeech, pickExamplePair } from "./quiz.js";
@@ -2205,6 +2206,9 @@ export function showReaderMode(article, enrichment = {}) {
   });
 
   // ── 文法標籤點擊 → 顯示解析面板 ──
+  const readerAddBtn = document.getElementById("readerAddGrammarPracticeBtn");
+  let _readerCurrentGrammarPoint = null;
+
   if (grammarAnalysis && grammarPanel && grammarPanelContent) {
     content.addEventListener("click", (e) => {
       const tag = e.target.closest("grammar-tag");
@@ -2212,16 +2216,36 @@ export function showReaderMode(article, enrichment = {}) {
         e.stopPropagation();
         const point = grammarPoints[tag.id];
         if (point) {
+          // 找出這個 point 所在的句子作為 exampleSentence
+          const sentenceObj = grammarAnalysis.sentences?.find(s => s.id === point.sentenceId);
+          _readerCurrentGrammarPoint = {
+            name:            point.name,
+            explanation:     point.explanation,
+            context:         point.context,
+            word:            point.word,
+            exampleSentence: sentenceObj?.text || point.word,
+          };
           grammarPanel.classList.remove("hidden");
           grammarPanelContent.innerHTML =
             `<div class="font-medium mb-1" style="color:#4A4A4A;">${escapeHTML(point.name)}</div>` +
             `<div class="text-gray-600 mb-1">${escapeHTML(point.explanation)}</div>` +
             `<div style="color:#A3B18A;font-size:0.85em;">${escapeHTML(point.context)}</div>`;
+          if (readerAddBtn) readerAddBtn.classList.remove("hidden");
         }
         return;
       }
       document.getElementById("readerTooltip")?.remove();
     });
+
+    if (readerAddBtn) {
+      // 每次 showReaderMode 都重新綁定（移除舊監聽器）
+      const newBtn = readerAddBtn.cloneNode(true);
+      readerAddBtn.parentNode.replaceChild(newBtn, readerAddBtn);
+      newBtn.classList.add("hidden");
+      newBtn.addEventListener("click", () => {
+        if (_readerCurrentGrammarPoint) addGrammarPointFromPanel(_readerCurrentGrammarPoint);
+      });
+    }
   } else {
     content.addEventListener("click", () => {
       document.getElementById("readerTooltip")?.remove();
@@ -2319,6 +2343,175 @@ export async function handleSelectionAnalyze(term, anchorRect = null) {
   } catch (err) {
     console.error(err);
     showToast("分析失敗，請稍後再試", { type: "warn", duration: 4000 });
+  }
+}
+
+/* ===== 文法測驗 ===== */
+
+let _gqQuestions   = [];   // 本輪 5 題
+let _gqIndex       = 0;    // 目前題號 (0-based)
+let _gqScores      = [];   // 'A' | 'B' | 'C' per question
+let _gqCurrentPoint = null; // 目前題目對應的文法點（供 reader 收藏按鈕用）
+
+function _gqEl(id) { return document.getElementById(id); }
+
+export async function openGrammarQuiz() {
+  const points = getGrammarPracticePoints();
+  if (!points.length) {
+    showToast("請先在圖書館文法分析中，點擊藍色文法標籤，加入文法練習點", { type: "warn", duration: 4000 });
+    return;
+  }
+
+  // 開啟 modal，顯示 loading
+  const modal = _gqEl("grammarQuizModal");
+  modal.classList.remove("hidden"); modal.classList.add("flex");
+  _gqEl("grammarQuizLoading").classList.remove("hidden");
+  _gqEl("grammarQuizQuestion").classList.add("hidden");
+  _gqEl("grammarQuizSummary").classList.add("hidden");
+  _gqEl("grammarQuizProgress").textContent = "";
+
+  // 準備 knownWords
+  const knownWords = getAllWords().map(w => ({ word: w.word, definition: w.definition }));
+
+  try {
+    const questions = await generateGrammarQuiz(points, knownWords);
+    if (!Array.isArray(questions) || questions.length === 0) throw new Error("AI 未回傳題目");
+    _gqQuestions = questions.slice(0, 5);
+    _gqIndex  = 0;
+    _gqScores = [];
+    _gqEl("grammarQuizLoading").classList.add("hidden");
+    _gqShowQuestion();
+  } catch (err) {
+    console.error("[文法測驗]", err);
+    modal.classList.add("hidden"); modal.classList.remove("flex");
+    showToast("出題失敗：" + err.message, { type: "warn", duration: 4000 });
+  }
+}
+
+function _gqShowQuestion() {
+  const q = _gqQuestions[_gqIndex];
+  if (!q) return;
+
+  _gqCurrentPoint = q;
+  _gqEl("grammarQuizProgress").textContent = `${_gqIndex + 1} / ${_gqQuestions.length}`;
+  _gqEl("grammarQuizPointName").textContent  = q.grammarPointName || "";
+  _gqEl("grammarQuizInstruction").textContent = q.instruction || "";
+  _gqEl("grammarQuizOriginal").textContent   = q.originalSentence || "";
+
+  const hintEl = _gqEl("grammarQuizHint");
+  if (q.hint) {
+    hintEl.textContent = `提示：${q.hint}`;
+    hintEl.classList.add("hidden"); // 隱藏，等使用者按提示才顯示
+  } else {
+    hintEl.classList.add("hidden");
+  }
+
+  _gqEl("grammarQuizAnswer").value = "";
+  _gqEl("grammarQuizAnswer").disabled = false;
+  _gqEl("grammarQuizFeedback").classList.add("hidden");
+  _gqEl("grammarQuizSubmit").classList.remove("hidden");
+  _gqEl("grammarQuizShowHint").classList.remove("hidden");
+  _gqEl("grammarQuizNext").classList.add("hidden");
+  _gqEl("grammarQuizQuestion").classList.remove("hidden");
+  _gqEl("grammarQuizAnswer").focus();
+}
+
+export async function submitGrammarQuizAnswer() {
+  const userAnswer = _gqEl("grammarQuizAnswer").value.trim();
+  if (!userAnswer) { showToast("請先輸入改寫後的句子", { type: "warn", duration: 2000 }); return; }
+
+  const q = _gqQuestions[_gqIndex];
+  _gqEl("grammarQuizSubmit").disabled = true;
+  _gqEl("grammarQuizSubmit").textContent = "批改中…";
+
+  try {
+    const result = await gradeGrammarAnswer(
+      q.instruction, q.originalSentence, userAnswer, q.grammarPointName || ""
+    );
+
+    const score = result?.score || "C";
+    _gqScores.push(score);
+
+    // 記錄練習歷史
+    const points = getGrammarPracticePoints();
+    const matched = points.find(p => p.name === q.grammarPointName);
+    if (matched) recordGrammarPractice(matched.id);
+
+    // 顯示回饋
+    const fb = _gqEl("grammarQuizFeedback");
+    fb.classList.remove("hidden");
+    fb.style.background = score === "A" ? "#F0FDF4" : score === "B" ? "#FEFCE8" : "#FFF1F2";
+    fb.style.border     = score === "A" ? "1px solid #86EFAC" : score === "B" ? "1px solid #FDE047" : "1px solid #FECDD3";
+
+    const scoreLabel = { A: "✓ 優秀", B: "△ 大致正確", C: "✗ 需要改進" }[score] || score;
+    const scoreColor = { A: "#16A34A", B: "#CA8A04", C: "#DC2626" }[score] || "#555";
+    _gqEl("grammarQuizFeedbackScore").innerHTML =
+      `<span style="color:${scoreColor};font-size:1rem;">${scoreLabel}</span>`;
+    _gqEl("grammarQuizFeedbackRef").innerHTML =
+      `<span style="color:#6B7280;font-size:.8em;">參考答案：</span> ${escapeHTML(result?.referenceSentence || "")}`;
+    _gqEl("grammarQuizFeedbackText").textContent = result?.feedbackZh || "";
+    _gqEl("grammarQuizFeedbackNote").textContent = result?.grammarNote ? `📌 ${result.grammarNote}` : "";
+
+  } catch (err) {
+    console.error("[文法批改]", err);
+    _gqScores.push("C");
+    const fb = _gqEl("grammarQuizFeedback");
+    fb.classList.remove("hidden");
+    _gqEl("grammarQuizFeedbackScore").textContent = "批改失敗，請繼續下一題";
+    _gqEl("grammarQuizFeedbackRef").textContent   = "";
+    _gqEl("grammarQuizFeedbackText").textContent  = err.message;
+    _gqEl("grammarQuizFeedbackNote").textContent  = "";
+  } finally {
+    _gqEl("grammarQuizSubmit").disabled = false;
+    _gqEl("grammarQuizSubmit").textContent = "提交";
+    _gqEl("grammarQuizSubmit").classList.add("hidden");
+    _gqEl("grammarQuizShowHint").classList.add("hidden");
+    _gqEl("grammarQuizAnswer").disabled = true;
+    _gqEl("grammarQuizNext").classList.remove("hidden");
+  }
+}
+
+export function grammarQuizNext() {
+  _gqIndex++;
+  if (_gqIndex >= _gqQuestions.length) {
+    _gqShowSummary();
+  } else {
+    _gqShowQuestion();
+  }
+}
+
+function _gqShowSummary() {
+  _gqEl("grammarQuizQuestion").classList.add("hidden");
+  const total = _gqScores.length;
+  const aCount = _gqScores.filter(s => s === "A").length;
+  const bCount = _gqScores.filter(s => s === "B").length;
+  const label = `${aCount + bCount} / ${total} 題答對`;
+  _gqEl("grammarQuizSummaryScore").textContent = label;
+  _gqEl("grammarQuizSummaryText").textContent  =
+    `優秀 ${aCount} 題・大致正確 ${bCount} 題・需改進 ${total - aCount - bCount} 題`;
+  _gqEl("grammarQuizSummary").classList.remove("hidden");
+  _gqEl("grammarQuizProgress").textContent = "";
+}
+
+export function closeGrammarQuiz() {
+  const modal = _gqEl("grammarQuizModal");
+  modal.classList.add("hidden"); modal.classList.remove("flex");
+}
+
+export function grammarQuizShowHint() {
+  const hintEl = _gqEl("grammarQuizHint");
+  hintEl.classList.remove("hidden");
+  _gqEl("grammarQuizShowHint").classList.add("hidden");
+}
+
+// ── "加入文法練習" 按鈕的共用處理 ──
+// pointData: { name, explanation, context, word, exampleSentence }
+export function addGrammarPointFromPanel(pointData) {
+  const { added } = addGrammarPoint(pointData);
+  if (added) {
+    showToast(`已將「${pointData.name}」加入文法練習`, { type: "success", duration: 2500 });
+  } else {
+    showToast(`「${pointData.name}」已在練習清單中`, { type: "info", duration: 2000 });
   }
 }
 

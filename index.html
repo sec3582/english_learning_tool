@@ -698,6 +698,11 @@
           <!-- Reader 文法解析面板（點擊文法標籤後顯示） -->
           <div id="readerGrammarPanel" class="hidden rounded-lg p-4 text-sm" style="background:#F8F9FA; border-left:3px solid #A3B18A;">
             <div id="readerGrammarPanelContent"></div>
+            <div class="mt-3 flex justify-end">
+              <button id="readerAddGrammarPracticeBtn" class="hidden text-xs px-3 py-1 rounded border" style="color:#4F46E5;border-color:#C7D2FE;background:#EEF2FF;">
+                + 加入文法練習
+              </button>
+            </div>
           </div>
           <!-- Reader 單字提示卡（動態插入） -->
         </section>
@@ -781,10 +786,16 @@
           </div>
 
           <!-- 只保留「本機資料開始測驗」；雲端載入/同步請使用下方四顆按鈕 -->
-          <button id="startQuizBtn" class="w-full mb-3 btn-primary-m justify-center" style="border-radius:8px;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-            開始測驗
-          </button>
+          <div class="flex gap-2 mb-3">
+            <button id="startQuizBtn" class="flex-1 btn-primary-m justify-center" style="border-radius:8px;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              開始測驗
+            </button>
+            <button id="startGrammarQuizBtn" class="flex-1 btn-outline-m justify-center" style="border-radius:8px;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+              文法測驗
+            </button>
+          </div>
 
           <!-- All filters -->
           <div id="allFilters" class="grid grid-cols-2 gap-2 mb-3 hidden">
@@ -963,6 +974,56 @@
     </div>
   </div>
 
+
+  <!-- Grammar Quiz Modal -->
+  <div id="grammarQuizModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+    <div class="bg-white w-full max-w-xl rounded-xl shadow-xl mx-4 p-6 space-y-4">
+      <!-- Header -->
+      <div class="flex justify-between items-center">
+        <h3 class="text-lg sidebar-title">
+          文法測驗
+          <span id="grammarQuizProgress" class="text-sm font-normal text-gray-400 ml-2"></span>
+        </h3>
+        <button id="grammarQuizClose" class="text-gray-400 hover:text-gray-600">✕</button>
+      </div>
+
+      <!-- Loading -->
+      <div id="grammarQuizLoading" class="text-center py-10 text-gray-500 text-sm">
+        <svg class="animate-spin inline-block mr-2 mb-1" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg>
+        AI 正在出題中，請稍候…
+      </div>
+
+      <!-- Question area -->
+      <div id="grammarQuizQuestion" class="hidden space-y-3">
+        <div id="grammarQuizPointName" class="text-xs font-medium px-2 py-1 rounded inline-block" style="background:#EEF2FF; color:#4F46E5;"></div>
+        <div id="grammarQuizInstruction" class="font-medium text-gray-800 leading-relaxed"></div>
+        <div class="rounded-lg p-3 text-sm text-gray-700" style="background:#F8F9FA; border-left:3px solid #A3B18A;">
+          <div class="text-xs text-gray-400 mb-1">原句</div>
+          <div id="grammarQuizOriginal" class="leading-relaxed"></div>
+        </div>
+        <div id="grammarQuizHint" class="text-xs text-gray-400 italic hidden"></div>
+        <textarea id="grammarQuizAnswer" class="w-full p-3 border rounded resize-none text-sm" rows="3" placeholder="請在此輸入改寫後的英文句子…"></textarea>
+        <div class="flex gap-2">
+          <button id="grammarQuizSubmit" class="px-4 py-2 quiz-btn-primary rounded text-sm">提交</button>
+          <button id="grammarQuizShowHint" class="px-4 py-2 bg-gray-100 rounded text-sm text-gray-600">提示</button>
+          <button id="grammarQuizNext" class="px-4 py-2 quiz-btn-next rounded text-sm hidden">下一題</button>
+        </div>
+        <div id="grammarQuizFeedback" class="hidden rounded-lg p-4 space-y-2 text-sm" style="background:#F0FDF4; border:1px solid #86EFAC;">
+          <div class="flex items-center gap-2 font-semibold" id="grammarQuizFeedbackScore"></div>
+          <div id="grammarQuizFeedbackRef" class="text-gray-700"></div>
+          <div id="grammarQuizFeedbackText" class="text-gray-600 leading-relaxed"></div>
+          <div id="grammarQuizFeedbackNote" class="text-xs pt-1" style="color:#A3B18A; border-top:1px solid #BBF7D0;padding-top:6px;"></div>
+        </div>
+      </div>
+
+      <!-- Summary -->
+      <div id="grammarQuizSummary" class="hidden text-center py-4 space-y-3">
+        <div class="text-4xl font-bold" id="grammarQuizSummaryScore" style="color:#A3B18A;"></div>
+        <div class="text-gray-600 text-sm" id="grammarQuizSummaryText"></div>
+        <button id="grammarQuizDone" class="px-5 py-2 btn-primary-m rounded justify-center">完成</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Usage modal -->
   <div id="usageModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">

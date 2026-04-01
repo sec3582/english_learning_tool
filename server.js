@@ -205,6 +205,78 @@ function buildTranslateArticlePrompt(text) {
 ${text}`;
 }
 
+/**
+ * 建構「文法測驗出題」用的 Prompt
+ * @param {Array} points - 已收藏的文法點 [{ name, explanation, context, word, exampleSentence }]
+ * @param {Array} knownWords - 使用者已知單字 [{ word, definition }]
+ */
+function buildGrammarQuizGeneratePrompt(points, knownWords) {
+  const pointsText = points.map((p, i) =>
+    `${i + 1}. 文法點：${p.name}\n   說明：${p.explanation}\n   示例句：${p.exampleSentence || p.word}`
+  ).join("\n\n");
+
+  const wordsText = (knownWords || []).slice(0, 30).map(w => w.word).join(", ");
+
+  return `You are an English grammar quiz designer for Traditional Chinese learners.
+
+The learner has saved these grammar points for practice:
+${pointsText}
+
+The learner also knows these vocabulary words (try to incorporate some naturally):
+${wordsText || "(none)"}
+
+Design exactly 5 grammar rewriting exercises. Each exercise gives the learner ONE original English sentence and asks them to rewrite it according to a specific grammar instruction.
+
+RULES:
+- Each question must target one of the grammar points listed above (you may repeat if there are fewer than 5 points)
+- The instruction must be clear and specific (e.g., "改成被動語態", "用現在完成式改寫", "把這句改成表達遺憾的假設語氣")
+- The originalSentence should be a complete, natural English sentence (can be from the example or freshly composed)
+- Instructions must be written in Traditional Chinese (繁體中文)
+- Make sentences varied and interesting; avoid trivial one-word sentences
+
+Return ONLY a valid JSON array of exactly 5 objects:
+[
+  {
+    "grammarPointName": "文法點名稱（繁體中文，對應上面的文法點）",
+    "instruction": "改寫指示（繁體中文，說明要如何改寫）",
+    "originalSentence": "The original English sentence to rewrite.",
+    "hint": "關鍵提示（繁體中文，一句話提示改寫方向，例如：記得用 had + 過去分詞）"
+  }
+]
+
+Return ONLY the JSON array, no markdown, no code fences, no extra text.`;
+}
+
+/**
+ * 建構「文法測驗批改」用的 Prompt
+ */
+function buildGrammarQuizFeedbackPrompt(instruction, originalSentence, userAnswer, grammarPointName) {
+  return `You are an English grammar coach for Traditional Chinese learners.
+
+Grammar point being practiced: ${grammarPointName}
+Task instruction (in Chinese): ${instruction}
+Original sentence: "${originalSentence}"
+Learner's rewritten answer: "${userAnswer}"
+
+Evaluate the learner's answer and provide feedback.
+
+Return ONLY a valid JSON object:
+{
+  "correct": true or false,
+  "score": "A" | "B" | "C",
+  "referenceSentence": "A model correct rewriting of the original sentence",
+  "feedbackZh": "具體的繁體中文回饋，說明哪裡對、哪裡需要改進（2-3 句）",
+  "grammarNote": "這個文法點的關鍵規則提醒（繁體中文，1-2 句）"
+}
+
+Score rubric:
+- A: Grammatically correct and natural, fully satisfies the instruction
+- B: Mostly correct with minor issues (wrong article, slight unnatural phrasing, etc.)
+- C: Major grammatical errors or did not follow the instruction
+
+Return ONLY the JSON object, no markdown, no code fences.`;
+}
+
 // ====== 主要 API 端點 ======
 // 接受與原本 GAS proxy 相同的請求格式：POST /api
 // Body 可以是 JSON 或 text/plain（前端舊版格式）
@@ -246,6 +318,18 @@ app.post("/api", async (req, res) => {
     // 全文中英對照翻譯
     if (!text) return res.status(400).json({ ok: false, error: "缺少 text 欄位" });
     prompt = buildTranslateArticlePrompt(text);
+  } else if (action === "grammarQuizGenerate") {
+    // 文法測驗出題
+    const { points, knownWords } = body;
+    if (!points?.length) return res.status(400).json({ ok: false, error: "缺少 points 欄位" });
+    prompt = buildGrammarQuizGeneratePrompt(points, knownWords || []);
+  } else if (action === "grammarQuizFeedback") {
+    // 文法測驗批改
+    const { instruction, originalSentence, userAnswer, grammarPointName } = body;
+    if (!instruction || !originalSentence || !userAnswer) {
+      return res.status(400).json({ ok: false, error: "缺少必要欄位" });
+    }
+    prompt = buildGrammarQuizFeedbackPrompt(instruction, originalSentence, userAnswer, grammarPointName || "");
   } else {
     return res.status(400).json({ ok: false, error: `未知的 action：${action}` });
   }

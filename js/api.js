@@ -251,6 +251,21 @@ export async function analyzeGrammar(text) {
   return normalizeToJSON_(data?.content);
 }
 
+export async function generateGrammarQuiz(points, knownWords) {
+  const data = await callAppsScript("grammarQuizGenerate", { points, knownWords });
+  return normalizeToJSON_(data?.content);
+}
+
+export async function gradeGrammarAnswer(instruction, originalSentence, userAnswer, grammarPointName) {
+  const data = await callAppsScript("grammarQuizFeedback", {
+    instruction,
+    originalSentence,
+    userAnswer: String(userAnswer || ""),
+    grammarPointName: String(grammarPointName || ""),
+  });
+  return normalizeToJSON_(data?.content);
+}
+
 // ====== 主要 API：查單字（自訂詞） ======
 export async function analyzeCustomWordAPI(article, term) {
   const data = await callAppsScript("analyzeCustomWord", {

@@ -296,6 +296,7 @@ function bindEvents() {
   });
 
   // 文法標籤點擊（事件委託）
+  let _grammarModalCurrentPoint = null;
   $("grammarArticleViewer")?.addEventListener("click", (e) => {
     const tag = e.target.closest("grammar-tag");
     if (!tag) return;
@@ -318,7 +319,16 @@ function bindEvents() {
     }
     tag.classList.add("active");
 
-    // 更新解說區
+    // 記住目前文法點（供加入練習按鈕使用）
+    _grammarModalCurrentPoint = {
+      name:            point.name,
+      explanation:     point.explanation,
+      context:         point.context,
+      word:            point.word,
+      exampleSentence: sentenceEl?.textContent?.trim() || point.word,
+    };
+
+    // 更新解說區（含「加入文法練習」按鈕）
     const panel = $("grammarExplanationPanel");
     if (panel) {
       panel.innerHTML = `
@@ -327,7 +337,17 @@ function bindEvents() {
           <div style="font-size:.875rem; color:#475569; line-height:1.7;">${_esc(point.explanation)}</div>
           <div style="font-size:.8125rem; color:#64748b; line-height:1.65;
                       border-left:2px solid #93c5fd; padding-left:10px; margin-top:4px;">${_esc(point.context)}</div>
+          <div style="margin-top:8px; text-align:right;">
+            <button id="grammarModalAddPracticeBtn"
+              style="font-size:.78rem;color:#4F46E5;background:#EEF2FF;border:1px solid #C7D2FE;
+                     border-radius:6px;padding:3px 10px;cursor:pointer;">
+              + 加入文法練習
+            </button>
+          </div>
         </div>`;
+      $("grammarModalAddPracticeBtn")?.addEventListener("click", () => {
+        if (_grammarModalCurrentPoint) UI.addGrammarPointFromPanel(_grammarModalCurrentPoint);
+      });
     }
   });
 
@@ -537,6 +557,22 @@ function bindEvents() {
   on("quizNext", "click", () => {
     const modal = $("quizModal");
     if (modal) modal.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" }));
+  });
+
+  // —— 文法測驗 ——
+  on("startGrammarQuizBtn", "click", () => UI.openGrammarQuiz?.());
+  on("grammarQuizClose",    "click", () => UI.closeGrammarQuiz?.());
+  on("grammarQuizSubmit",   "click", () => UI.submitGrammarQuizAnswer?.());
+  on("grammarQuizNext",     "click", () => UI.grammarQuizNext?.());
+  on("grammarQuizShowHint", "click", () => UI.grammarQuizShowHint?.());
+  on("grammarQuizDone",     "click", () => UI.closeGrammarQuiz?.());
+  $("grammarQuizAnswer")?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+      UI.submitGrammarQuizAnswer?.();
+    }
+  });
+  $("grammarQuizModal")?.addEventListener("click", (e) => {
+    if (e.target === $("grammarQuizModal")) UI.closeGrammarQuiz?.();
   });
 
 
