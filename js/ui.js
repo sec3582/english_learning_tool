@@ -2102,15 +2102,36 @@ function highlightKnownWords_(text, knownWords) {
 
   // 先逐段處理，避免跨段 span
   return text.split(/\n\n+/).map(para => {
-    let html = escapeHTML(para.replace(/\n/g, " "));
+    const flat = para.replace(/\n/g, " ");
+
+    // 在純文字中找出所有不重疊的比對位置，再一次性組裝 HTML，
+    // 避免對已插入的 HTML 屬性再次執行 regex 替換而破壞標記。
+    const occupied = new Uint8Array(flat.length);
+    const matches = [];
     for (const w of sorted) {
-      const escaped = escapeReg(escapeHTML(w.word));
-      const re = new RegExp(`\\b${escaped}\\b`, "gi");
-      html = html.replace(re, match =>
-        `<span class="reader-word" data-word="${escapeHTML(w.word)}" ` +
-        `data-pos="${escapeHTML(w.pos)}" data-def="${escapeHTML(w.definition)}">${match}</span>`
-      );
+      const re = new RegExp(`\\b${escapeReg(w.word)}\\b`, "gi");
+      let m;
+      while ((m = re.exec(flat)) !== null) {
+        const s = m.index, e = m.index + m[0].length;
+        let overlap = false;
+        for (let i = s; i < e; i++) { if (occupied[i]) { overlap = true; break; } }
+        if (!overlap) {
+          matches.push({ s, e, w, matchText: m[0] });
+          for (let i = s; i < e; i++) occupied[i] = 1;
+        }
+      }
     }
+    matches.sort((a, b) => a.s - b.s);
+
+    let html = "";
+    let pos = 0;
+    for (const { s, e, w, matchText } of matches) {
+      html += escapeHTML(flat.slice(pos, s));
+      html += `<span class="reader-word" data-word="${escapeHTML(w.word)}" ` +
+              `data-pos="${escapeHTML(w.pos)}" data-def="${escapeHTML(w.definition)}">${escapeHTML(matchText)}</span>`;
+      pos = e;
+    }
+    html += escapeHTML(flat.slice(pos));
     return `<p>${html}</p>`;
   }).join("");
 }
