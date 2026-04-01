@@ -2206,8 +2206,18 @@ export function showReaderMode(article, enrichment = {}) {
   });
 
   // ── 文法標籤點擊 → 顯示解析面板 ──
-  const readerAddBtn = document.getElementById("readerAddGrammarPracticeBtn");
   let _readerCurrentGrammarPoint = null;
+
+  // 用事件委託處理「加入文法練習」按鈕，避免 cloneNode 後變數失效的問題
+  const readerGrammarPanel = document.getElementById("readerGrammarPanel");
+  if (readerGrammarPanel && !readerGrammarPanel._addBtnBound) {
+    readerGrammarPanel._addBtnBound = true;
+    readerGrammarPanel.addEventListener("click", (e) => {
+      if (e.target.closest("#readerAddGrammarPracticeBtn") && _readerCurrentGrammarPoint) {
+        addGrammarPointFromPanel(_readerCurrentGrammarPoint);
+      }
+    });
+  }
 
   if (grammarAnalysis && grammarPanel && grammarPanelContent) {
     content.addEventListener("click", (e) => {
@@ -2216,7 +2226,6 @@ export function showReaderMode(article, enrichment = {}) {
         e.stopPropagation();
         const point = grammarPoints[tag.id];
         if (point) {
-          // 找出這個 point 所在的句子作為 exampleSentence
           const sentenceObj = grammarAnalysis.sentences?.find(s => s.id === point.sentenceId);
           _readerCurrentGrammarPoint = {
             name:            point.name,
@@ -2230,22 +2239,13 @@ export function showReaderMode(article, enrichment = {}) {
             `<div class="font-medium mb-1" style="color:#4A4A4A;">${escapeHTML(point.name)}</div>` +
             `<div class="text-gray-600 mb-1">${escapeHTML(point.explanation)}</div>` +
             `<div style="color:#A3B18A;font-size:0.85em;">${escapeHTML(point.context)}</div>`;
-          if (readerAddBtn) readerAddBtn.classList.remove("hidden");
+          // 直接從 DOM 取得最新的按鈕元素再顯示
+          document.getElementById("readerAddGrammarPracticeBtn")?.classList.remove("hidden");
         }
         return;
       }
       document.getElementById("readerTooltip")?.remove();
     });
-
-    if (readerAddBtn) {
-      // 每次 showReaderMode 都重新綁定（移除舊監聽器）
-      const newBtn = readerAddBtn.cloneNode(true);
-      readerAddBtn.parentNode.replaceChild(newBtn, readerAddBtn);
-      newBtn.classList.add("hidden");
-      newBtn.addEventListener("click", () => {
-        if (_readerCurrentGrammarPoint) addGrammarPointFromPanel(_readerCurrentGrammarPoint);
-      });
-    }
   } else {
     content.addEventListener("click", () => {
       document.getElementById("readerTooltip")?.remove();
