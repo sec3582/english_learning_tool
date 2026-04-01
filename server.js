@@ -91,6 +91,22 @@ ${text}`;
 }
 
 /**
+ * 從文章中擷取包含 term 的前後句子（±windowSize 句），避免送整篇文章。
+ * 若 term 不在文章中，fallback 回傳前 400 字元。
+ */
+function extractTermContext(article, term, windowSize = 2) {
+  if (!article || !term) return article || "";
+  const sentences = article.match(/[^.!?\n]+[.!?\n]+/g) || [];
+  if (!sentences.length) return article.slice(0, 400);
+  const termLower = term.toLowerCase();
+  const idx = sentences.findIndex(s => s.toLowerCase().includes(termLower));
+  if (idx === -1) return article.slice(0, 400);
+  const start = Math.max(0, idx - windowSize);
+  const end = Math.min(sentences.length, idx + windowSize + 1);
+  return sentences.slice(start, end).join("").trim();
+}
+
+/**
  * 建構「自訂單字分析」用的 Prompt
  * 目標：針對使用者指定的單字進行深度分析，回傳 JSON 物件
  * @param {string} article - 文章內容（作為上下文）
@@ -303,7 +319,7 @@ app.post("/api", async (req, res) => {
   } else if (action === "analyzeCustomWord") {
     // 自訂單字分析：傳入文章上下文與目標單字
     if (!term) return res.status(400).json({ ok: false, error: "缺少 term 欄位" });
-    prompt = buildAnalyzeCustomWordPrompt(article, term);
+    prompt = buildAnalyzeCustomWordPrompt(extractTermContext(article, term), term);
   } else if (action === "analyzeGrammar") {
     // 文法重點分析：傳入文章文字
     if (!text) return res.status(400).json({ ok: false, error: "缺少 text 欄位" });
