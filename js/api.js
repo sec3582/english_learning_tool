@@ -12,9 +12,8 @@ const USD_TO_TWD = 32.5;
 // 模型單價（USD / 百萬 tokens）— 已從 OpenAI GPT-4o 改為 Google Gemini 系列費率
 // 參考：https://ai.google.dev/pricing
 const MODEL_PRICING = {
-  "gemini-2.5-flash-lite": { inPerM: 0.10, outPerM: 0.40 }, // Gemini 2.0 Flash：快速且低成本
-  "gemini-2.5-flash-lite": { inPerM: 0.075, outPerM: 0.30 }, // Gemini 1.5 Flash（備用）
-  "gemini-1.5-pro":   { inPerM: 1.25,  outPerM: 5.00 }, // Gemini 1.5 Pro（高性能，較貴）
+  "gemini-2.5-flash-lite": { inPerM: 0.075, outPerM: 0.30 },
+  "gemini-1.5-pro":        { inPerM: 1.25,  outPerM: 5.00 },
 };
 
 function roughTokenEstimate(str) {

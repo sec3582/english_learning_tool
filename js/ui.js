@@ -183,7 +183,7 @@ export function renderWordSelection(words, articleText = "") {
     let exampleFromArticle = w.example1 || "";
 
     if (keyWord && sentences.length) {
-      const hasWord = exampleFromArticle.toLowerCase().includes(keyWord);
+      const hasWord = new RegExp("\\b" + escapeReg(keyWord) + "\\b", "i").test(exampleFromArticle);
       if (!hasWord) {
         const re = new RegExp("\\b" + escapeReg(keyWord) + "\\b", "i");
         const hit = sentences.find(s => re.test(s));
@@ -1072,13 +1072,12 @@ export function submitQuizAnswer(asWrong = false) {
       if (fb) fb.innerHTML =
         `<span class="text-red-600">錯誤，答案是 <strong>${w.word}</strong></span>`;
 
-      const pairForWrong = pickExamplePair(w, { showZh: !!QUIZ_PREF.showZh });
       wrongAnswers.push({
         word: w.word,
         your: userInput || "(空白)",
         correct: w.word,
         definition: w.definition || "",
-        example: pairForWrong?.en || ""
+        example: q?.exampleEn || ""
       });
     }
 
@@ -1092,8 +1091,7 @@ export function submitQuizAnswer(asWrong = false) {
         if (audioMode !== "none") {
           const texts = [];
           if ((audioMode === "word" || audioMode === "both") && w?.word) texts.push(w.word);
-          const pair = pickExamplePair(w, { showZh: !!QUIZ_PREF.showZh });
-          const sentence = pair?.en || "";
+          const sentence = q?.exampleEn || "";
           if ((audioMode === "sentence" || audioMode === "both") && sentence) texts.push(sentence);
           if (texts.length) speakSequence(texts);
         }
@@ -1287,10 +1285,10 @@ export function refreshSyncUI(){
 /* ===== Usage 面板 ===== */
 export function refreshUsageUI(){
   const s = getUsageSummary(); const budget = getUsageBudget(); const cost = (s.cost||0);
-  const badge = document.getElementById("usageCostBadge"); if (badge){ badge.textContent = Math.ceil(cost); const over = budget != null && budget > 0 && cost >= budget; badge.parentElement?.classList.toggle("text-yellow-200", over && cost < (budget*1.2)); badge.parentElement?.classList.toggle("text-red-200", over && cost >= (budget*1.2)); }
+  const badge = document.getElementById("usageCostBadge"); if (badge){ badge.textContent = cost.toFixed(3); const over = budget != null && budget > 0 && cost >= budget; badge.parentElement?.classList.toggle("text-yellow-200", over && cost < (budget*1.2)); badge.parentElement?.classList.toggle("text-red-200", over && cost >= (budget*1.2)); }
   const elCost = document.getElementById("usageCostTotal"), elP = document.getElementById("usagePromptTokens"), elC = document.getElementById("usageCompletionTokens"), box = document.getElementById("usagePerModel");
-  if (elCost) elCost.textContent = Math.ceil(cost); if (elP) elP.textContent = (s.prompt_tokens||0).toLocaleString(); if (elC) elC.textContent = (s.completion_tokens||0).toLocaleString();
-  if (box){ box.innerHTML = ""; const models = s.perModel || {}; Object.keys(models).forEach(m=>{ const r = models[m]; const div = document.createElement("div"); div.textContent = `${m} — NT$${Math.ceil(r.cost||0)} · P:${(r.prompt||0).toLocaleString()} / C:${(r.completion||0).toLocaleString()}`; box.appendChild(div); }); if (!Object.keys(models).length){ const div = document.createElement("div"); div.className="text-gray-500"; div.textContent = "尚無資料"; box.appendChild(div); } }
+  if (elCost) elCost.textContent = cost.toFixed(3); if (elP) elP.textContent = (s.prompt_tokens||0).toLocaleString(); if (elC) elC.textContent = (s.completion_tokens||0).toLocaleString();
+  if (box){ box.innerHTML = ""; const models = s.perModel || {}; Object.keys(models).forEach(m=>{ const r = models[m]; const div = document.createElement("div"); div.textContent = `${m} — NT$${(r.cost||0).toFixed(3)} · P:${(r.prompt||0).toLocaleString()} / C:${(r.completion||0).toLocaleString()}`; box.appendChild(div); }); if (!Object.keys(models).length){ const div = document.createElement("div"); div.className="text-gray-500"; div.textContent = "尚無資料"; box.appendChild(div); } }
 }
 export function openUsageModal(){ const input = document.getElementById("usageBudgetInput"); const b = getUsageBudget(); if (input) input.value = b!=null?String(b):""; refreshUsageUI(); const m = document.getElementById("usageModal"); m?.classList.remove("hidden"); m?.classList.add("flex"); }
 export function closeUsageModal(){ const m = document.getElementById("usageModal"); m?.classList.add("hidden"); m?.classList.remove("flex"); }
