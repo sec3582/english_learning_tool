@@ -1401,7 +1401,8 @@ export async function handlePushSheets() {
     alert(
       `已同步到 Google Sheet：\n` +
       `Words=${r.words}　AddedLogs=${r.addedLogs}　ReviewLogs=${r.reviewLogs}\n` +
-      `翻譯／文法=${r.enrichments} 篇　電子雞、標題已同步`
+      `翻譯／文法=${r.enrichments} 篇　文法練習點=${r.grammarPoints ?? 0}\n` +
+      `電子雞、標題已同步`
     );
   } catch (e) {
     console.error(e);

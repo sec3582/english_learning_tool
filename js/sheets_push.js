@@ -10,6 +10,7 @@ const SHEET_ADDED       = "AddedLogs";
 const SHEET_REVIEW      = "ReviewLogs";
 const SHEET_MISC        = "Misc";
 const SHEET_ENRICHMENTS = "Enrichments";
+const SHEET_GRAMMAR     = "GrammarPoints";
 
 const PET_KEYS = [
   'currentXP','level','petHunger','petHungerDecayTs',
@@ -154,10 +155,25 @@ export async function pushLocalStorageToSheets() {
   await clearRange(`${SHEET_ENRICHMENTS}!A1:B`);
   await updateValues(`${SHEET_ENRICHMENTS}!A1`, enrichmentRows);
 
+  // ── GrammarPoints sheet：文法練習點 ──
+  await ensureSheet(SHEET_GRAMMAR);
+  let grammarPoints = [];
+  try { grammarPoints = JSON.parse(localStorage.getItem('grammarPracticePoints') || '[]'); } catch {}
+  const grammarRows = [
+    ["id", "name", "explanation", "context", "word", "exampleSentence", "addedAt"],
+    ...(Array.isArray(grammarPoints) ? grammarPoints : []).map(p => [
+      p.id ?? "", p.name ?? "", p.explanation ?? "", p.context ?? "",
+      p.word ?? "", p.exampleSentence ?? "", p.addedAt ?? "",
+    ])
+  ];
+  await clearRange(`${SHEET_GRAMMAR}!A1:G`);
+  await updateValues(`${SHEET_GRAMMAR}!A1`, grammarRows);
+
   return {
     words:      wordRows.length,
     addedLogs:  addedRows.length,
     reviewLogs: reviewRows.length,
     enrichments: enrichmentRows.length - 1,
+    grammarPoints: grammarRows.length - 1,
   };
 }

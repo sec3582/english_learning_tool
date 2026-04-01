@@ -10,6 +10,7 @@ const SHEET_ADDED       = "AddedLogs";
 const SHEET_REVIEW      = "ReviewLogs";
 const SHEET_MISC        = "Misc";
 const SHEET_ENRICHMENTS = "Enrichments";
+const SHEET_GRAMMAR     = "GrammarPoints";
 
 async function waitSdk() {
   await new Promise((resolve, reject) => {
@@ -202,6 +203,25 @@ export async function bootstrapFromSheetsToLocalStorage() {
     console.warn("[SheetsBootstrap] Enrichments sheet not found or failed:", err.message);
   }
 
+  // ── GrammarPoints sheet：文法練習點 ──
+  let grammarCount = 0;
+  try {
+    const grammarRows = await getValues(`${SHEET_GRAMMAR}!A2:G`);
+    const grammarPoints = grammarRows.filter(r => r[0]).map(r => ({
+      id:              r[0] ?? "",
+      name:            r[1] ?? "",
+      explanation:     r[2] ?? "",
+      context:         r[3] ?? "",
+      word:            r[4] ?? "",
+      exampleSentence: r[5] ?? "",
+      addedAt:         r[6] ?? "",
+    }));
+    localStorage.setItem('grammarPracticePoints', JSON.stringify(grammarPoints));
+    grammarCount = grammarPoints.length;
+  } catch (err) {
+    console.warn("[SheetsBootstrap] GrammarPoints sheet not found or failed:", err.message);
+  }
+
   console.log("[SheetsBootstrap] pulled:", {
     myWords: myWords.length,
     addedLogs: addedLogs.length,
@@ -210,5 +230,6 @@ export async function bootstrapFromSheetsToLocalStorage() {
     header,
     misc: Object.keys(miscPulled),
     enrichments: enrichmentCount,
+    grammarPoints: grammarCount,
   });
 }
