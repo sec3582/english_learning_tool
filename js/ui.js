@@ -2408,16 +2408,19 @@ let _gqQuestions   = [];   // 本輪 5 題
 let _gqIndex       = 0;    // 目前題號 (0-based)
 let _gqScores      = [];   // 'A' | 'B' | 'C' per question
 let _gqCurrentPoint = null; // 目前題目對應的文法點（供 reader 收藏按鈕用）
+let _gqLoading     = false; // 防止重複觸發
 
 function _gqEl(id) { return document.getElementById(id); }
 
 export async function openGrammarQuiz() {
+  if (_gqLoading) return;
   const points = getGrammarPracticePoints();
   if (!points.length) {
     showToast("請先在圖書館文法分析中，點擊藍色文法標籤，加入文法練習點", { type: "warn", duration: 4000 });
     return;
   }
 
+  _gqLoading = true;
   // 開啟 modal，顯示 loading
   const modal = _gqEl("grammarQuizModal");
   modal.classList.remove("hidden"); modal.classList.add("flex");
@@ -2441,6 +2444,8 @@ export async function openGrammarQuiz() {
     console.error("[文法測驗]", err);
     modal.classList.add("hidden"); modal.classList.remove("flex");
     showToast("出題失敗：" + err.message, { type: "warn", duration: 4000 });
+  } finally {
+    _gqLoading = false;
   }
 }
 
@@ -2465,6 +2470,8 @@ function _gqShowQuestion() {
   _gqEl("grammarQuizAnswer").value = "";
   _gqEl("grammarQuizAnswer").disabled = false;
   _gqEl("grammarQuizFeedback").classList.add("hidden");
+  _gqEl("grammarQuizSubmit").disabled = false;
+  _gqEl("grammarQuizSubmit").textContent = "提交";
   _gqEl("grammarQuizSubmit").classList.remove("hidden");
   _gqEl("grammarQuizShowHint").classList.remove("hidden");
   _gqEl("grammarQuizNext").classList.add("hidden");
