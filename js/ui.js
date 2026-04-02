@@ -1,7 +1,8 @@
 // js/ui.js（頂端 imports）
 import { analyzeArticle, extractJSON, getUsageSummary, getUsageBudget, setUsageBudget, resetUsageMonth, analyzeCustomWordAPI, generateGrammarQuiz, gradeGrammarAnswer } from "./api.js";
 import { getGrammarPracticePoints, addGrammarPoint, removeGrammarPoint, recordGrammarPractice } from "./grammarStorage.js";
-import { addWord, getAllWords, deleteWord, getTodayWords, getDueWords, getDueCount, saveAllWords, scheduleNext, ensureDueForAll, getMasteredCount, getSyncMeta, clearDirtyAndSetLastSync } from "./storage.js";
+import { addWord, getAllWords, deleteWord, updateWord, getTodayWords, getDueWords, getDueCount, saveAllWords, scheduleNext, ensureDueForAll, getMasteredCount, getSyncMeta, clearDirtyAndSetLastSync } from "./storage.js";
+import { getMatchedRelations } from "./wordRelations.js";
 import { speak, speakEn, speakSequence } from "./speech.js";
 import { buildTypingQuestion, makeChoiceQuestion, makeDictationQuestion, grade, afterAnswerSpeech, pickExamplePair } from "./quiz.js";
 import { pushLocalStorageToSheets } from "./sheets_push.js";
@@ -295,6 +296,32 @@ export async function handleAnalyzeCustom(){
   }
 }
 
+/* ===== addWord 後非同步補齊同義字/反義字 ===== */
+async function _fetchAndStoreRelations(wordStr) {
+  try {
+    const res = await fetch("/api", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "synonymsOnly", term: wordStr }),
+    });
+    const data = await res.json();
+    if (!data.ok || !data.content) return;
+    const raw = typeof data.content === "string"
+      ? data.content.replace(/```(?:json)?/gi, "").replace(/```/g, "").trim()
+      : data.content;
+    const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+    if (parsed.synonyms !== undefined || parsed.antonyms !== undefined) {
+      updateWord(wordStr, {
+        synonyms: parsed.synonyms || "",
+        antonyms: parsed.antonyms || "",
+      });
+      renderSidebarLists();
+    }
+  } catch (_) {
+    // 靜默失敗，同義字為非必要功能
+  }
+}
+
 /* ===== 自訂新增（手動加入） ===== */
 export function handleCustomAdd(){
   const word = document.getElementById("cw_word").value.trim();
@@ -308,6 +335,7 @@ export function handleCustomAdd(){
 
   const res = addWord({ word, pos, definition, example1, example2, example2_zh, level });
   if (!res.added) return alert(`「${word}」已存在`);
+  _fetchAndStoreRelations(word);
   alert(`已加入：${word}`);
 
   const cb = findCbByWord(word); if (cb) markRowAsAdded(cb, true);
@@ -336,7 +364,7 @@ export function handleSaveSelected(){
       level: level || ""
     });
 
-    if (added) { markRowAsAdded(cb, false); anyAdded = true; } else { markRowAsAdded(cb, true); }
+    if (added) { markRowAsAdded(cb, false); anyAdded = true; _fetchAndStoreRelations(word); } else { markRowAsAdded(cb, true); }
     exists.add(k);
   });
 
@@ -576,19 +604,11 @@ async function _fetchMnemonic(word, options = {}) {
 function _renderMnemonicBody(word, body, regenOptions = null) {
   body.innerHTML = `<div class="mnemonic-loading"><span class="mnemonic-dot"></span><span class="mnemonic-dot"></span><span class="mnemonic-dot"></span></div>`;
 
-  const toChips = (str, cls) =>
-    (str || "").split(",")
-      .map(s => s.trim()).filter(s => s && s !== "無")
-      .map(s => `<span class="mnemonic-chip${cls ? " " + cls : ""}">${escapeHTML(s)}</span>`)
-      .join("");
-
   _fetchMnemonic(word, regenOptions || {})
     .then(d => {
       const parts = (d.daily_example || "").split(" | ");
       const eng = parts[0] || "";
       const zh  = parts[1] || "";
-      const synChips = toChips(d.synonyms || "");
-      const antChips = toChips(d.antonyms || "", "mnemonic-chip--ant");
 
       body.innerHTML = `
         <div class="mnemonic-section">
@@ -604,8 +624,6 @@ function _renderMnemonicBody(word, body, regenOptions = null) {
           <div class="mnemonic-text">${escapeHTML(eng)}</div>
           ${zh ? `<div class="mnemonic-text mnemonic-zh">${escapeHTML(zh)}</div>` : ""}
         </div>
-        ${synChips ? `<div class="mnemonic-section"><div class="mnemonic-label">同義字</div><div class="mnemonic-chips">${synChips}</div></div>` : ""}
-        ${antChips ? `<div class="mnemonic-section"><div class="mnemonic-label">反義字</div><div class="mnemonic-chips">${antChips}</div></div>` : ""}
         <div class="mnemonic-regen-row">
           <button class="mnemonic-regen" id="mnemonicRegen">沒感覺，換一個</button>
         </div>`;
@@ -722,6 +740,28 @@ function makeListItem(w, opts = {}) {
       aiSection.appendChild(zhLine);
     }
     details.appendChild(aiSection);
+  }
+
+  // 3.5 已收藏的關聯字（同義/反義）
+  const { synonyms: mSyns, antonyms: mAnts } = getMatchedRelations(w, getAllWords());
+  if (mSyns.length || mAnts.length) {
+    const relDiv = document.createElement("div");
+    relDiv.className = "wc-relations";
+    if (mSyns.length) {
+      const row = document.createElement("div");
+      row.className = "wc-rel-row";
+      row.innerHTML = `<span class="wc-rel-label">同義</span>` +
+        mSyns.map(r => `<span class="wc-rel-chip">${escapeHTML(r.word)}</span>`).join("");
+      relDiv.appendChild(row);
+    }
+    if (mAnts.length) {
+      const row = document.createElement("div");
+      row.className = "wc-rel-row";
+      row.innerHTML = `<span class="wc-rel-label">反義</span>` +
+        mAnts.map(r => `<span class="wc-rel-chip wc-rel-chip--ant">${escapeHTML(r.word)}</span>`).join("");
+      relDiv.appendChild(row);
+    }
+    details.appendChild(relDiv);
   }
 
   // 4. 複習模式：AI 記憶輔助按鈕（全部顯示）

@@ -162,6 +162,22 @@ Return ONLY a valid JSON object, no markdown, no code fences, no extra text.`;
 
 
 /**
+ * 建構「僅取同義字/反義字」用的輕量 Prompt（不含語源/口訣/例句）
+ * @param {string} term - 目標英文單字
+ */
+function buildSynonymsOnlyPrompt(term) {
+  return `For the English word "${term}", provide synonyms and antonyms.
+Return ONLY a valid JSON object with no markdown, no code fences, no extra text:
+{
+  "synonyms": "word1, word2, word3",
+  "antonyms": "word1, word2"
+}
+Rules:
+- "synonyms": 3–5 common English synonyms, comma-separated
+- "antonyms": 1–3 common English antonyms, comma-separated. If none exist, write "無"`;
+}
+
+/**
  * 建構「文法重點分析」用的 Prompt
  * 目標：識別文章中 5~10 個文法重點，標記所在句子，並提供繁體中文詳細解析
  * @param {string} text - 使用者輸入的英文文章
@@ -365,6 +381,10 @@ app.post("/api", async (req, res) => {
       return res.status(400).json({ ok: false, error: "缺少必要欄位" });
     }
     prompt = buildGrammarQuizFeedbackPrompt(instruction, originalSentence, userAnswer, grammarPointName || "");
+  } else if (action === "synonymsOnly") {
+    // 輕量同義字/反義字查詢（addWord 後非同步補齊）
+    if (!term) return res.status(400).json({ ok: false, error: "缺少 term 欄位" });
+    prompt = buildSynonymsOnlyPrompt(term);
   } else {
     return res.status(400).json({ ok: false, error: `未知的 action：${action}` });
   }

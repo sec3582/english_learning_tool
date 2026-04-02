@@ -104,7 +104,9 @@ export async function pushLocalStorageToSheets() {
     w.level ?? "",
     w.addedAt ?? "",
     w.dueAt ?? "",
-    (w.stage ?? 0).toString()
+    (w.stage ?? 0).toString(),
+    w.synonyms ?? "",
+    w.antonyms ?? "",
   ])).filter(r => r[0]);
 
   const addedRows = (Array.isArray(addedLogs) ? addedLogs : []).map(x => ([
@@ -118,13 +120,15 @@ export async function pushLocalStorageToSheets() {
     x.correct ? "TRUE" : "FALSE"
   ])).filter(r => r[1]);
 
-  // 清空 A2 以下（保留 header）
-  await clearRange(`${SHEET_WORDS}!A2:K`);
+  const WORDS_HEADER = ["word","pos","definition","example1","example1_zh","example2","example2_zh","level","addedAt","dueAt","stage","synonyms","antonyms"];
+
+  // 清空整欄（含 header），再從 A1 完整寫回
+  await clearRange(`${SHEET_WORDS}!A1:M`);
   await clearRange(`${SHEET_ADDED}!A2:B`);
   await clearRange(`${SHEET_REVIEW}!A2:C`);
 
-  // 覆寫回去
-  await updateValues(`${SHEET_WORDS}!A2`, wordRows);
+  // 覆寫回去（Words 從 A1 含 header 一起寫）
+  await updateValues(`${SHEET_WORDS}!A1`, [WORDS_HEADER, ...wordRows]);
   await updateValues(`${SHEET_ADDED}!A2`, addedRows);
   await updateValues(`${SHEET_REVIEW}!A2`, reviewRows);
 

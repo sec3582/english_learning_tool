@@ -76,7 +76,7 @@ export async function bootstrapFromSheetsToLocalStorage() {
   await requestToken();
 
   // --- Words: read header row then rows ---
-  const headerRow = await getValues(`${SHEET_WORDS}!A1:K1`);
+  const headerRow = await getValues(`${SHEET_WORDS}!A1:M1`);
   const header = (headerRow?.[0] || []).map(normalizeHeader);
 
   const required = [
@@ -91,6 +91,8 @@ export async function bootstrapFromSheetsToLocalStorage() {
     "addedAt",
     "dueAt",
     "stage",
+    "synonyms",
+    "antonyms",
   ];
 
   const col = Object.create(null);
@@ -102,12 +104,12 @@ export async function bootstrapFromSheetsToLocalStorage() {
   // If header is missing or incomplete, fall back to a safe positional mapping for your declared order.
   const hasAll = required.every((k) => col[k] >= 0);
 
-  const wordRows = await getValues(`${SHEET_WORDS}!A2:K`);
+  const wordRows = await getValues(`${SHEET_WORDS}!A2:M`);
 
   const myWords = wordRows
     .map((r) => {
       if (!hasAll) {
-        // fallback assumes exact order: word,pos,definition,example1,example1_zh,example2,example2_zh,level,addedAt,dueAt,stage
+        // fallback assumes exact order: word,pos,definition,example1,example1_zh,example2,example2_zh,level,addedAt,dueAt,stage,synonyms,antonyms
         return {
           word: r[0] ?? "",
           pos: r[1] ?? "",
@@ -120,6 +122,8 @@ export async function bootstrapFromSheetsToLocalStorage() {
           addedAt: r[8] ?? "",
           dueAt: r[9] ?? "",
           stage: toNumberSafe(r[10], 0),
+          synonyms: r[11] ?? "",
+          antonyms: r[12] ?? "",
         };
       }
 
@@ -136,6 +140,8 @@ export async function bootstrapFromSheetsToLocalStorage() {
         addedAt: get("addedAt") ?? "",
         dueAt: get("dueAt") ?? "",
         stage: toNumberSafe(get("stage"), 0),
+        synonyms: get("synonyms") ?? "",
+        antonyms: get("antonyms") ?? "",
       };
     })
     .filter((x) => String(x.word || "").trim());

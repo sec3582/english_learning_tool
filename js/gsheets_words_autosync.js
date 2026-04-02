@@ -81,24 +81,25 @@ async function overwriteWordsNow() {
     w.level ?? "",
     w.addedAt ?? "",
     w.dueAt ?? "",
-    (w.stage ?? 0).toString()
+    (w.stage ?? 0).toString(),
+    w.synonyms ?? "",
+    w.antonyms ?? "",
   ])).filter(r => r[0]);
 
-  // 清空 A2:J（保留 header）
+  const WORDS_HEADER = ["word","pos","definition","example1","example1_zh","example2","example2_zh","level","addedAt","dueAt","stage","synonyms","antonyms"];
+
+  // 清空整欄（含 header），再從 A1 完整寫回
   await gapi.client.sheets.spreadsheets.values.clear({
     spreadsheetId: SPREADSHEET_ID,
-    range: `${SHEET_WORDS}!A2:K`,
+    range: `${SHEET_WORDS}!A1:M`,
   });
 
-  // 沒資料就結束（代表清空完成）
-  if (!rows.length) return;
-
-  // 從 A2 起覆寫
+  // 從 A1 起覆寫（含 header；即使 rows 為空也要寫 header）
   await gapi.client.sheets.spreadsheets.values.update({
     spreadsheetId: SPREADSHEET_ID,
-    range: `${SHEET_WORDS}!A2`,
+    range: `${SHEET_WORDS}!A1`,
     valueInputOption: "RAW",
-    resource: { values: rows },
+    resource: { values: [WORDS_HEADER, ...rows] },
   });
 }
 
