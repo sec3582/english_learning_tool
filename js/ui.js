@@ -1677,8 +1677,9 @@ export function showToast(message, { duration = 3000, type = "success" } = {}) {
     toast = document.createElement("div");
     toast.id = "generalToast";
     toast.style.cssText =
-      "position:fixed;bottom:5rem;left:50%;transform:translateX(-50%);" +
+      "position:fixed;bottom:max(5rem,calc(env(safe-area-inset-bottom,0px) + 1rem));left:50%;transform:translateX(-50%);" +
       "padding:.6rem 1.2rem;border-radius:12px;font-size:.9rem;font-weight:500;" +
+      "max-width:calc(100vw - 32px);width:max-content;text-align:center;" +
       "box-shadow:0 6px 20px rgba(0,0,0,.18);z-index:300;transition:opacity .25s;";
     document.body.appendChild(toast);
   }
@@ -2333,6 +2334,9 @@ function showReaderTooltip_(el, wordData) {
     </div>
   `;
 
+  // Append off-screen first to measure actual rendered width
+  tip.style.visibility = "hidden";
+  tip.style.left = "-9999px";
   document.body.appendChild(tip);
 
   document.getElementById("_readerJumpBtn")?.addEventListener("click", (e) => {
@@ -2342,12 +2346,13 @@ function showReaderTooltip_(el, wordData) {
   });
 
   const rect = el.getBoundingClientRect();
-  const tipW = 280;
+  const tipW = tip.getBoundingClientRect().width || 280;
   let left = rect.left + window.scrollX;
   if (left + tipW > window.innerWidth - 16) left = window.innerWidth - tipW - 16;
   if (left < 8) left = 8;
   tip.style.top  = `${rect.bottom + window.scrollY + 6}px`;
   tip.style.left = `${left}px`;
+  tip.style.visibility = "";
 
   // 8 秒後自動消失（內容變多，給更多時間閱讀）
   setTimeout(() => tip.remove(), 8000);

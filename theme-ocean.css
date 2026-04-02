@@ -254,6 +254,17 @@ button[title="播放"]:hover{ background:#eef1ea !important; color:#8d9b76 !impo
   display: none;
   animation: pet-bubble-float 3s ease-in-out infinite;
 }
+@media (max-width: 480px) {
+  #petPenalty {
+    bottom: 12px;
+    right: 8px;
+    transform: scale(0.75);
+    transform-origin: bottom right;
+  }
+  .pet-bubble {
+    right: 75px;
+  }
+}
 
 /* Speech bubble (Zzz / ... / ♥) */
 .pet-bubble {
