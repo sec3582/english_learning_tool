@@ -102,12 +102,18 @@ function bindEvents() {
   on("ocrPickBtn", "click", UI.handlePickOcrFile);
   on("ocrRunBtn", "click", UI.handleRunOcr);
   on("loadSheetsBtn", "click", async () => {
-    await UI.handleLoadSheets();
+    const result = await UI.handleLoadSheets();
     // 雲端載入完成後，同步更新圖書館列表
-    try {
-      const articles = await getRecentArticles(50);
-      UI.renderLibraryList(articles);
-    } catch { /* 靜默：圖書館載入失敗不影響主流程 */ }
+    // 優先使用 bootstrap 已讀取的 Article_History（同一 token，不需第二次授權彈窗）
+    if (result?.articles) {
+      try { UI.renderLibraryList(result.articles); } catch {}
+    } else {
+      // fallback：bootstrap 未回傳文章時才嘗試重新 fetch
+      try {
+        const articles = await getRecentArticles(50);
+        UI.renderLibraryList(articles);
+      } catch { /* 靜默：圖書館載入失敗不影響主流程 */ }
+    }
   });
   on("pushSheetsBtn", "click", UI.handlePushSheets);
 
@@ -409,7 +415,10 @@ function bindEvents() {
       // 切到「手動輸入」Tab，把文字填入輸入框
       $("inputTabManual")?.click();
       const ta = $("articleInput");
-      if (ta) ta.value = _cleanFetchedText(data.text);
+      if (ta) {
+        ta.value = _cleanFetchedText(data.text);
+        ta.dispatchEvent(new Event("input", { bubbles: true }));
+      }
       $("urlInput").value = "";
       _setUrlStatus("", "");
       UI.showToast?.(`已擷取 ${data.text.length} 字，可點「讓 AI 挑單字」開始分析！`, { duration: 4000 });

@@ -11,6 +11,7 @@ const SHEET_REVIEW      = "ReviewLogs";
 const SHEET_MISC        = "Misc";
 const SHEET_ENRICHMENTS = "Enrichments";
 const SHEET_GRAMMAR     = "GrammarPoints";
+const SHEET_HISTORY     = "Article_History";
 
 async function waitSdk() {
   await new Promise((resolve, reject) => {
@@ -232,6 +233,22 @@ export async function bootstrapFromSheetsToLocalStorage() {
     console.warn("[SheetsBootstrap] GrammarPoints sheet not found or failed:", err.message);
   }
 
+  // ── Article_History sheet：圖書館文章 ──
+  let libraryArticles = [];
+  try {
+    const historyRows = await getValues(`${SHEET_HISTORY}!A2:C`);
+    const total = historyRows.length;
+    // 取最後 50 篇、倒序（最新在前），sheetRowIndex 與 gsheets_history.js 計算方式一致
+    libraryArticles = historyRows.slice(-50).reverse().map((r, i) => ({
+      title:         String(r[0] || "").trim() || "(untitled)",
+      fullText:      String(r[1] || "").trim(),
+      savedAt:       r[2] || "",
+      sheetRowIndex: total - i + 1,
+    }));
+  } catch (err) {
+    console.warn("[SheetsBootstrap] Article_History sheet not found or failed:", err.message);
+  }
+
   console.log("[SheetsBootstrap] pulled:", {
     myWords: myWords.length,
     addedLogs: addedLogs.length,
@@ -241,5 +258,8 @@ export async function bootstrapFromSheetsToLocalStorage() {
     misc: Object.keys(miscPulled),
     enrichments: enrichmentCount,
     grammarPoints: grammarCount,
+    libraryArticles: libraryArticles.length,
   });
+
+  return { articles: libraryArticles };
 }

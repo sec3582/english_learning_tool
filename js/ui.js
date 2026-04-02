@@ -1435,7 +1435,7 @@ export async function handleLoadSheets(){
     const mod = await import("./sheets_bootstrap.js");
     const fn = mod?.bootstrapFromSheetsToLocalStorage;
     if (typeof fn !== "function") throw new Error("bootstrapFromSheetsToLocalStorage not found");
-    await fn();
+    const result = await fn();
 
     // 載入後：更新 UI + 同步狀態
     try { ensureDueForAll(); } catch {}
@@ -1445,6 +1445,7 @@ export async function handleLoadSheets(){
     refreshSyncUI();
 
     alert("已從 Google Sheet 載入完成（本機資料已更新）。");
+    return result; // { articles: [...] }
   } catch (e) {
     console.error(e);
     alert("雲端載入失敗，請看 Console 錯誤訊息。");
@@ -1671,6 +1672,7 @@ async function doOCR(file) {
     const ta = document.getElementById("articleInput");
     if (!ta) return alert("找不到 articleInput");
     ta.value = ta.value ? (ta.value + "\n\n" + text) : text;
+    ta.dispatchEvent(new Event("input", { bubbles: true }));
 
     status.textContent = `OCR 完成。已寫入輸入框（${text.length} 字）`;
     runBtn?.classList.remove("hidden");
