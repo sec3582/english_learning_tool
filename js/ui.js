@@ -2025,38 +2025,31 @@ export function buildGrammarHTML(sentences, points, originalText = "") {
     return `<span data-id="${escapeHTML(s.id)}">${html}</span>`;
   }
 
-  // 依原文段落分組：若有 \n\n 則尊重使用者分段；否則每 5 句自動分一段
-  const rawParas = originalText.split(/\n\n+/).map(p => p.trim()).filter(Boolean);
-  let groups;
-  if (rawParas.length > 1) {
-    groups = rawParas.map(() => []);
-    let paraIdx = 0;
-    for (const s of sentences) {
-      let found = false;
-      for (let i = paraIdx; i < rawParas.length; i++) {
-        const normPara = rawParas[i].replace(/\s+/g, " ");
-        const normSent = s.text.trim().replace(/\s+/g, " ");
-        if (normPara.includes(normSent)) {
-          groups[i].push(s);
-          paraIdx = i;
-          found = true;
-          break;
-        }
+  // 依原文段落分組：若有 \n\n 則以雙換行分段；否則以單換行分段（對話格式）
+  const rawParas = (originalText.includes("\n\n")
+    ? originalText.split(/\n\n+/)
+    : originalText.split(/\n/)
+  ).map(p => p.trim()).filter(Boolean);
+
+  const groups = rawParas.map(() => /** @type {Array} */([]));
+  for (const s of sentences) {
+    const normSent = s.text.trim().replace(/\s+/g, " ");
+    let found = false;
+    for (let i = 0; i < rawParas.length; i++) {
+      if (rawParas[i].replace(/\s+/g, " ").includes(normSent)) {
+        groups[i].push(s);
+        found = true;
+        break;
       }
-      if (!found) groups[paraIdx].push(s);
     }
-  } else {
-    const CHUNK = 5;
-    groups = [];
-    for (let i = 0; i < sentences.length; i += CHUNK) {
-      groups.push(sentences.slice(i, i + CHUNK));
-    }
+    if (!found && groups.length) groups[groups.length - 1].push(s);
   }
 
-  return groups
-    .filter(g => g.length)
-    .map(g => `<p>${g.map(buildSentenceSpan).join(" ")}</p>`)
-    .join("");
+  return rawParas.map((rawPara, i) => {
+    const g = groups[i];
+    if (!g.length) return `<p>${escapeHTML(rawPara)}</p>`;
+    return `<p>${g.map(buildSentenceSpan).join(" ")}</p>`;
+  }).join("");
 }
 
 /** 將文法標籤套用到中英對照 HTML 的英文段落上 */

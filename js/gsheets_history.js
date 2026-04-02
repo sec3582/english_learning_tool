@@ -143,6 +143,14 @@ export async function saveArticleHistory(fullText) {
   return { saved: true, duplicate: false, title, sheetRowIndex };
 }
 
+function stripHtml_(text) {
+  return String(text || "")
+    .replace(/<[^>]*>/g, "")
+    .replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, " ")
+    .trim();
+}
+
 // 互動式授權後抓取最近 n 篇
 export async function getRecentArticles(n = 10) {
   const ok = await ensureAuthed_(true);
@@ -159,8 +167,8 @@ export async function getRecentArticles(n = 10) {
     // After slice(-n).reverse(), arr[i] corresponds to rows[total-1-i]
     // sheet row = (total-1-i) + 2  (row 1 is header, data starts at row 2)
     return rows.slice(-n).reverse().map((r, i) => ({
-      title:         r[0] || "(untitled)",
-      fullText:      r[1] || "",
+      title:         stripHtml_(r[0]) || "(untitled)",
+      fullText:      stripHtml_(r[1]),
       savedAt:       r[2] || "",
       sheetRowIndex: total - i + 1, // 1-based sheet row index
     }));
@@ -180,8 +188,8 @@ export async function getAllArticles() {
   });
   const rows = res.result.values || [];
   return rows.map(r => ({
-    title:    r[0] || "(untitled)",
-    fullText: r[1] || "",
+    title:    stripHtml_(r[0]) || "(untitled)",
+    fullText: stripHtml_(r[1]),
     savedAt:  r[2] || "",
   }));
 }
