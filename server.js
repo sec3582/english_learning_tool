@@ -72,22 +72,18 @@ STRICT RULES — violation is not acceptable:
 4. All Chinese fields ("definition", "example1_zh", "example2_zh") MUST be in Traditional Chinese.
 5. Return ONLY a valid JSON array — no markdown, no code fences, no extra text.
 
-Here is a perfect example of the required output format (for the word "book" used as a verb):
-[
-  {
-    "word": "book",
-    "pos": "verb",
-    "level": "A2",
-    "definition": "預訂；預約",
-    "example1": "She booked a table at the restaurant for Friday evening.",
-    "example1_zh": "她預訂了週五晚上的餐廳座位。",
-    "example2": "You should book your flight tickets early to get a better price.",
-    "example2_zh": "你應該早點預訂機票，以獲得更優惠的價格。"
-  }
-]
-
 Article:
-${text}`;
+${truncateArticleToParagraphs(text)}`;
+}
+
+/**
+ * 截斷文章至前 maxParagraphs 段，減少送出的 token 數量。
+ * 適用於詞彙分析、文法分析等不需要全文的任務。
+ */
+function truncateArticleToParagraphs(text, maxParagraphs = 5) {
+  const paragraphs = text.split(/\n\n+/).filter(p => p.trim());
+  if (paragraphs.length <= maxParagraphs) return text;
+  return paragraphs.slice(0, maxParagraphs).join('\n\n');
 }
 
 /**
@@ -207,7 +203,7 @@ STRICT RULES:
 5. Return ONLY a valid JSON object — no markdown, no code fences, no extra text.
 
 Article:
-${text}`;
+${truncateArticleToParagraphs(text)}`;
 }
 
 /**
@@ -228,10 +224,10 @@ ${text}`;
  */
 function buildGrammarQuizGeneratePrompt(points, knownWords) {
   const pointsText = points.map((p, i) =>
-    `${i + 1}. 文法點：${p.name}\n   說明：${p.explanation}\n   示例句：${p.exampleSentence || p.word}`
+    `${i + 1}. 文法點：${p.name}\n   示例句：${p.exampleSentence || p.word}`
   ).join("\n\n");
 
-  const wordsText = (knownWords || []).slice(0, 30).map(w => w.word).join(", ");
+  const wordsText = (knownWords || []).slice(0, 15).map(w => w.word).join(", ");
 
   return `You are an English grammar quiz designer for Traditional Chinese learners.
 
@@ -331,9 +327,32 @@ app.post("/api", async (req, res) => {
     const prevMnemonic = typeof body.prevMnemonic === "string" ? body.prevMnemonic : null;
     prompt = buildMnemonicPrompt(term, { regen: isRegen, prevMnemonic });
   } else if (action === "translateArticle") {
-    // 全文中英對照翻譯
+    // 全文中英對照翻譯：按段落分批呼叫 API，降低單次 token 用量
     if (!text) return res.status(400).json({ ok: false, error: "缺少 text 欄位" });
-    prompt = buildTranslateArticlePrompt(text);
+    try {
+      const paragraphs = text.split(/\n\n+/).filter(p => p.trim());
+      const CHUNK_SIZE = 4;
+      let combinedHtml = "";
+      let totalPromptTokens = 0;
+      let totalCompletionTokens = 0;
+      for (let i = 0; i < paragraphs.length; i += CHUNK_SIZE) {
+        const chunk = paragraphs.slice(i, i + CHUNK_SIZE).join("\n\n");
+        const chunkResult = await geminiModel.generateContent(buildTranslateArticlePrompt(chunk));
+        combinedHtml += chunkResult.response.text();
+        const meta = chunkResult.response.usageMetadata;
+        totalPromptTokens += meta?.promptTokenCount || 0;
+        totalCompletionTokens += meta?.candidatesTokenCount || 0;
+      }
+      return res.json({
+        ok: true,
+        content: combinedHtml,
+        model: "gemini-2.5-flash-lite",
+        usage: { prompt_tokens: totalPromptTokens, completion_tokens: totalCompletionTokens },
+      });
+    } catch (err) {
+      console.error("[Gemini API 錯誤]", err);
+      return res.status(500).json({ ok: false, error: err.message || "Gemini API 呼叫失敗" });
+    }
   } else if (action === "grammarQuizGenerate") {
     // 文法測驗出題
     const { points, knownWords } = body;

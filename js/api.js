@@ -241,14 +241,53 @@ function normalizeToJSON_(content) {
   }
 }
 
+// ====== 文章分析結果快取（localStorage，以文章內容 hash 為 key）======
+function simpleHash_(str) {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = (h * 0x01000193) >>> 0;
+  }
+  return h.toString(16);
+}
+
+function articleCacheGet_(action, text) {
+  const key = `wordgarden_cache_${action}_${simpleHash_(text)}`;
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function articleCacheSet_(action, text, value) {
+  const key = `wordgarden_cache_${action}_${simpleHash_(text)}`;
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // 儲存空間不足時靜默跳過
+  }
+}
+
 export async function analyzeArticle(text) {
-  const data = await callAppsScript("analyzeArticle", { text: String(text || "") });
-  return normalizeToJSON_(data?.content);
+  const normalized = String(text || "");
+  const cached = articleCacheGet_("analyzeArticle", normalized);
+  if (cached) return cached;
+  const data = await callAppsScript("analyzeArticle", { text: normalized });
+  const result = normalizeToJSON_(data?.content);
+  articleCacheSet_("analyzeArticle", normalized, result);
+  return result;
 }
 
 export async function analyzeGrammar(text) {
-  const data = await callAppsScript("analyzeGrammar", { text: String(text || "") });
-  return normalizeToJSON_(data?.content);
+  const normalized = String(text || "");
+  const cached = articleCacheGet_("analyzeGrammar", normalized);
+  if (cached) return cached;
+  const data = await callAppsScript("analyzeGrammar", { text: normalized });
+  const result = normalizeToJSON_(data?.content);
+  articleCacheSet_("analyzeGrammar", normalized, result);
+  return result;
 }
 
 export async function generateGrammarQuiz(points, knownWords) {
