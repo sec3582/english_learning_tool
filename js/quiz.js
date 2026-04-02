@@ -289,8 +289,18 @@ export function buildTypingQuestion(wordObj, opts = { showZh: true }) {
   const pair = pickExamplePair(wordObj, { showZh: !!opts.showZh });
   const expectedVariant = detectExpectedVariant(wordObj.word, pair.en);
   const expected = (expectedVariant || (wordObj.word || '')).toLowerCase();
-  const _masked = pair.en ? maskWordInText(expected || wordObj.word, pair.en) : "";
-  const maskedExample = (_masked && _masked !== pair.en) ? _masked : "";
+  let _masked = pair.en ? maskWordInText(expected || wordObj.word, pair.en) : "";
+
+  // Fallback：精確比對失敗時，改用形態學 regex 嘗試遮字
+  if (pair.en && _masked === pair.en) {
+    const morphRe = buildMorphRegex(wordObj.word);
+    _masked = pair.en.replace(morphRe, m =>
+      m.length <= 2 ? "_".repeat(m.length) : m[0] + "_".repeat(m.length - 2) + m[m.length - 1]
+    );
+  }
+
+  // 若仍找不到可遮的詞形，顯示原句作為上下文（詞不在句中，不會洩漏答案）
+  const maskedExample = _masked || "";
   return {
     type: "typing",
     expected,
