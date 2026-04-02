@@ -70,7 +70,7 @@ function initInputTabs() {
   tabs.forEach(({ btn, panel }) => {
     const btnEl = $(btn);
     if (!btnEl) return;
-    btnEl.addEventListener("click", () => {
+    btnEl.addEventListener("click", async () => {
       // 所有 tab → 非 active
       tabs.forEach(t => {
         $(t.btn)?.classList.remove("input-tab--active");
@@ -80,6 +80,19 @@ function initInputTabs() {
       btnEl.classList.add("input-tab--active");
       $(panel)?.classList.remove("hidden");
 
+      // 圖書館 tab：若尚未載入資料，自動觸發授權 + 載入
+      if (btn === "inputTabLibrary") {
+        const items = $("libraryItems");
+        const hasData = items && items.querySelectorAll(".library-item").length > 0;
+        if (!hasData) {
+          try {
+            const articles = await getRecentArticles(50);
+            UI.renderLibraryList(articles);
+          } catch (err) {
+            UI.showToast("圖書館載入失敗：" + err.message, { type: "warn", duration: 5000 });
+          }
+        }
+      }
     });
   });
 }
@@ -104,15 +117,9 @@ function bindEvents() {
   on("loadSheetsBtn", "click", async () => {
     const result = await UI.handleLoadSheets();
     // 雲端載入完成後，同步更新圖書館列表
-    // 優先使用 bootstrap 已讀取的 Article_History（同一 token，不需第二次授權彈窗）
-    if (result?.articles) {
-      try { UI.renderLibraryList(result.articles); } catch {}
-    } else {
-      // fallback：bootstrap 未回傳文章時才嘗試重新 fetch
-      try {
-        const articles = await getRecentArticles(50);
-        UI.renderLibraryList(articles);
-      } catch { /* 靜默：圖書館載入失敗不影響主流程 */ }
+    // bootstrap 已讀取 Article_History，直接使用（同一 token，不需第二次授權彈窗）
+    if (result) {
+      try { UI.renderLibraryList(result.articles ?? []); } catch {}
     }
   });
   on("pushSheetsBtn", "click", UI.handlePushSheets);
