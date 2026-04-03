@@ -1834,6 +1834,10 @@ export function removeLibraryArticle(sheetRowIndex) {
   // 同步重新索引 localStorage，避免翻譯/文法/自訂標題對應到錯誤的文章
   _shiftStorageKeys_(_ENRICHMENTS_KEY, sheetRowIndex);
   _shiftStorageKeys_(_TITLE_KEY, sheetRowIndex);
+  // 立即推送到 Sheets，防止重新載入時被舊的 titleOverrides 覆蓋
+  pushLocalStorageToSheets().catch(err => {
+    console.error("[removeLibraryArticle] 推送 titleOverrides 到 Sheets 失敗：", err);
+  });
   _renderLibraryPage_();
 }
 
