@@ -81,9 +81,9 @@ ${truncateArticleToParagraphs(text)}`;
  * 適用於詞彙分析、文法分析等不需要全文的任務。
  */
 function truncateArticleToParagraphs(text, maxParagraphs = 5) {
-  const paragraphs = text.split(/\n\n+/).filter(p => p.trim());
+  const paragraphs = text.split(/\n/).filter(p => p.trim());
   if (paragraphs.length <= maxParagraphs) return text;
-  return paragraphs.slice(0, maxParagraphs).join('\n\n');
+  return paragraphs.slice(0, maxParagraphs).join('\n');
 }
 
 /**

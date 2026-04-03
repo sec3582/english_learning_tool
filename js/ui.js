@@ -2031,11 +2031,8 @@ export function buildGrammarHTML(sentences, points, originalText = "") {
     return `<span data-id="${escapeHTML(s.id)}">${html}</span>`;
   }
 
-  // 依原文段落分組：若有 \n\n 則以雙換行分段；否則以單換行分段（對話格式）
-  const rawParas = (originalText.includes("\n\n")
-    ? originalText.split(/\n\n+/)
-    : originalText.split(/\n/)
-  ).map(p => p.trim()).filter(Boolean);
+  // 以單換行作為段落切分點，過濾空白行
+  const rawParas = originalText.split(/\n/).map(p => p.trim()).filter(Boolean);
 
   const groups = rawParas.map(() => /** @type {Array} */([]));
   for (const s of sentences) {
@@ -2189,8 +2186,8 @@ function _overlayKnownWords_(container, knownWords) {
 function highlightKnownWords_(text, knownWords) {
   if (!knownWords.length) {
     // 無已知詞時直接轉段落
-    return text.split(/\n\n+/).map(p =>
-      `<p>${escapeHTML(p.replace(/\n/g, " "))}</p>`
+    return text.split(/\n/).map(p => p.trim()).filter(Boolean).map(p =>
+      `<p>${escapeHTML(p)}</p>`
     ).join("");
   }
 
@@ -2198,8 +2195,8 @@ function highlightKnownWords_(text, knownWords) {
   const sorted = [...knownWords].sort((a, b) => b.word.length - a.word.length);
 
   // 先逐段處理，避免跨段 span
-  return text.split(/\n\n+/).map(para => {
-    const flat = para.replace(/\n/g, " ");
+  return text.split(/\n/).map(p => p.trim()).filter(Boolean).map(para => {
+    const flat = para;
 
     // 在純文字中找出所有不重疊的比對位置，再一次性組裝 HTML，
     // 避免對已插入的 HTML 屬性再次執行 regex 替換而破壞標記。
