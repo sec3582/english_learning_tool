@@ -15,55 +15,55 @@
   .word-row:hover .speak-btn{ visibility:visible; }
   .speak-btn{
     display:inline-flex;align-items:center;justify-content:center;
-    width:24px;height:24px;border:1px solid #d1d5db;border-radius:9999px;
+    width:24px;height:24px;border:1px solid var(--border);border-radius:9999px;
     font-size:12px;line-height:1;opacity:.7;transition:.15s;
   }
-  .speak-btn:hover{ opacity:1;background:#eff6ff;border-color:#93c5fd; }
+  .speak-btn:hover{ opacity:1;background: var(--bg);border-color: var(--primary); }
 
   /* ─── 匯入文章：輸入來源 Tabs（Morandi 版） ─── */
   .input-tab{
     padding:.5rem 1rem; font-size:.875rem; font-weight:500;
-    color:#7A7A7A; border-bottom: 2px solid transparent;
+    color: var(--muted); border-bottom: 2px solid transparent;
     margin-bottom: -1px; transition: color .15s, border-color .15s;
     white-space: nowrap; background: transparent;
   }
-  .input-tab:hover{ color:#4A4A4A; }
+  .input-tab:hover{ color: var(--text); }
   .input-tab--active{
-    color:#BC9C7F; border-bottom-color:#BC9C7F; font-weight:600;
+    color: var(--active); border-bottom-color: var(--active); font-weight:600;
   }
 
   /* ─── 左欄按鈕層級（Morandi Flat）─── */
   /* Primary：莫蘭迪灰綠底，白字 */
   .btn-primary-m{
     display:inline-flex; align-items:center; gap:6px;
-    background:#A3B18A; color:#fff;
+    background: var(--primary); color:#fff;
     padding:.5rem 1.1rem; border-radius:8px; font-size:.875rem; font-weight:600;
     border:none; cursor:pointer; transition:background .15s, opacity .15s;
     white-space:nowrap;
   }
-  .btn-primary-m:hover{ background:#8d9b76; }
+  .btn-primary-m:hover{ background: var(--primary-hover); }
   .btn-primary-m:disabled{ opacity:.5; cursor:not-allowed; }
 
   /* Secondary：透明底，灰色外框 */
   .btn-outline-m{
     display:inline-flex; align-items:center; gap:6px;
-    background:transparent; color:#7A7A7A;
+    background:transparent; color: var(--muted);
     padding:.5rem 1.1rem; border-radius:8px; font-size:.875rem; font-weight:500;
-    border:1.5px solid #C8CBCE; cursor:pointer;
+    border:1.5px solid var(--border); cursor:pointer;
     transition:color .15s, border-color .15s;
     white-space:nowrap;
   }
-  .btn-outline-m:hover{ color:#4A4A4A; border-color:#A3B18A; }
+  .btn-outline-m:hover{ color: var(--text); border-color: var(--primary); }
 
   /* Tertiary：Ghost 按鈕，極淺背景 */
   .btn-ghost-m{
     display:inline-flex; align-items:center; gap:6px;
-    background:transparent; color:#7A7A7A;
+    background:transparent; color: var(--muted);
     padding:.5rem .9rem; border-radius:8px; font-size:.875rem; font-weight:500;
     border:none; cursor:pointer; transition:color .15s, background .15s;
     white-space:nowrap;
   }
-  .btn-ghost-m:hover{ color:#4A4A4A; background:#F3F4F1; }
+  .btn-ghost-m:hover{ color: var(--text); background: var(--card); }
 
   /* Starred 狀態：霧霾藍淡底 */
   .btn-ghost-m--starred{
@@ -74,23 +74,23 @@
   /* Small utility 按鈕（OCR 等） */
   .btn-sm-m{
     display:inline-flex; align-items:center; gap:5px;
-    background:#F3F4F1; color:#7A7A7A;
+    background: var(--card); color: var(--muted);
     padding:.35rem .7rem; border-radius:6px; font-size:.8125rem;
-    border:none; cursor:pointer; transition:background .15s;
+    border:1px solid var(--border); cursor:pointer; transition:background .15s;
     white-space:nowrap;
   }
-  .btn-sm-m:hover{ background:#EAECEE; }
+  .btn-sm-m:hover{ background: var(--bg); }
 
   /* Section 標題 */
   .section-h{
     display:flex; align-items:center; gap:7px;
-    font-size:1rem; font-weight:600; color:#4A4A4A; margin:0;
+    font-size:1rem; font-weight:600; color: var(--text); margin:0;
   }
-  .section-h svg{ color:#A3B18A; flex-shrink:0; }
+  .section-h svg{ color: var(--primary); flex-shrink:0; }
 
   /* ─── 閱讀模式 Reader Mode ─── */
   .reader-body{
-    font-size: 1.05rem; line-height: 1.95; color: #1e293b;
+    font-size: 1.05rem; line-height: 1.95; color: var(--text);
   }
   .reader-body p{ margin-bottom: 1em; }
   .reader-word{
@@ -101,8 +101,8 @@
 
   /* ─── Reader 單字提示卡 ─── */
   .reader-tooltip{
-    position: absolute; background: #fff;
-    border: 1px solid rgba(29,53,87,.15); border-radius: 10px;
+    position: absolute; background: var(--card);
+    border: 1px solid var(--border); border-radius: 10px;
     padding: 12px 14px;
     box-shadow: 0 6px 20px rgba(0,0,0,.12);
     z-index: 200; min-width: 220px; max-width: min(300px, calc(100vw - 16px));
@@ -112,25 +112,25 @@
   .library-item{
     display: flex; align-items: flex-start; gap: 10px;
     padding: 12px 14px; border-radius: 12px;
-    border: none; background: #fafafa;
+    border: none; background: var(--card);
     box-shadow: 0 1px 4px rgba(29,53,87,.06);
     cursor: pointer; transition: background .18s, box-shadow .18s;
   }
-  .library-item:hover{ background: #eef1ea; box-shadow: 0 2px 10px rgba(29,53,87,.10); }
+  .library-item:hover{ background: var(--bg); box-shadow: 0 2px 10px rgba(29,53,87,.10); }
   .lib-delete{
     opacity: 0; transition: opacity .15s; flex-shrink: 0;
-    color: #9ca3af; font-size: 15px; line-height: 1;
+    color: var(--muted); font-size: 15px; line-height: 1;
     padding: 0 3px; background: none; border: none; cursor: pointer;
   }
   .library-item:hover .lib-delete{ opacity: 1; }
-  .lib-delete:hover{ color: #ef4444; }
+  .lib-delete:hover{ color: var(--error); }
   .lib-pencil{
     opacity: 0; transition: opacity .15s; flex-shrink: 0;
-    color: #9ca3af; background: none; border: none; cursor: pointer;
+    color: var(--muted); background: none; border: none; cursor: pointer;
     padding: 1px 2px; display: flex; align-items: center;
   }
   .library-item:hover .lib-pencil{ opacity: 1; }
-  .lib-pencil:hover{ color: #6b7280; }
+  .lib-pencil:hover{ color: var(--text); }
   .lib-title-input{
     flex: 1; min-width: 0; font-size: 0.875rem; font-weight: 500;
     color: #1f2937; border: none; border-bottom: 1.5px solid #A3B18A;
@@ -148,7 +148,7 @@
   /* ─── Reader mode 工具列 ─── */
   .reader-toolbar{
     display:flex; gap:8px; flex-wrap:wrap; align-items:center;
-    padding-bottom:12px; border-bottom:1px solid #f0f0ed;
+    padding-bottom:12px; border-bottom:1px solid var(--border);
   }
   .reader-enrich-status{
     display:flex; gap:6px; flex-wrap:wrap; align-items:center; flex:1; min-width:0;
@@ -161,25 +161,17 @@
   .reader-enrich-tag--gr{ background:#EAF0FB; color:#5577AA; }
   </style>
   <style>
-  /* ─── Color Tokens: Word Garden Morandi Palette ─── */
-  :root{
-    --bg: #F2F3EE;          /* 米白底色 */
-    --primary: #A3B18A;     /* 莫蘭迪灰綠（全站主色） */
-    --primary-hover: #8d9b76;
-    --primary-dark: #7a9068; /* Navbar 漸層深端 */
-    --theme-color: #8F9A78; /* 互動元素統一主題色（一改全改） */
-    --active: #BC9C7F;      /* 大地駝色（選取/active） */
-    --blue: #A3B18A;        /* 統一為 primary */
-    --navy: #4a5940;        /* 深綠（文字重點） */
+  /* Color tokens 已集中至 theme-ocean.css :root */
 
-    --text: #2c2c2c;
-    --muted: #6B7280;
-    --card: #ffffff;
-    --ring: rgba(163,177,138,.30);
+  /* 深色模式：覆蓋 Tailwind 的 bg-white / bg-gray-100 讓 section 卡片跟著變色 */
+  [data-theme="dark"] .bg-white,
+  [data-theme="dark"] section.bg-white {
+    background: var(--card) !important;
+    color: var(--text);
   }
-
-  /* 背景與字體基調 */
-  body{ background: var(--bg); color: var(--text); }
+  [data-theme="dark"] body.bg-gray-100 {
+    background: var(--bg) !important;
+  }
 
   /* Header：莫蘭迪灰綠漸層 */
   .header-gradient{
@@ -191,7 +183,7 @@
   /* 卡片：圓角 16、柔霧邊框、輕陰影 */
   .card{
     background: var(--card);
-    border: 1px solid rgba(29,53,87,.06);
+    border: 1px solid var(--border);
     border-radius: 16px;
     box-shadow: 0 10px 20px rgba(29,53,87,.06);
   }
@@ -206,11 +198,11 @@
   /* Tabs（右側：今日/到期/全部） */
   .tab{
     padding:.4rem .7rem; font-size:.85rem; border:1px solid transparent;
-    border-right:1px solid rgba(29,53,87,.12);
-    background: #fff; color: var(--navy); transition:.2s ease;
+    border-right:1px solid var(--border);
+    background: var(--card); color: var(--navy); transition:.2s ease;
   }
   .tab:last-child{ border-right:none; }
-  .tab:hover{ background: #f8fafc; }
+  .tab:hover{ background: var(--bg); }
   .tab--active{ background: var(--primary); color: #fff; border-color: var(--primary); }
 
   /* Buttons */
@@ -218,10 +210,10 @@
   .btn:focus{ outline: none; box-shadow: 0 0 0 4px var(--ring); }
   .btn-primary{ background: var(--primary); color:#fff; }
   .btn-primary:hover{ background: var(--primary-hover); }
-  .btn-secondary{ background: transparent; color: var(--muted); border:1.5px solid #C8CBCE; }
+  .btn-secondary{ background: transparent; color: var(--muted); border:1.5px solid var(--border); }
   .btn-secondary:hover{ border-color: var(--primary); color: var(--primary); }
-  .btn-ghost{ background:#fff; color: var(--navy); border:1px solid rgba(29,53,87,.15); }
-  .btn-ghost:hover{ background:#f8fafc; }
+  .btn-ghost{ background: var(--card); color: var(--navy); border:1px solid var(--border); }
+  .btn-ghost:hover{ background: var(--bg); }
 
   /* 浮動加入列 (FAB Bar) */
   .fab{
@@ -236,24 +228,24 @@
   }
 
   /* Modal */
-  .modal{ background:#fff; border-radius:16px; box-shadow:0 24px 60px rgba(2,6,23,.35); }
+  .modal{ background: var(--card); border-radius:16px; box-shadow:0 24px 60px rgba(2,6,23,.35); }
 
   /* 輕量表單強化：focus ring 換成 Morandi 主色 */
   textarea, input, select{
-    border-radius:12px; border:1px solid rgba(29,53,87,.15);
+    border-radius:12px; border:1px solid var(--border);
   }
   textarea:focus, input:focus, select:focus{
     outline:none;
-    border-color: #A3B18A;
-    box-shadow: 0 0 0 3px rgba(163,177,138,.22);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--ring);
   }
 
   /* 小喇叭按鈕 */
   .icon-circle{
     width: 28px; height: 28px; border-radius:999px; display:grid; place-items:center;
-    border:1px solid rgba(29,53,87,.2); color:#5b7083; background:#fff; transition:.2s;
+    border:1px solid var(--border); color: var(--muted); background: var(--card); transition:.2s;
   }
-  .icon-circle:hover{ color:#1e293b; border-color: rgba(29,53,87,.35); }
+  .icon-circle:hover{ color: var(--text); border-color: var(--primary); }
 
   /* AI 建議卡（維持你原有 hover 顯示喇叭的互動） */
   .word-row .speak-btn{ visibility:hidden; }
@@ -262,8 +254,8 @@
   /* ── 單字卡 (Word Card) Morandi 扁平化 — 易讀性修正版 ── */
   .wc-card{
     position:relative;
-    background:#fff;
-    border:1px solid #EAECEE;
+    background: var(--card);
+    border:1px solid var(--border);
     border-radius:12px;
     overflow:hidden;
   }
@@ -276,7 +268,7 @@
   /* 英文單字：獨佔一行，避免與詞性/定義混排斷字 */
   .wc-title strong{
     display:block;
-    color:#333333; font-weight:600; font-size:1.25rem;
+    color: var(--text); font-weight:600; font-size:1.25rem;
     line-height:1.25;
   }
   /* 詞性 + 定義：同一行，作為獨立的 meta row */
@@ -285,11 +277,11 @@
     gap:0 4px; margin-top:2px;
   }
   .wc-title .wc-pos{
-    color:#555555; font-size:.8125rem; font-weight:400;
+    color: var(--muted); font-size:.8125rem; font-weight:400;
     white-space:nowrap; /* 詞性不折行 */
   }
   .wc-title .wc-def{
-    color:#555555; font-size:.875rem; font-weight:400;
+    color: var(--muted); font-size:.875rem; font-weight:400;
     word-break:keep-all; /* 中文詞不在字元中間斷開 */
   }
   /* 箭頭：靠頂對齊，與單字視覺基線相近 */
@@ -318,9 +310,9 @@
   .wc-card:hover .wc-del-corner{ opacity:1; }
   .wc-del-corner:hover{ color:#C0392B; }
 
-  /* 文章例句：主要閱讀文字，#333，text-base，leading-relaxed，無斜體 */
+  /* 文章例句：主要閱讀文字，text-base，leading-relaxed，無斜體 */
   .wc-article{
-    color:#333333;
+    color: var(--text);
     font-size:1rem;       /* text-base = 16px */
     font-weight:400;
     line-height:1.625;    /* leading-relaxed */
@@ -328,22 +320,22 @@
     margin:0;
   }
 
-  /* AI 助教解析區塊（米白底，均勻 padding） */
+  /* AI 助教解析區塊（次層底色，均勻 padding） */
   .wc-ai{
-    background:#F8F9FA; border-radius:10px;
+    background: var(--bg); border-radius:10px;
     padding:16px;
     display:flex; flex-direction:column; gap:4px;
   }
   /* 英文例句：主要資訊，深色 */
   .wc-ai-text{
     margin:0;
-    color:#333333; font-size:1rem;
+    color: var(--text); font-size:1rem;
     line-height:1.65; font-weight:400;
   }
   /* 中文翻譯：輔助資訊，次要色 + 微縮字級 */
   .wc-ai-zh{
     margin:0; margin-top:4px;
-    color:#6B7280; font-size:.9375rem;
+    color: var(--muted); font-size:.9375rem;
     line-height:1.6; font-weight:400;
   }
 
@@ -351,11 +343,11 @@
   .wc-footer{
     display:flex; align-items:center; gap:2px;
     padding-top:8px; margin-top:0;
-    border-top:1px solid #EAECEE;
+    border-top:1px solid var(--border);
   }
   .wc-btn-save{
     display:inline-flex; align-items:center; gap:4px;
-    font-size:.8125rem; font-weight:400; color:#555555;
+    font-size:.8125rem; font-weight:400; color: var(--muted);
     background:none; border:none; cursor:pointer;
     padding:4px 8px; border-radius:6px;
     transition:color .15s, background .15s;
@@ -388,7 +380,7 @@
   }
   .mnemonic-overlay.hidden{ display:none; }
   .mnemonic-window{
-    background:#fff; border-radius:16px;
+    background: var(--card); border-radius:16px;
     padding:24px; width:min(600px, calc(100vw - 32px));
     box-shadow:0 12px 40px rgba(0,0,0,.18);
     max-height:82vh; overflow-y:auto;
@@ -398,30 +390,30 @@
     margin-bottom:18px;
   }
   .mnemonic-word-title{
-    font-size:1.25rem; font-weight:700; color:#333;
+    font-size:1.25rem; font-weight:700; color: var(--text);
     letter-spacing:.01em;
   }
   .mnemonic-close{
     background:none; border:none; cursor:pointer;
-    color:#9ca3af; font-size:20px; line-height:1;
+    color: var(--muted); font-size:20px; line-height:1;
     padding:2px 6px; border-radius:6px; transition:color .15s;
   }
-  .mnemonic-close:hover{ color:#374151; }
+  .mnemonic-close:hover{ color: var(--text); }
   .mnemonic-section{ margin-bottom:16px; }
   .mnemonic-label{
     font-size:.6875rem; font-weight:700; color:#A3B18A;
     text-transform:uppercase; letter-spacing:.06em; margin-bottom:6px;
   }
   .mnemonic-text{
-    font-size:.9375rem; color:#374151;
+    font-size:.9375rem; color: var(--text);
     line-height:1.7; white-space:pre-line;
   }
   .mnemonic-highlight{
-    background:#F8F7F2; border-radius:10px;
-    padding:10px 14px; color:#4a5940;
+    background: var(--bg); border-radius:10px;
+    padding:10px 14px; color: var(--navy);
   }
   .mnemonic-zh{
-    color:#6B7280; font-size:.875rem;
+    color: var(--muted); font-size:.875rem;
     margin-top:4px; line-height:1.6;
   }
   /* Loading 動畫 */
@@ -447,15 +439,15 @@
   .mnemonic-chips{ display:flex; flex-wrap:wrap; gap:6px; margin-top:2px; }
   .mnemonic-chip{ display:inline-block; padding:3px 10px; border-radius:999px; font-size:.8125rem; color:#4a5940; background:#eef1ea; border:1px solid #d4dece; }
   .mnemonic-chip--ant{ color:#7a4a4a; background:#f5eaea; border-color:#e8d0d0; }
-  .mnemonic-regen-row{ display:flex; justify-content:flex-end; padding-top:12px; margin-top:4px; border-top:1px solid #f0f0ee; }
-  .mnemonic-regen{ font-size:.8rem; color:#9ca3af; background:none; border:1px solid #e5e7eb; cursor:pointer; padding:4px 12px; border-radius:8px; transition:all .15s; }
-  .mnemonic-regen:hover{ color:#6b7280; border-color:#d1d5db; background:#f9fafb; }
+  .mnemonic-regen-row{ display:flex; justify-content:flex-end; padding-top:12px; margin-top:4px; border-top:1px solid var(--border); }
+  .mnemonic-regen{ font-size:.8rem; color: var(--muted); background:none; border:1px solid var(--border); cursor:pointer; padding:4px 12px; border-radius:8px; transition:all .15s; }
+  .mnemonic-regen:hover{ color: var(--text); border-color: var(--primary); background: var(--bg); }
 
   /* ── 右側欄位標題（去圖示後補足視覺重量） ── */
   .sidebar-title{
     font-weight:600;
     letter-spacing:.05em;
-    color:#3d4a35;
+    color: var(--navy);
   }
 
   /* ── 測驗按鈕（統一引用 --theme-color）── */
@@ -611,14 +603,14 @@
   .article-viewer {
     font-size: 1rem;
     line-height: 2.1;
-    color: #1e293b;
+    color: var(--text);
   }
   .article-viewer p {
     margin-bottom: 1.5em;
   }
   /* 全文翻譯：中英對照 */
   #translateContent .eng-text {
-    color: #1e293b;
+    color: var(--text);
     font-size: 0.95rem;
     margin-bottom: 4px;
   }
@@ -637,7 +629,7 @@
     <div class="max-w-6xl mx-auto flex items-center justify-between">
       <div class="flex items-center gap-2">
         <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22V12"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/><path d="M12 12C12 6 17 2 17 2s-2 4-5 4-6-3-6-3 3 5 6 9Z"/></svg>
-        <h1 class="text-xl font-bold tracking-wide">Jill's Word Garden</h1>
+        <h1 class="text-xl font-bold tracking-wide">養雞背單字</h1>
       </div>
       <div class="flex items-center gap-6 text-white">
         <div class="flex items-center gap-2">
@@ -648,6 +640,13 @@
           <span class="text-white/80 text-base font-medium">待複習</span>
           <span id="dueCountBadge" class="chip">0</span>
         </div>
+        <button id="darkModeToggle" aria-label="切換深色模式"
+          class="flex items-center justify-center w-8 h-8 rounded-full transition-colors"
+          style="background:rgba(255,255,255,.15); color:#fff;">
+          <svg id="darkModeIcon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+        </button>
         <button id="openUsageBtn" class="flex items-center gap-1.5 text-base text-white/80 font-medium hover:text-white transition-colors">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg>
           <span>本月估算：NT$<span id="usageCostBadge" style="font-weight:700;color:#fff;">0</span></span>
@@ -695,7 +694,7 @@
           <div id="inputPanelManual" class="space-y-4">
             <textarea id="articleInput"
               class="w-full p-5 border border-gray-200 rounded-xl text-base text-gray-800 leading-relaxed placeholder-gray-300 focus:outline-none resize-y min-h-[300px]"
-              style="line-height:1.75; color:#333333; font-size:1rem; font-weight:500;"
+              style="line-height:1.75; color:var(--text); font-size:1rem; font-weight:500;"
               placeholder="請貼上英文文章…"></textarea>
             <div class="flex flex-wrap items-center gap-3">
               <!-- Primary Action -->
@@ -790,7 +789,7 @@
           </div>
           <div id="readerContent" class="reader-body"></div>
           <!-- Reader 文法解析面板（點擊文法標籤後顯示） -->
-          <div id="readerGrammarPanel" class="hidden rounded-lg p-4 text-sm" style="background:#F8F9FA; border-left:3px solid #A3B18A;">
+          <div id="readerGrammarPanel" class="hidden rounded-lg p-4 text-sm" style="background:var(--bg); border-left:3px solid var(--primary);">
             <div id="readerGrammarPanelContent"></div>
             <div class="mt-3 flex justify-end">
               <button id="readerAddGrammarPracticeBtn" class="hidden text-xs px-3 py-1 rounded border" style="color:#4F46E5;border-color:#C7D2FE;background:#EEF2FF;">
@@ -1091,7 +1090,7 @@
       <div id="grammarQuizQuestion" class="hidden space-y-3">
         <div id="grammarQuizPointName" class="text-xs font-medium px-2 py-1 rounded inline-block" style="background:#EEF2FF; color:#4F46E5;"></div>
         <div id="grammarQuizInstruction" class="font-medium text-gray-800 leading-relaxed"></div>
-        <div class="rounded-lg p-3 text-sm text-gray-700" style="background:#F8F9FA; border-left:3px solid #A3B18A;">
+        <div class="rounded-lg p-3 text-sm" style="background:var(--bg); border-left:3px solid var(--primary); color:var(--text);">
           <div class="text-xs text-gray-400 mb-1">原句</div>
           <div id="grammarQuizOriginal" class="leading-relaxed"></div>
         </div>
@@ -1182,7 +1181,7 @@
     position:fixed; z-index:9999;
     display:none; align-items:center; gap:5px;
     padding:5px 12px 5px 9px; border-radius:999px;
-    background:#F8F9FA; border:1px solid #E0E4DE;
+    background:var(--card); border:1px solid var(--border);
     box-shadow:0 2px 10px rgba(0,0,0,.12);
     cursor:pointer; user-select:none; white-space:nowrap;
   ">
@@ -1193,7 +1192,7 @@
   <!-- 反白分析結果小卡 -->
   <div id="selectionResult" class="hidden" style="
     position:fixed; z-index:10000;
-    background:#fff; border:1px solid #E0E4DE;
+    background:var(--card); border:1px solid var(--border);
     border-radius:16px; padding:16px 18px;
     box-shadow:0 8px 32px rgba(0,0,0,.15), 0 2px 8px rgba(0,0,0,.08);
     max-width:min(350px, calc(100vw - 32px)); min-width:240px;
@@ -1213,36 +1212,70 @@
 
   <!-- 文法重點分析 Modal -->
   <div id="grammarModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
-    <div class="bg-white w-full max-w-3xl rounded-xl shadow-xl flex flex-col mx-4" style="max-height:82vh;">
+    <div class="w-full max-w-3xl rounded-xl shadow-xl flex flex-col mx-4" style="background:var(--card); max-height:82vh;">
       <!-- Header -->
-      <div class="flex justify-between items-center px-6 py-4 border-b border-gray-100 flex-shrink-0">
-        <h3 class="text-base font-semibold" style="color:#4A4A4A;">文法重點分析</h3>
-        <button id="grammarModalClose" class="text-gray-400 hover:text-gray-600 transition-colors" aria-label="關閉">
+      <div class="flex justify-between items-center px-6 py-4 border-b flex-shrink-0" style="border-color:var(--border);">
+        <h3 class="text-base font-semibold" style="color:var(--text);">文法重點分析</h3>
+        <button id="grammarModalClose" class="transition-colors" style="color:var(--muted);" aria-label="關閉">
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
       <!-- Article Viewer（可捲動） -->
       <div class="article-viewer overflow-y-auto px-6 py-5 flex-1 min-h-0" id="grammarArticleViewer" style="min-height:clamp(80px, 18vh, 180px);"></div>
       <!-- Explanation Panel（固定高度） -->
-      <div class="px-6 py-4 border-t border-gray-100 flex-shrink-0" id="grammarExplanationPanel"
-           style="background:#F8F9FA; min-height:clamp(80px, 14vh, 130px); max-height:clamp(140px, 28vh, 300px); overflow-y:auto;">
-        <p class="text-sm text-center" style="color:#9CA3AF; padding-top:1.75rem;">點擊文章中的藍色標籤，查看文法解析</p>
+      <div class="px-6 py-4 border-t flex-shrink-0" id="grammarExplanationPanel"
+           style="background:var(--bg); border-color:var(--border); min-height:clamp(80px, 14vh, 130px); max-height:clamp(140px, 28vh, 300px); overflow-y:auto;">
+        <p class="text-sm text-center" style="color:var(--muted); padding-top:1.75rem;">點擊文章中的藍色標籤，查看文法解析</p>
       </div>
     </div>
   </div>
 
   <!-- 全文翻譯 Modal -->
   <div id="translateModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
-    <div class="bg-white w-full max-w-2xl rounded-xl shadow-xl flex flex-col mx-4" style="max-height:85vh;">
-      <div class="flex justify-between items-center px-6 py-4 border-b border-gray-100 flex-shrink-0">
-        <h3 class="text-base font-semibold" style="color:#4A4A4A;">全文中英對照翻譯</h3>
-        <button id="translateModalClose" class="text-gray-400 hover:text-gray-600 transition-colors" aria-label="關閉">
+    <div class="w-full max-w-2xl rounded-xl shadow-xl flex flex-col mx-4" style="background:var(--card); max-height:85vh;">
+      <div class="flex justify-between items-center px-6 py-4 border-b flex-shrink-0" style="border-color:var(--border);">
+        <h3 class="text-base font-semibold" style="color:var(--text);">全文中英對照翻譯</h3>
+        <button id="translateModalClose" class="transition-colors" style="color:var(--muted);" aria-label="關閉">
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
       <div id="translateContent" class="overflow-y-auto px-6 py-5 flex-1 min-h-0 text-sm leading-relaxed" style="line-height:1.9;"></div>
     </div>
   </div>
+
+  <!-- 深色模式切換 -->
+  <script>
+    (function(){
+      const STORAGE_KEY = 'wordgarden-theme';
+      const root = document.documentElement;
+      const btn  = document.getElementById('darkModeToggle');
+      const icon = document.getElementById('darkModeIcon');
+
+      const moonSVG = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+      const sunSVG  = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+
+      function applyTheme(isDark){
+        if(isDark){
+          root.setAttribute('data-theme','dark');
+          icon.innerHTML = sunSVG;
+        } else {
+          root.removeAttribute('data-theme');
+          icon.innerHTML = moonSVG;
+        }
+      }
+
+      // 初始化：優先 localStorage，其次系統偏好
+      const saved = localStorage.getItem(STORAGE_KEY);
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      applyTheme(saved ? saved === 'dark' : prefersDark);
+
+      btn.addEventListener('click', function(){
+        const isDark = root.getAttribute('data-theme') === 'dark';
+        applyTheme(!isDark);
+        localStorage.setItem(STORAGE_KEY, !isDark ? 'dark' : 'light');
+      });
+    })();
+  </script>
 
   <!-- 原本主程式照常 -->
   <script type="module" src="js/main.js"></script>

@@ -1,13 +1,36 @@
 /* Word Garden Morandi Sage Theme */
 :root{
   --bg: #F2F3EE;
-  --blue: #A3B18A;      /* 莫蘭迪灰綠（全站主色） */
-  --navy: #4a5940;      /* 深綠（重點文字） */
-  --active: #BC9C7F;    /* 大地駝色（選取色） */
-
+  --primary: #A3B18A;     /* 莫蘭迪灰綠（全站主色） */
+  --primary-hover: #8d9b76;
+  --primary-dark: #7a9068; /* Navbar 漸層深端 */
+  --theme-color: #8F9A78;  /* 互動元素統一主題色 */
+  --active: #BC9C7F;       /* 大地駝色（選取色） */
+  --blue: #A3B18A;         /* 統一為 primary */
+  --navy: #4a5940;         /* 深綠（重點文字） */
   --text: #2c2c2c;
   --muted: #6B7280;
+  --card: #ffffff;
+  --border: #E0E4DE;
   --ring: rgba(163,177,138,.30);
+  --error: #ef4444;
+}
+
+[data-theme="dark"]{
+  --bg: #0d1321;
+  --card: #1d2d44;
+  --text: #f0ebd8;
+  --muted: #A2B5CA;                      /* 灰藍輔助文字 */
+  --border: #3e5c76;
+  --primary: #748cab;                    /* 柔和灰藍主色 */
+  --primary-hover: #8ba0be;              /* 稍亮 hover */
+  --primary-dark: #748cab;
+  --theme-color: #748cab;
+  --active: #f0ebd8;                     /* Tab active：米白 */
+  --blue: #748cab;
+  --navy: #b5c9db;                       /* 深色背景上可讀的淡藍灰 */
+  --ring: rgba(116,140,171,.40);         /* 柔和灰藍 focus ring */
+  --error: #f87171;
 }
 
 
@@ -34,7 +57,7 @@ header.bg-green-600{
 
 /* Cards */
 .bg-white.rounded-xl.shadow.p-6{
-  border: 1px solid rgba(29,53,87,.06);
+  border: 1px solid var(--border);
   border-radius: 16px !important;
   box-shadow: 0 10px 20px rgba(29,53,87,.06) !important;
 }
@@ -42,36 +65,36 @@ header.bg-green-600{
 /* Tabs */
 div.inline-flex.rounded-md.overflow-hidden.border > button{
   padding:.4rem .7rem; font-size:.85rem; border:1px solid transparent;
-  border-right:1px solid rgba(29,53,87,.12);
-  background:#fff; color: var(--navy); transition:.2s ease;
+  border-right:1px solid var(--border);
+  background: var(--card); color: var(--navy); transition:.2s ease;
 }
 div.inline-flex.rounded-md.overflow-hidden.border > button:last-child{ border-right:none; }
-#tabToday:hover,#tabDue:hover,#tabAll:hover{ background:#f8fafc; }
+#tabToday:hover,#tabDue:hover,#tabAll:hover{ background: var(--bg); }
 /* active state：大地駝色文字 + 底部內陰影底線 */
 #tabToday.bg-gray-100,#tabDue.bg-gray-100,#tabAll.bg-gray-100{
-  background: #fff !important;
-  color: #BC9C7F !important;
+  background: var(--card) !important;
+  color: var(--active) !important;
   font-weight: 600 !important;
-  box-shadow: inset 0 -2.5px 0 #BC9C7F !important;
+  box-shadow: inset 0 -2.5px 0 var(--active) !important;
   border-color: transparent !important;
 }
 
 /* Primary action buttons */
 #analyzeBtn,#saveBtn,#customAnalyzeBtn,#customAddBtn,#qsStart,#startQuizBtn,#usageSaveBudget{
-  background: #A3B18A !important; color:#fff !important; border-radius:12px;
+  background: var(--primary) !important; color:#fff !important; border-radius:12px;
   padding:.6rem 1rem; font-weight:600; box-shadow:0 3px 8px rgba(163,177,138,.22);
 }
 #analyzeBtn:hover,#saveBtn:hover,#customAnalyzeBtn:hover,#customAddBtn:hover,#qsStart:hover,#startQuizBtn:hover,#usageSaveBudget:hover{
-  background: #8d9b76 !important;
+  background: var(--primary-hover) !important;
 }
 
 /* Secondary / Ghost buttons */
 #ocrPickBtn,#ocrRunBtn,#allPrev,#allNext,#qsCancel,#usageReset{
-  background:#fff !important; color: var(--navy) !important; border:1px solid rgba(29,53,87,.15) !important;
+  background: var(--card) !important; color: var(--navy) !important; border:1px solid var(--border) !important;
   border-radius:12px; padding:.5rem .9rem; font-weight:600;
 }
 #ocrPickBtn:hover,#ocrRunBtn:hover,#allPrev:hover,#allNext:hover,#qsCancel:hover,#usageReset:hover{
-  background:#f8fafc !important;
+  background: var(--bg) !important;
 }
 
 /* Usage modal main close */
@@ -84,11 +107,11 @@ div.inline-flex.rounded-md.overflow-hidden.border > button:last-child{ border-ri
 
 /* Floating bar */
 #fabBar{
-  background: #A3B18A !important; color:#fff; border-radius:999px !important;
+  background: var(--primary) !important; color:#fff; border-radius:999px !important;
   box-shadow: 0 8px 20px rgba(163,177,138,.32) !important;
 }
 #fabBar button{
-  background:#fff !important; color: #7a9068 !important; border-radius:12px; padding:.4rem .8rem; font-weight:700;
+  background: var(--card) !important; color: var(--primary-dark) !important; border-radius:12px; padding:.4rem .8rem; font-weight:700;
 }
 
 /* Undo toast */
@@ -103,20 +126,20 @@ div.inline-flex.rounded-md.overflow-hidden.border > button:last-child{ border-ri
 
 /* Form focus ring */
 textarea, input, select{
-  border-radius:12px !important; border:1px solid rgba(0,0,0,.12);
+  border-radius:12px !important; border:1px solid var(--border);
 }
 textarea:focus, input:focus, select:focus{
-  outline:none; border-color: #A3B18A !important; box-shadow: 0 0 0 3px rgba(163,177,138,.22) !important;
+  outline:none; border-color: var(--primary) !important; box-shadow: 0 0 0 3px var(--ring) !important;
 }
 
 /* Speaker button (created by JS, has title="播放") — Ghost 樣式 */
 button[title="播放"]{
   display:inline-flex; align-items:center; gap:4px;
-  border:none; color:#A3B18A; background:transparent;
+  border:none; color: var(--primary); background:transparent;
   border-radius:6px; padding:3px 6px; font-size:.8125rem;
   transition:background .15s, color .15s; cursor:pointer;
 }
-button[title="播放"]:hover{ background:#eef1ea !important; color:#8d9b76 !important; }
+button[title="播放"]:hover{ background: var(--bg) !important; color: var(--primary-hover) !important; }
 
 /* Small text muted */
 .text-gray-500{ color: var(--muted) !important; }
@@ -125,17 +148,17 @@ button[title="播放"]:hover{ background:#eef1ea !important; color:#8d9b76 !impo
 #quizModePicker .grid [data-mode]{
   cursor: pointer;
   border-width: 2px !important;
-  border-color: rgba(29,53,87,.18) !important; /* 初始淡藍邊 */
+  border-color: var(--border) !important;
   border-radius: 16px !important;
-  background: #fff !important;
+  background: var(--card) !important;
   transition: transform .15s ease, box-shadow .2s ease,
               border-color .15s ease, background-color .15s ease;
 }
 
 #quizModePicker .grid [data-mode]:hover,
 #quizModePicker .grid [data-mode]:focus-visible{
-  background: #eef1ea !important;
-  border-color: #A3B18A !important;
+  background: var(--bg) !important;
+  border-color: var(--primary) !important;
   box-shadow:
     0 0 0 3px rgba(163,177,138,.25),
     0 8px 18px rgba(120,144,104,.15);
@@ -145,8 +168,8 @@ button[title="播放"]:hover{ background:#eef1ea !important; color:#8d9b76 !impo
 
 #quizModePicker .grid [data-mode]:active{
   transform: translateY(-1px) scale(1.005);
-  box-shadow: 0 0 0 2px rgba(163,177,138,.30), 0 4px 12px rgba(120,144,104,.12);
-  border-color: #8d9b76 !important;
+  box-shadow: 0 0 0 2px var(--ring), 0 4px 12px rgba(120,144,104,.12);
+  border-color: var(--primary-hover) !important;
 }
 
 /* 動作偏好：減少動態時，停用浮起效果 */
@@ -166,7 +189,7 @@ button[title="播放"]:hover{ background:#eef1ea !important; color:#8d9b76 !impo
    ═══════════════════════════════════════════ */
 
 .pixel-pet-frame {
-  background: #FAFAF5;
+  background: var(--card);
   border: 3px solid #D4C4A0;
   border-radius: 6px;
   padding: 10px 18px 8px;
@@ -271,7 +294,7 @@ button[title="播放"]:hover{ background:#eef1ea !important; color:#8d9b76 !impo
   position: absolute;
   top: 4px;
   right: 95px;
-  background: #fff;
+  background: var(--card);
   border: 2px solid #C8B899;
   border-radius: 8px;
   padding: 2px 7px;
@@ -288,3 +311,159 @@ button[title="播放"]:hover{ background:#eef1ea !important; color:#8d9b76 !impo
   50%      { transform: translateY(-3px); }
 }
 
+
+/* ════════════════════════════════════════════
+   Dark Mode — Targeted Overrides
+   （只在 [data-theme="dark"] 下生效）
+   ════════════════════════════════════════════ */
+
+/* ── 0. Header：深夜書房背景 + 米白文字 ── */
+[data-theme="dark"] .header-gradient {
+  background: #3e5c76 !important;
+  box-shadow: 0 4px 16px rgba(13,19,33,.50) !important;
+}
+[data-theme="dark"] .header-gradient,
+[data-theme="dark"] .header-gradient * {
+  color: #f0ebd8 !important;
+}
+[data-theme="dark"] .header-gradient .chip {
+  background: rgba(240,235,216,.18) !important;
+  color: #f0ebd8 !important;
+}
+
+/* ── 1. Primary 按鈕：柔灰藍背景 + 米白文字 ── */
+[data-theme="dark"] .btn-primary-m,
+[data-theme="dark"] .btn-primary,
+[data-theme="dark"] .tab--active,
+[data-theme="dark"] .quiz-btn-primary,
+[data-theme="dark"] #analyzeBtn,
+[data-theme="dark"] #saveBtn,
+[data-theme="dark"] #customAnalyzeBtn,
+[data-theme="dark"] #customAddBtn,
+[data-theme="dark"] #qsStart,
+[data-theme="dark"] #startQuizBtn,
+[data-theme="dark"] #usageSaveBudget {
+  color: #f0ebd8 !important;
+}
+
+/* ── 2. Ghost / Outline 按鈕：柔灰藍邊框 + 米白文字 ── */
+[data-theme="dark"] .btn-ghost-m,
+[data-theme="dark"] .btn-outline-m,
+[data-theme="dark"] .btn-ghost,
+[data-theme="dark"] #ocrPickBtn,
+[data-theme="dark"] #ocrRunBtn,
+[data-theme="dark"] #allPrev,
+[data-theme="dark"] #allNext,
+[data-theme="dark"] #qsCancel,
+[data-theme="dark"] #usageReset,
+[data-theme="dark"] #exportJsonBtn,
+[data-theme="dark"] #importJsonBtn,
+[data-theme="dark"] #loadSheetsBtn,
+[data-theme="dark"] #pushSheetsBtn {
+  color: #f0ebd8 !important;
+  border-color: var(--primary) !important;
+  background: var(--card) !important;
+}
+
+/* ── 3. 標題文字：h2 / h3 / .section-h / .sidebar-title ── */
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] .section-h,
+[data-theme="dark"] .sidebar-title {
+  color: var(--text) !important;
+}
+
+/* ── 4. Tab 非 active 文字 ── */
+[data-theme="dark"] div.inline-flex.rounded-md.overflow-hidden.border > button,
+[data-theme="dark"] #tabToday:not(.bg-gray-100),
+[data-theme="dark"] #tabDue:not(.bg-gray-100),
+[data-theme="dark"] #tabAll:not(.bg-gray-100) {
+  color: var(--muted) !important;
+}
+
+/* ── 5. 表單輸入框 ── */
+[data-theme="dark"] textarea,
+[data-theme="dark"] input:not([type="file"]):not([type="range"]),
+[data-theme="dark"] select {
+  background: var(--bg) !important;
+  color: var(--text) !important;
+}
+[data-theme="dark"] textarea::placeholder,
+[data-theme="dark"] input::placeholder {
+  color: var(--muted) !important;
+  opacity: 1;
+}
+
+/* ── 6. Tailwind gray 文字 → muted ── */
+[data-theme="dark"] .text-gray-400,
+[data-theme="dark"] .text-gray-500,
+[data-theme="dark"] .text-gray-600,
+[data-theme="dark"] .text-gray-700,
+[data-theme="dark"] .text-gray-800 {
+  color: var(--muted) !important;
+}
+
+/* ── 7. Tailwind gray 背景 / 邊框 → token ── */
+[data-theme="dark"] .bg-gray-100,
+[data-theme="dark"] .bg-gray-50,
+[data-theme="dark"] .bg-gray-200 {
+  background: var(--card) !important;
+}
+[data-theme="dark"] .border-gray-100,
+[data-theme="dark"] .border-gray-200,
+[data-theme="dark"] .border-gray-300 {
+  border-color: var(--border) !important;
+}
+
+/* ── 8. 電子雞進度條 ── */
+[data-theme="dark"] #hungerBar { background: var(--primary) !important; }
+[data-theme="dark"] #moodBar   { background: #cbb29a !important; }  /* 駝色提亮版 */
+[data-theme="dark"] #xpBar     { background: var(--primary) !important; }
+
+/* ── 9. 單字卡關聯字 chips ── */
+[data-theme="dark"] .wc-rel-label { color: var(--muted) !important; }
+[data-theme="dark"] .wc-rel-chip {
+  color: var(--text) !important;
+  background: rgba(255,255,255,.08) !important;
+  border-color: var(--border) !important;
+}
+[data-theme="dark"] .wc-rel-chip--ant {
+  color: var(--text) !important;
+  background: rgba(248,113,113,.12) !important;
+  border-color: rgba(248,113,113,.30) !important;
+}
+
+/* ── 10. AI 記憶輔助按鈕 ── */
+[data-theme="dark"] .wc-ai-help {
+  color: #f0ebd8 !important;
+  background: rgba(116,140,171,.20) !important;
+}
+[data-theme="dark"] .wc-ai-help:hover {
+  background: rgba(116,140,171,.32) !important;
+  color: #f0ebd8 !important;
+}
+
+/* ── 11. 記憶窗 chips ── */
+[data-theme="dark"] .mnemonic-chip {
+  color: var(--text) !important;
+  background: rgba(255,255,255,.08) !important;
+  border-color: var(--border) !important;
+}
+[data-theme="dark"] .mnemonic-chip--ant {
+  color: var(--text) !important;
+  background: rgba(248,113,113,.12) !important;
+  border-color: rgba(248,113,113,.30) !important;
+}
+
+/* ── 12. 測驗「下一題」按鈕（原 --navy 深色背景） ── */
+[data-theme="dark"] .quiz-btn-next {
+  background: var(--border) !important;
+  color: var(--text) !important;
+}
+
+/* ── 13. Reader 返回按鈕 ── */
+[data-theme="dark"] #readerBackBtn {
+  background: var(--card) !important;
+  color: var(--muted) !important;
+  border: 1px solid var(--border);
+}
