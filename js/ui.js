@@ -2142,22 +2142,46 @@ function _overlayKnownWords_(container, knownWords) {
   while ((node = walker.nextNode())) textNodes.push(node);
 
   for (const textNode of textNodes) {
-    let html = escapeHTML(textNode.textContent);
-    let modified = false;
+    const text = textNode.textContent;
+    if (!text.trim()) continue;
+
+    const occupied = new Uint8Array(text.length);
+    const matches = [];
+
     for (const w of sorted) {
-      const re = new RegExp(`\\b${escapeReg(escapeHTML(w.word))}\\b`, 'gi');
-      if (re.test(html)) {
-        html = html.replace(re, match =>
-          `<span class="reader-word" data-word="${escapeHTML(w.word)}" ` +
-          `data-pos="${escapeHTML(w.pos)}" data-def="${escapeHTML(w.definition)}">${match}</span>`
-        );
-        modified = true;
+      const re = new RegExp(`\\b${escapeReg(w.word)}\\b`, 'gi');
+      let match;
+      while ((match = re.exec(text)) !== null) {
+        const start = match.index;
+        const end = start + match[0].length;
+
+        let isOccupied = false;
+        for (let i = start; i < end; i++) {
+          if (occupied[i]) { isOccupied = true; break; }
+        }
+
+        if (!isOccupied) {
+          for (let i = start; i < end; i++) occupied[i] = 1;
+          matches.push({ start, end, matchText: match[0], wordObj: w });
+        }
       }
     }
-    if (modified) {
-      const span = document.createElement('span');
-      span.innerHTML = html;
-      textNode.parentNode.replaceChild(span, textNode);
+
+    if (matches.length > 0) {
+      matches.sort((a, b) => a.start - b.start);
+
+      let html = '';
+      let pos = 0;
+      for (const m of matches) {
+        html += escapeHTML(text.slice(pos, m.start));
+        html += `<span class="reader-word" data-word="${escapeHTML(m.wordObj.word)}" data-pos="${escapeHTML(m.wordObj.pos || '')}" data-def="${escapeHTML(m.wordObj.definition || '')}">${escapeHTML(m.matchText)}</span>`;
+        pos = m.end;
+      }
+      html += escapeHTML(text.slice(pos));
+
+      const wrapper = document.createElement('span');
+      wrapper.innerHTML = html;
+      textNode.parentNode.replaceChild(wrapper, textNode);
     }
   }
 }
