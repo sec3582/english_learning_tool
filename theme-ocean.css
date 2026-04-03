@@ -22,6 +22,7 @@
   --text: #f0ebd8;
   --muted: #A2B5CA;                      /* 灰藍輔助文字 */
   --border: #3e5c76;
+  --hover-bg: rgba(62,92,118,.40);       /* 列表/卡片懸停高光 */
   --primary: #748cab;                    /* 柔和灰藍主色 */
   --primary-hover: #8ba0be;              /* 稍亮 hover */
   --primary-dark: #748cab;
@@ -466,4 +467,127 @@ button[title="播放"]:hover{ background: var(--bg) !important; color: var(--pri
   background: var(--card) !important;
   color: var(--muted) !important;
   border: 1px solid var(--border);
+}
+[data-theme="dark"] #readerBackBtn:hover {
+  background: var(--hover-bg) !important;
+  color: #f0ebd8 !important;
+}
+
+/* ════════════════════════════════════════════
+   ── 14. Hover 狀態：深夜書房互動回饋 ──
+   ════════════════════════════════════════════ */
+
+/* 列表 / 單字卡 */
+[data-theme="dark"] .library-item:hover {
+  background: var(--hover-bg) !important;
+  box-shadow: 0 2px 10px rgba(13,19,33,.30) !important;
+}
+[data-theme="dark"] .wc-card:hover {
+  background: var(--hover-bg) !important;
+}
+
+/* Ghost / Outline 按鈕 hover：primary 背景 + 米白文字 */
+[data-theme="dark"] .btn-ghost-m:hover,
+[data-theme="dark"] .btn-outline-m:hover,
+[data-theme="dark"] .btn-ghost:hover,
+[data-theme="dark"] #ocrPickBtn:hover,
+[data-theme="dark"] #ocrRunBtn:hover,
+[data-theme="dark"] #allPrev:hover,
+[data-theme="dark"] #allNext:hover,
+[data-theme="dark"] #qsCancel:hover,
+[data-theme="dark"] #usageReset:hover,
+[data-theme="dark"] #exportJsonBtn:hover,
+[data-theme="dark"] #importJsonBtn:hover,
+[data-theme="dark"] #loadSheetsBtn:hover,
+[data-theme="dark"] #pushSheetsBtn:hover {
+  background: var(--primary) !important;
+  color: #f0ebd8 !important;
+  border-color: var(--primary) !important;
+}
+
+/* Primary 按鈕 hover 雙重確認 */
+[data-theme="dark"] .btn-primary-m:hover,
+[data-theme="dark"] .btn-primary:hover,
+[data-theme="dark"] #analyzeBtn:hover,
+[data-theme="dark"] #saveBtn:hover,
+[data-theme="dark"] #customAnalyzeBtn:hover,
+[data-theme="dark"] #customAddBtn:hover,
+[data-theme="dark"] #qsStart:hover,
+[data-theme="dark"] #startQuizBtn:hover,
+[data-theme="dark"] #usageSaveBudget:hover {
+  background: var(--primary-hover) !important;
+  color: #f0ebd8 !important;
+}
+
+/* Tab hover（右側清單 + 上方輸入分頁） */
+[data-theme="dark"] #tabToday:hover,
+[data-theme="dark"] #tabDue:hover,
+[data-theme="dark"] #tabAll:hover {
+  background: var(--hover-bg) !important;
+  color: #f0ebd8 !important;
+}
+[data-theme="dark"] .tab:hover {
+  background: var(--hover-bg) !important;
+  color: #f0ebd8 !important;
+}
+[data-theme="dark"] .input-tab:hover {
+  color: #f0ebd8 !important;
+  background: var(--hover-bg) !important;
+}
+
+/* Small utility 按鈕 */
+[data-theme="dark"] .btn-sm-m:hover {
+  background: var(--hover-bg) !important;
+  color: #f0ebd8 !important;
+}
+
+/* 測驗「下一題」按鈕 hover */
+[data-theme="dark"] .quiz-btn-next:hover {
+  background: var(--primary) !important;
+  color: #f0ebd8 !important;
+}
+
+/* Reader 行內字詞 hover */
+[data-theme="dark"] .reader-word:hover {
+  background: var(--hover-bg) !important;
+}
+
+/* 單字卡細節 hover */
+[data-theme="dark"] .wc-card:hover .wc-title strong { color: #9bf6ff !important; }
+[data-theme="dark"] .wc-title .wc-word:hover { color: var(--primary) !important; }
+[data-theme="dark"] .wc-del-corner:hover      { color: var(--error) !important; }
+[data-theme="dark"] .wc-btn-save:hover {
+  color: #f0ebd8 !important;
+  background: var(--hover-bg) !important;
+}
+
+/* 記憶窗 hover */
+[data-theme="dark"] .mnemonic-word-title:hover { color: var(--primary) !important; }
+[data-theme="dark"] .mnemonic-regen:hover {
+  background: var(--hover-bg) !important;
+  color: #f0ebd8 !important;
+  border-color: var(--primary) !important;
+}
+
+/* 文法標籤 hover */
+[data-theme="dark"] grammar-tag:hover {
+  background: rgba(116,140,171,.28) !important;
+  color: var(--text) !important;
+}
+
+/* 小喇叭按鈕 hover */
+[data-theme="dark"] .speak-btn:hover {
+  background: var(--hover-bg) !important;
+  border-color: var(--primary) !important;
+}
+[data-theme="dark"] button[title="播放"]:hover {
+  background: var(--hover-bg) !important;
+  color: var(--primary) !important;
+}
+
+/* Quiz mode picker hover */
+[data-theme="dark"] #quizModePicker .grid [data-mode]:hover,
+[data-theme="dark"] #quizModePicker .grid [data-mode]:focus-visible {
+  background: var(--hover-bg) !important;
+  border-color: var(--primary) !important;
 }
