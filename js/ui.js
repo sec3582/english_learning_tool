@@ -2265,10 +2265,24 @@ export function showReaderMode(article, enrichment = {}) {
       statusDiv.appendChild(tag);
     }
   }
-  // 翻譯按鈕：無翻譯時顯示
-  if (translateBtn) translateBtn.classList.toggle("hidden", !!enrichment.translatedContent);
-  // 文法按鈕：無文法分析時顯示
-  if (grammarBtn2) grammarBtn2.classList.toggle("hidden", !!enrichment.grammarAnalysis);
+  // 翻譯按鈕：無翻譯時顯示，並確保按鈕回到初始狀態
+  if (translateBtn) {
+    const hasTranslation = !!enrichment.translatedContent;
+    translateBtn.classList.toggle("hidden", hasTranslation);
+    if (!hasTranslation) {
+      translateBtn.textContent = "翻譯此文";
+      translateBtn.disabled = false;
+    }
+  }
+  // 文法按鈕：無文法分析時顯示，並確保按鈕回到初始狀態
+  if (grammarBtn2) {
+    const hasGrammar = !!enrichment.grammarAnalysis;
+    grammarBtn2.classList.toggle("hidden", hasGrammar);
+    if (!hasGrammar) {
+      grammarBtn2.textContent = "文法分析";
+      grammarBtn2.disabled = false;
+    }
+  }
 
   // 重置文法面板
   const grammarPanel        = document.getElementById("readerGrammarPanel");
