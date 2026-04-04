@@ -609,14 +609,24 @@
     margin-bottom: 1.5em;
   }
   /* 全文翻譯：中英對照 */
-  #translateContent .eng-text {
+  #translateContent .eng-text,
+  #readerContent .eng-text {
     color: var(--text);
-    font-size: 0.95rem;
-    margin-bottom: 4px;
+    font-size: 1rem;
+    line-height: 1.6;
+    margin-bottom: 8px;
   }
-  #translateContent .cht-text {
+
+  #translateContent .cht-text,
+  #readerContent .cht-text {
+    /* 使用 !important 避免被舊文章資料庫裡殘留的 inline-style 蓋掉 */
+    color: #9CA3AF !important;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin-bottom: 20px !important;
     border-left: 3px solid #A3B18A;
-    padding-left: 10px;
+    padding-left: 12px;
+    font-weight: 300; /* 讓中文筆畫稍微輕一點，與英文主體產生區隔 */
   }
   </style>
 
