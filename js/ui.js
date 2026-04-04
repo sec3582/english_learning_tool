@@ -49,8 +49,24 @@ function escapeReg(s = "") {
 
 
 /* POS 簡寫 */
-const POS_MAP = { noun: "n.", verb: "v.", adjective: "adj.", adverb: "adv.", pronoun: "pron.", preposition: "prep.", conjunction: "conj.", interjection: "interj.", phrase: "phr." };
-function posAbbr(pos=""){ const k = String(pos).toLowerCase().trim(); return POS_MAP[k] || pos; }
+const POS_MAP = {
+  // 英文全名
+  "noun": "n.", "verb": "v.", "adjective": "adj.", "adverb": "adv.",
+  "pronoun": "pron.", "preposition": "prep.", "conjunction": "conj.", "interjection": "int.",
+  // 中文對應
+  "名詞": "n.", "動詞": "v.", "形容詞": "adj.", "副詞": "adv.",
+  "代名詞": "pron.", "介系詞": "prep.", "連接詞": "conj.", "感嘆詞": "int.",
+  // 無點縮寫
+  "n": "n.", "v": "v.", "adj": "adj.", "adv": "adv.",
+  "prep": "prep.", "pron": "pron.", "conj": "conj.", "int": "int.",
+  // 片語
+  "phrase": "phr.", "片語": "phr.", "phr": "phr.",
+};
+function posAbbr(pos=""){
+  const trimmed = String(pos).trim();
+  const k = trimmed.toLowerCase();
+  return (POS_MAP[trimmed] ?? POS_MAP[k] ?? trimmed) || pos;
+}
 
 /* ===== 測驗偏好 & 自動語音 ===== */
 let QUIZ_PREF = (() => {

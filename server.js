@@ -227,7 +227,7 @@ ${truncateArticleToParagraphs(text)}`;
  * @param {string} text - 英文文章內容
  */
 function buildTranslateArticlePrompt(text) {
-  return `你是一個專業的英文翻譯助理。請將以下英文文章翻譯成繁體中文。為了幫助使用者學習，請採用「段落式中英對照」的格式回傳。請先輸出一段原始的英文段落，接著在下一段輸出對應的繁體中文翻譯。請使用 HTML 格式排版，英文段落請用 <p class="eng-text"> 包覆，中文翻譯請用 <p class="cht-text" style="color: #666; margin-bottom: 20px;"> 包覆。請確保每一段都有對應的翻譯，不要遺漏。只回傳 HTML 內容，不要加入任何說明文字或 code fence。
+  return `你是一個專業的英文翻譯助理。請將以下英文文章翻譯成繁體中文。為了幫助使用者學習，請採用「段落式中英對照」的格式回傳。請先輸出一段原始的英文段落，接著在下一段輸出對應的繁體中文翻譯。請使用 HTML 格式排版，英文段落請用 <p class="eng-text"> 包覆，中文翻譯請用 <p class="cht-text"> 包覆。請確保每一段都有對應的翻譯，不要遺漏。只回傳 HTML 內容，不要加入任何說明文字或 code fence。
 
 文章內容：
 ${text}`;
