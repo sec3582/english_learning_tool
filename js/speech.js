@@ -44,6 +44,22 @@ function _isMaleVoice(v) {
   return _MALE_NAME_HINTS.some(h => n.includes(h));
 }
 
+function _isGoogleVoice(v) {
+  return (v.name || "").toLowerCase().includes("google");
+}
+
+function _isLocalVoice(v) {
+  return v.localService === true;
+}
+
+// 偵測平台（ua 字串，僅用於語音優先順序提示）
+const _platform = (() => {
+  const ua = (typeof navigator !== "undefined" ? navigator.userAgent : "") || "";
+  if (/Win/i.test(ua)) return "windows";
+  if (/Mac/i.test(ua)) return "mac";
+  return "other";
+})();
+
 function pickVoice(langWanted, specifiedName, preferMale = false) {
   if (!ready) return null;
   if (specifiedName) {
@@ -52,18 +68,39 @@ function pickVoice(langWanted, specifiedName, preferMale = false) {
   }
 
   const tag = (langWanted || "").split("-")[0];
-  const inLang = voices.filter(v => (v.lang || "").toLowerCase().startsWith(tag));
-  const pool = inLang.length ? inLang : voices;
+  const isEn = tag === "en";
+
+  // 同語系候選：排除 Google 雲端語音（en 才排；中文 Google 語音通常可用）
+  const inLang = voices.filter(v => {
+    if (!(v.lang || "").toLowerCase().startsWith(tag)) return false;
+    if (isEn && _isGoogleVoice(v)) return false;
+    return true;
+  });
+  const pool = inLang.length ? inLang : voices.filter(v => !isEn || !_isGoogleVoice(v));
+
+  // 英文：優先本機語音，並依平台進一步排序
+  let localPool = isEn ? pool.filter(_isLocalVoice) : pool;
+
+  if (isEn && localPool.length) {
+    // Windows 優先 Microsoft 聲音
+    if (_platform === "windows") {
+      const ms = localPool.filter(v => (v.name || "").toLowerCase().includes("microsoft"));
+      if (ms.length) localPool = ms;
+    }
+    // Mac 優先非雲端本機聲音（localService 已過濾，直接用）
+  }
+
+  const candidate = (isEn && localPool.length) ? localPool : pool;
 
   if (preferMale) {
-    const male = pool.find(v => _isMaleVoice(v));
+    const male = candidate.find(v => _isMaleVoice(v));
     if (male) return male;
   }
 
-  // 優先完全相符，再找同語系
-  const exact = voices.find(v => (v.lang || "").toLowerCase() === (langWanted || "").toLowerCase());
+  // 優先完全語系相符
+  const exact = candidate.find(v => (v.lang || "").toLowerCase() === (langWanted || "").toLowerCase());
   if (exact) return exact;
-  return pool[0] || voices[0] || null;
+  return candidate[0] || voices[0] || null;
 }
 
 function _utterFor(text, lang) {
@@ -100,6 +137,7 @@ export function speak(text, opts = {}) {
     return;
   }
   const u = _utterFor(text, lang);
+  console.log('Current utterance rate:', u.rate, 'Voice:', u.voice?.name);
   window.speechSynthesis.speak(u);
 }
 
@@ -129,7 +167,7 @@ export function speakSequence(seq = [], onEnd) {
     const u = _utterFor(cur.text, cur.lang);
     u.onend = () => next();
     u.onerror = () => next();
-    try { window.speechSynthesis.speak(u); } catch { next(); }
+    try { console.log('Current utterance rate:', u.rate, 'Voice:', u.voice?.name); window.speechSynthesis.speak(u); } catch { next(); }
   };
   next();
 }
