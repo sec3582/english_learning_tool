@@ -359,6 +359,12 @@ app.post("/api", async (req, res) => {
         totalPromptTokens += meta?.promptTokenCount || 0;
         totalCompletionTokens += meta?.candidatesTokenCount || 0;
       }
+      // 所有 chunk 組裝完畢後，統一清除可能殘留的 markdown code fence
+      // 放在這裡可防止 fence 標記被切斷在兩個 chunk 之間而漏網
+      combinedHtml = combinedHtml
+        .replace(/^```html?\s*/im, "")
+        .replace(/```\s*$/m, "")
+        .trim();
       return res.json({
         ok: true,
         content: combinedHtml,
