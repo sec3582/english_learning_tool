@@ -108,7 +108,7 @@ export function startQuizFromSettings() {
   const cb = modal?.querySelector("#qs_showZh");
   QUIZ_PREF.audio = sel ? sel.value : "none";
   QUIZ_PREF.showZh = cb ? !!cb.checked : true;
-  QUIZ_PREF.mode = "typing";
+  // 不覆蓋 QUIZ_PREF.mode，保留 startQuizFlowWithMode() 設定的題型
   localStorage.setItem("quizPref", JSON.stringify(QUIZ_PREF));
 
   closeQuizSettings();

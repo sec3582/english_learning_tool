@@ -561,6 +561,37 @@ button[title="播放"]:hover{ background: var(--bg) !important; color: var(--pri
   background: var(--hover-bg) !important;
 }
 
+/* ── 15. 單字測驗 Modal 深色層次補強 ── */
+/* 定義框：比 modal 卡片更深，形成凹槽感 */
+[data-theme="dark"] #quizPrompt .bg-gray-50 {
+  background: var(--bg) !important;
+  border: 1px solid var(--border) !important;
+}
+/* 輸入框：統一邊框色，確保立體感 */
+[data-theme="dark"] #quizAnswer {
+  background: var(--bg) !important;
+  border-color: var(--border) !important;
+  color: var(--text) !important;
+}
+/* 提交按鈕：恢復莫蘭迪綠，讓主按鈕視覺焦點明確 */
+[data-theme="dark"] #quizSubmit {
+  background: #7a9068 !important;
+  color: #f0ebd8 !important;
+}
+[data-theme="dark"] #quizSubmit:hover {
+  background: #6b7f57 !important;
+  color: #f0ebd8 !important;
+}
+/* 不會按鈕：恢復按鈕輪廓，避免融入 modal 背景 */
+[data-theme="dark"] #quizIDK {
+  background: #2e3d50 !important;
+  color: var(--muted) !important;
+}
+[data-theme="dark"] #quizIDK:hover {
+  background: var(--border) !important;
+  color: #f0ebd8 !important;
+}
+
 /* 記憶窗 hover */
 [data-theme="dark"] .mnemonic-word-title:hover { color: var(--primary) !important; }
 [data-theme="dark"] .mnemonic-regen:hover {
