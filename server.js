@@ -348,12 +348,16 @@ app.post("/api", async (req, res) => {
     try {
       const paragraphs = text.split(/\n\n+/).filter(p => p.trim());
       const CHUNK_SIZE = 4;
+      const chunkPromises = [];
+      for (let i = 0; i < paragraphs.length; i += CHUNK_SIZE) {
+        const chunk = paragraphs.slice(i, i + CHUNK_SIZE).join("\n\n");
+        chunkPromises.push(geminiModel.generateContent(buildTranslateArticlePrompt(chunk)));
+      }
+      const chunkResults = await Promise.all(chunkPromises);
       let combinedHtml = "";
       let totalPromptTokens = 0;
       let totalCompletionTokens = 0;
-      for (let i = 0; i < paragraphs.length; i += CHUNK_SIZE) {
-        const chunk = paragraphs.slice(i, i + CHUNK_SIZE).join("\n\n");
-        const chunkResult = await geminiModel.generateContent(buildTranslateArticlePrompt(chunk));
+      for (const chunkResult of chunkResults) {
         combinedHtml += chunkResult.response.text();
         const meta = chunkResult.response.usageMetadata;
         totalPromptTokens += meta?.promptTokenCount || 0;
