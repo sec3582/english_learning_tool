@@ -492,24 +492,24 @@ export function switchSidebarTab(which){
   const pagerToday= document.getElementById("todayPager");
   const pagerDue  = document.getElementById("duePager");
 
-  [tToday,tDue,tAll].forEach(b=>b && b.classList.remove("bg-gray-100"));
+  [tToday,tDue,tAll].forEach(b=>b && b.classList.remove("tab--active"));
   [lToday,lDue,lAll].forEach(x=>x && x.classList.add("hidden"));
 
   if (filters) filters.classList.add("hidden");
   [pagerAll,pagerToday,pagerDue].forEach(p => p && p.classList.add("hidden"));
 
   if (which === "today"){
-    tToday && tToday.classList.add("bg-gray-100");
+    tToday && tToday.classList.add("tab--active");
     lToday && lToday.classList.remove("hidden");
     renderListToday(); // ✅ 這裡會自己決定 todayPager 要不要顯示
   }
   else if (which === "due"){
-    tDue && tDue.classList.add("bg-gray-100");
+    tDue && tDue.classList.add("tab--active");
     lDue && lDue.classList.remove("hidden");
     renderListDue();   // ✅ 這裡會自己決定 duePager 要不要顯示
   }
   else {
-    tAll && tAll.classList.add("bg-gray-100");
+    tAll && tAll.classList.add("tab--active");
     lAll && lAll.classList.remove("hidden");
     if (filters) filters.classList.remove("hidden");
     renderListAll();   // 你原本的：renderListAll 會自己處理 allPager

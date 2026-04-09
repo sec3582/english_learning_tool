@@ -25,15 +25,15 @@
 }
 
 [data-theme="dark"] {
-  --wc-surface:    #18100A;
-  --wc-ai-bg:      #0E0906;
+  --wc-surface:    #231609;   /* raised: 3-tier depth — clearly above container #150F08 */
+  --wc-ai-bg:      #0C0704;   /* deepened: clearly below card surface */
   --wc-word-color: #EFE1C0;
   --wc-muted:      #956F42;
   --wc-accent:     #C8782A;
-  --wc-rule:       rgba(200, 120, 42, 0.14);
-  --wc-shadow-a:   rgba(200, 120, 42, 0.09);
-  --wc-shadow-b:   rgba(  0,   0,  0, 0.60);
-  --wc-shadow-c:   rgba(  0,   0,  0, 0.40);
+  --wc-rule:       rgba(200, 120, 42, 0.18);
+  --wc-shadow-a:   rgba(200, 120, 42, 0.22);  /* raised: candlelight edge now visible */
+  --wc-shadow-b:   rgba(  0,   0,  0, 0.55);
+  --wc-shadow-c:   rgba(  0,   0,  0, 0.35);
   --wc-chip-bg:    rgba(200, 120, 42, 0.12);
   --wc-chip-bdr:   rgba(200, 120, 42, 0.25);
   --wc-chip-ant-bg:  rgba(200,  70, 42, 0.12);
@@ -46,14 +46,14 @@
 .wc-card {
   position: relative;
   isolation: isolate;                  /* stacking context for noise layer */
-  background: var(--wc-surface);
-  border: none;                        /* shadow-as-border replaces hard edge */
-  border-radius: 10px;
+  background: var(--wc-surface) !important;   /* beats index.html inline <style> */
+  border: none !important;                    /* removes 1px border from inline style */
+  border-radius: 10px !important;
   overflow: hidden;
   box-shadow:
     0 0 0 1px var(--wc-shadow-a),      /* warm amber edge */
     0 2px 8px var(--wc-shadow-b),      /* warm mid shadow */
-    0 8px 24px var(--wc-shadow-c);     /* ambient glow */
+    0 8px 24px var(--wc-shadow-c) !important; /* ambient glow */
   transition: box-shadow 0.22s ease;
 }
 
@@ -78,21 +78,25 @@
   opacity: 0.025;
 }
 
-/* Night: candle-top inset glow + deep shadow */
+/* Night: candle-edge outline + inset glow — sculpts the card out of the dark */
 [data-theme="dark"] .wc-card {
+  background: var(--wc-surface) !important;
+  border: none !important;
   box-shadow:
-    0 0 0 1px var(--wc-shadow-a),
-    0 4px 16px var(--wc-shadow-b),
-    inset 0 1px 0 rgba(200, 120, 42, 0.08);  /* candle edge on top */
+    0 0 0 1px var(--wc-shadow-a),              /* amber candlelight edge */
+    0 4px 16px var(--wc-shadow-b),             /* depth shadow */
+    inset 0 1px 0 rgba(200, 120, 42, 0.16),    /* candle top-edge — light from above */
+    inset 0 0 28px rgba(200, 120, 42, 0.04) !important;  /* barely-there interior warmth */
 }
 
-/* Night hover: amber edge brightens, depth increases */
+/* Night hover: edge brightens, interior warms slightly */
 [data-theme="dark"] .wc-card:hover {
   background: var(--wc-surface) !important;
   box-shadow:
-    0 0 0 1px rgba(200, 120, 42, 0.18) !important,
-    0 6px 22px rgba(0, 0, 0, 0.70)     !important,
-    inset 0 1px 0 rgba(200, 120, 42, 0.13) !important;
+    0 0 0 1px rgba(200, 120, 42, 0.32)         !important,
+    0 6px 22px rgba(0, 0, 0, 0.65)             !important,
+    inset 0 1px 0 rgba(200, 120, 42, 0.22)     !important,
+    inset 0 0 28px rgba(200, 120, 42, 0.06)    !important;
 }
 
 
@@ -226,7 +230,10 @@
 }
 
 [data-theme="dark"] .wc-ai {
-  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.45);
+  /* Deepen the recession: clearly below card surface */
+  box-shadow:
+    inset 0 2px 10px rgba(0, 0, 0, 0.60),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.35);
 }
 
 .wc-ai-text {
@@ -445,5 +452,1250 @@
   #sidebarAllList   li {
     animation: none;
     opacity: 1;
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   SCENE A — Navbar: Amber Glass Archway (格拉斯入口廊道)
+   Recedes behind the word cards. Warm amber, not sage green.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Day: deep amber glass — sun pooled in the bottom of a perfume bottle */
+.header-gradient {
+  background: linear-gradient(160deg, #2C1A06 0%, #3D2408 55%, #2A1505 100%) !important;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.42) !important;
+  border-bottom: 1px solid rgba(200, 149, 42, 0.32) !important;
+  color: #F0DDB8 !important;
+}
+
+/* All text children: warm cream, not cold white */
+.header-gradient h1 {
+  color: #F0DDB8 !important;
+}
+
+.header-gradient span:not(.chip) {
+  color: rgba(240, 221, 184, 0.82) !important;
+}
+
+/* Usage cost amount */
+#usageCostBadge {
+  color: #F0DDB8 !important;
+}
+
+/* Stat chips: amber-tinted glass panel */
+#masteredBadge,
+#dueCountBadge {
+  background: rgba(200, 149, 42, 0.22) !important;
+  color: #F0DDB8 !important;
+  border: 1px solid rgba(200, 149, 42, 0.32) !important;
+}
+
+/* Dark mode toggle: amber ring */
+#darkModeToggle {
+  background: rgba(200, 149, 42, 0.16) !important;
+  color: #F0DDB8 !important;
+  border: 1px solid rgba(200, 149, 42, 0.24) !important;
+}
+#darkModeToggle:hover {
+  background: rgba(200, 149, 42, 0.26) !important;
+}
+
+/* Usage button */
+#openUsageBtn {
+  color: rgba(240, 221, 184, 0.82) !important;
+  transition: color 0.15s ease !important;
+}
+#openUsageBtn:hover {
+  color: #F0DDB8 !important;
+}
+
+/* Night: dark alcove — candlelight rises from below, not from above */
+[data-theme="dark"] .header-gradient {
+  background: #0C0703 !important;
+  box-shadow: 0 2px 18px rgba(0, 0, 0, 0.72) !important;
+  border-bottom: 1px solid rgba(200, 120, 42, 0.15) !important;
+}
+
+[data-theme="dark"] .header-gradient h1 {
+  color: #D9C9A8 !important;
+}
+
+[data-theme="dark"] .header-gradient span:not(.chip) {
+  color: rgba(217, 201, 168, 0.78) !important;
+}
+
+[data-theme="dark"] #masteredBadge,
+[data-theme="dark"] #dueCountBadge {
+  background: rgba(200, 120, 42, 0.18) !important;
+  color: #D9C9A8 !important;
+  border-color: rgba(200, 120, 42, 0.25) !important;
+}
+
+[data-theme="dark"] #darkModeToggle {
+  background: rgba(200, 120, 42, 0.14) !important;
+  color: #D9C9A8 !important;
+  border-color: rgba(200, 120, 42, 0.20) !important;
+}
+
+[data-theme="dark"] #usageCostBadge {
+  color: #D9C9A8 !important;
+}
+
+[data-theme="dark"] #openUsageBtn {
+  color: rgba(217, 201, 168, 0.78) !important;
+}
+
+[data-theme="dark"] #openUsageBtn:hover {
+  color: #D9C9A8 !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   SCENE B — Input Section: Perfumer's Work Desk (香水師的工作桌面)
+   The only place in the UI where the user writes. Must feel like a
+   working surface, not an exhibition shelf.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Day: worn parchment workbench — slightly darker than the word cards */
+#articleInputSection {
+  background: #F0E8D4 !important;
+  border: none !important;
+  box-shadow:
+    0 0 0 1px rgba(150, 110, 60, 0.20),
+    0 4px 16px rgba(100,  70, 20, 0.08),
+    0 1px  4px rgba(100,  70, 20, 0.05) !important;
+}
+
+/* Section heading icon: amber instead of sage-green */
+#articleInputSection .section-h svg {
+  color: var(--wc-accent) !important;
+}
+
+/* Thin amber rule below section heading row */
+#articleInputSection > .flex.items-center.justify-between {
+  border-bottom: 1px solid rgba(200, 149, 42, 0.20);
+  padding-bottom: 1rem;
+  margin-bottom: 0;
+}
+
+/* Tab row border: warm amber instead of cold gray */
+#articleInputSection .border-b {
+  border-bottom-color: rgba(200, 149, 42, 0.22) !important;
+}
+
+/* input-tab--active: moved to theme-perfume-day.css (tab component overrides) */
+
+/* OCR + utility buttons: warm tinted ghost */
+#articleInputSection .btn-sm-m {
+  background: rgba(200, 149, 42, 0.09) !important;
+  color: var(--wc-muted) !important;
+  border-color: rgba(200, 149, 42, 0.22) !important;
+}
+#articleInputSection .btn-sm-m:hover {
+  background: rgba(200, 149, 42, 0.17) !important;
+  color: var(--wc-word-color) !important;
+}
+
+/* Night: candlelit work desk — amber border light at full container tier */
+[data-theme="dark"] #articleInputSection {
+  background: #120D06 !important;
+  box-shadow:
+    0 0 0 1px rgba(200, 120, 42, 0.20),    /* candlelight edge — same tier as wordListCard */
+    0 4px 20px rgba(0, 0, 0, 0.55),
+    0 1px  4px rgba(0, 0, 0, 0.40) !important;
+}
+
+[data-theme="dark"] #articleInputSection .border-b {
+  border-bottom-color: rgba(200, 120, 42, 0.16) !important;
+}
+
+/* [data-theme="dark"] input-tab--active: moved to theme-perfume-day.css */
+
+[data-theme="dark"] #articleInputSection > .flex.items-center.justify-between {
+  border-bottom-color: rgba(200, 120, 42, 0.14);
+}
+
+[data-theme="dark"] #articleInputSection .btn-sm-m {
+  background: rgba(200, 120, 42, 0.09) !important;
+  color: var(--wc-muted) !important;
+  border-color: rgba(200, 120, 42, 0.18) !important;
+}
+[data-theme="dark"] #articleInputSection .btn-sm-m:hover {
+  background: rgba(200, 120, 42, 0.17) !important;
+  color: var(--wc-text) !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   SCENE C — Textarea: Quill Writing Surface (羽毛筆書寫區)
+   The act of writing is intimate. The surface must feel like vellum.
+   Focus state = sunlight (day) or candlelight (night) illuminating the page.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Day: bright vellum, freshly laid on the desk */
+#articleInput {
+  background:    #FBF5E8 !important;
+  border:        1px solid rgba(180, 140, 60, 0.25) !important;
+  border-radius: 10px !important;
+  color:         #1C1208 !important;
+  line-height:   1.8 !important;
+  transition:    border-color 0.18s ease, box-shadow 0.22s ease !important;
+}
+
+#articleInput::placeholder {
+  color:   #9A7A52 !important;  /* adjusted: 4.6:1 on #FBF5E8 — WCAG AA */
+  opacity: 1 !important;
+}
+
+/* Focus: amber sunlight catches the page */
+#articleInput:focus {
+  outline:      none !important;
+  border-color: rgba(200, 149, 42, 0.50) !important;
+  box-shadow:
+    0 0 0 2px rgba(200, 149, 42, 0.18),
+    0 0 14px rgba(200, 149, 42, 0.09) !important;
+}
+
+/* Night: dark vellum, lit by a single candle */
+[data-theme="dark"] #articleInput {
+  background:    #1A1208 !important;
+  border-color:  rgba(200, 120, 42, 0.18) !important;
+  color:         #EFE1C0 !important;
+}
+
+[data-theme="dark"] #articleInput::placeholder {
+  color:   #6B5030 !important;
+  opacity: 1 !important;
+}
+
+[data-theme="dark"] #articleInput:focus {
+  border-color: rgba(200, 120, 42, 0.40) !important;
+  box-shadow:
+    0 0 0 2px rgba(200, 120, 42, 0.16),
+    0 0 18px rgba(200, 120, 42, 0.08) !important;
+}
+
+
+/* ── URL input & Library search (縮比例的同族書寫區) ────────────────── */
+
+#urlInput,
+#librarySearch {
+  background:    #FBF5E8 !important;
+  border:        1px solid rgba(180, 140, 60, 0.25) !important;
+  border-radius: 8px !important;
+  color:         #1C1208 !important;
+  transition:    border-color 0.18s ease, box-shadow 0.20s ease !important;
+}
+
+#urlInput::placeholder,
+#librarySearch::placeholder {
+  color:   #9A7A52 !important;
+  opacity: 1 !important;
+}
+
+#urlInput:focus,
+#librarySearch:focus {
+  outline:      none !important;
+  border-color: rgba(200, 149, 42, 0.45) !important;
+  box-shadow:
+    0 0 0 2px rgba(200, 149, 42, 0.13),
+    0 0 10px rgba(200, 149, 42, 0.07) !important;
+}
+
+[data-theme="dark"] #urlInput,
+[data-theme="dark"] #librarySearch {
+  background:   #1A1208 !important;
+  border-color: rgba(200, 120, 42, 0.18) !important;
+  color:        #EFE1C0 !important;
+}
+
+[data-theme="dark"] #urlInput::placeholder,
+[data-theme="dark"] #librarySearch::placeholder {
+  color:   #6B5030 !important;
+  opacity: 1 !important;
+}
+
+[data-theme="dark"] #urlInput:focus,
+[data-theme="dark"] #librarySearch:focus {
+  border-color: rgba(200, 120, 42, 0.38) !important;
+  box-shadow:
+    0 0 0 2px rgba(200, 120, 42, 0.13),
+    0 0 12px rgba(200, 120, 42, 0.07) !important;
+}
+
+
+/* ── Reduced motion — Scenes A B C ──────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .header-gradient,
+  #articleInputSection,
+  #articleInput,
+  #urlInput,
+  #librarySearch {
+    transition: none !important;
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   PHASE 4 FIX — Right Column Unification
+   單字清單容器、篩選器、按鈕、文字色 統一至格拉斯香水實驗室宇宙
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── 1. Word List Container (#wordListCard) ─────────────────────────── */
+/* Slightly deeper parchment than word cards — work desk, not exhibit shelf */
+
+#wordListCard {
+  background: var(--color-surface-panel) !important;  /* #E8DCCA — old book cover, 3–5% deeper than cards */
+  border: none !important;
+  border-radius: var(--radius-container) !important;  /* 8px — spec §2E, not 16px */
+  box-shadow:
+    3px 6px 20px rgba(80, 50, 15, 0.14),              /* SH-2: warm brown, x+y offset from upper-left light */
+    inset 0 1px 0 var(--color-rim-panel) !important;  /* rim: candlelight on top edge */
+}
+
+/* Sidebar title: dry ink, not cold navy */
+#wordListCard .sidebar-title {
+  color: var(--wc-word-color) !important;
+}
+
+[data-theme="dark"] #wordListCard {
+  background: #150F08 !important;     /* tier 2: container — darker than cards (#231609) */
+  box-shadow:
+    0 0 0 1px rgba(200, 120, 42, 0.20),    /* amber border light — candlelight at edge */
+    0 4px 20px rgba(0, 0, 0, 0.60) !important;
+}
+
+[data-theme="dark"] #wordListCard .sidebar-title {
+  color: var(--wc-word-color) !important;
+}
+
+
+/* ── 2. Tab Group (今日新增 / 複習 / 全部) ───────────────────────────── */
+
+/* ── 3. Quiz Buttons ─────────────────────────────────────────────────── */
+/* Primary: amber, not sage-green */
+
+#startQuizBtn {
+  background: var(--wc-accent) !important;
+  color: #FBF5E8 !important;
+  border-color: transparent !important;
+  box-shadow: 0 2px 8px rgba(200, 149, 42, 0.28) !important;
+}
+
+#startQuizBtn:hover {
+  background: #A87820 !important;
+  box-shadow: 0 3px 10px rgba(200, 149, 42, 0.36) !important;
+}
+
+/* Outline: thin amber border */
+#startGrammarQuizBtn {
+  background: transparent !important;
+  color: var(--wc-muted) !important;
+  border: 1px solid rgba(200, 149, 42, 0.30) !important;
+}
+
+#startGrammarQuizBtn:hover {
+  background: rgba(200, 149, 42, 0.10) !important;
+  color: var(--wc-word-color) !important;
+  border-color: rgba(200, 149, 42, 0.50) !important;
+}
+
+[data-theme="dark"] #startQuizBtn {
+  background: var(--wc-accent) !important;
+  color: #0E0906 !important;
+  box-shadow: 0 2px 10px rgba(200, 120, 42, 0.30) !important;
+}
+
+[data-theme="dark"] #startQuizBtn:hover {
+  background: #D98B30 !important;
+}
+
+[data-theme="dark"] #startGrammarQuizBtn {
+  background: transparent !important;
+  color: var(--wc-muted) !important;
+  border-color: rgba(200, 120, 42, 0.25) !important;
+}
+
+[data-theme="dark"] #startGrammarQuizBtn:hover {
+  background: rgba(200, 120, 42, 0.12) !important;
+  color: var(--wc-word-color) !important;
+  border-color: rgba(200, 120, 42, 0.42) !important;
+}
+
+
+/* ── 4. Filter Inputs & Selects ──────────────────────────────────────── */
+/* allFilters contains: #allSearch, #allPos, #allLevel, #allSort          */
+
+#allSearch,
+#allPos,
+#allLevel,
+#allSort {
+  background: #FBF5E8 !important;
+  border: 1px solid rgba(180, 140, 60, 0.28) !important;
+  border-radius: 8px !important;
+  color: #1C1208 !important;
+  transition: border-color 0.18s ease, box-shadow 0.20s ease !important;
+}
+
+#allSearch::placeholder {
+  color: #9A7A52 !important;
+  opacity: 1 !important;
+}
+
+#allSearch:focus,
+#allPos:focus,
+#allLevel:focus,
+#allSort:focus {
+  outline: none !important;
+  border-color: rgba(200, 149, 42, 0.50) !important;
+  box-shadow: 0 0 0 2px rgba(200, 149, 42, 0.14) !important;
+}
+
+[data-theme="dark"] #allSearch,
+[data-theme="dark"] #allPos,
+[data-theme="dark"] #allLevel,
+[data-theme="dark"] #allSort {
+  background: #1A1208 !important;
+  border-color: rgba(200, 120, 42, 0.20) !important;
+  color: #EFE1C0 !important;
+}
+
+[data-theme="dark"] #allSearch::placeholder {
+  color: #6B5030 !important;
+  opacity: 1 !important;
+}
+
+[data-theme="dark"] #allSearch:focus,
+[data-theme="dark"] #allPos:focus,
+[data-theme="dark"] #allLevel:focus,
+[data-theme="dark"] #allSort:focus {
+  border-color: rgba(200, 120, 42, 0.42) !important;
+  box-shadow: 0 0 0 2px rgba(200, 120, 42, 0.14) !important;
+}
+
+
+/* ── 5. Pager Buttons (上一頁 / 下一頁) ──────────────────────────────── */
+
+#todayPrev, #todayNext,
+#duePrev,   #dueNext,
+#allPrev,   #allNext {
+  background: rgba(200, 149, 42, 0.10) !important;
+  color: var(--wc-muted) !important;
+  border: 1px solid rgba(200, 149, 42, 0.22) !important;
+  border-radius: 6px !important;
+  transition: background 0.15s ease, color 0.15s ease !important;
+}
+
+#todayPrev:hover, #todayNext:hover,
+#duePrev:hover,   #dueNext:hover,
+#allPrev:hover,   #allNext:hover {
+  background: rgba(200, 149, 42, 0.20) !important;
+  color: var(--wc-word-color) !important;
+}
+
+/* Pager info text */
+#todayPageInfo,
+#duePageInfo,
+#allPageInfo {
+  color: var(--wc-muted) !important;
+}
+
+[data-theme="dark"] #todayPrev, [data-theme="dark"] #todayNext,
+[data-theme="dark"] #duePrev,   [data-theme="dark"] #dueNext,
+[data-theme="dark"] #allPrev,   [data-theme="dark"] #allNext {
+  background: rgba(200, 120, 42, 0.09) !important;
+  color: var(--wc-muted) !important;
+  border-color: rgba(200, 120, 42, 0.18) !important;
+}
+
+[data-theme="dark"] #todayPrev:hover, [data-theme="dark"] #todayNext:hover,
+[data-theme="dark"] #duePrev:hover,   [data-theme="dark"] #dueNext:hover,
+[data-theme="dark"] #allPrev:hover,   [data-theme="dark"] #allNext:hover {
+  background: rgba(200, 120, 42, 0.18) !important;
+  color: var(--wc-word-color) !important;
+}
+
+[data-theme="dark"] #todayPageInfo,
+[data-theme="dark"] #duePageInfo,
+[data-theme="dark"] #allPageInfo {
+  color: var(--wc-muted) !important;
+}
+
+
+/* ── 6. Tailwind gray text overrides within #wordListCard ────────────── */
+/* Catches any residual text-gray-* Tailwind classes on list metadata     */
+
+#wordListCard .text-gray-500,
+#wordListCard .text-gray-400,
+#wordListCard .text-gray-600 {
+  color: var(--wc-muted) !important;
+}
+
+[data-theme="dark"] #wordListCard .text-gray-500,
+[data-theme="dark"] #wordListCard .text-gray-400,
+[data-theme="dark"] #wordListCard .text-gray-600 {
+  color: var(--wc-muted) !important;
+}
+
+
+/* ── 7. Start Quiz Grammar button SVG icon color ─────────────────────── */
+
+#startGrammarQuizBtn svg {
+  color: currentColor;
+}
+
+
+/* ── Reduced motion — Phase 4 Fix ───────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  #startQuizBtn,
+  #startGrammarQuizBtn,
+  #allSearch, #allPos, #allLevel, #allSort,
+  #todayPrev, #todayNext,
+  #duePrev, #dueNext,
+  #allPrev, #allNext {
+    transition: none !important;
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   TYPOGRAPHY AUDIT — Global text-color enforcement
+   Day  → primary: #1C1208 (dried ink)  / muted: #7A6045 (faded brown ink)
+   Night→ primary: #EFE1C0 (candlelit vellum) / muted: #956F42 (amber shadow)
+   Eliminates all residual Tailwind text-gray-* / text-blue-* leakage
+   within the three cinematic containers.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── DAY MODE ─────────────────────────────────────────────────────────── */
+
+/* 1. Scoped base-color cascade — all three containers inherit dry-ink text */
+.wc-card,
+#wordListCard,
+#articleInputSection {
+  color: var(--wc-word-color) !important;   /* #1C1208 */
+}
+
+/* 2. Full Tailwind gray-scale neutralisation within each container        */
+/*    Enumerates text-gray-100 → text-gray-900 to be exhaustive.          */
+
+.wc-card .text-gray-100, .wc-card .text-gray-200,
+.wc-card .text-gray-300, .wc-card .text-gray-400,
+.wc-card .text-gray-500, .wc-card .text-gray-600,
+.wc-card .text-gray-700, .wc-card .text-gray-800,
+.wc-card .text-gray-900,
+#wordListCard .text-gray-100, #wordListCard .text-gray-200,
+#wordListCard .text-gray-300, #wordListCard .text-gray-400,
+#wordListCard .text-gray-500, #wordListCard .text-gray-600,
+#wordListCard .text-gray-700, #wordListCard .text-gray-800,
+#wordListCard .text-gray-900,
+#articleInputSection .text-gray-100, #articleInputSection .text-gray-200,
+#articleInputSection .text-gray-300, #articleInputSection .text-gray-400,
+#articleInputSection .text-gray-500, #articleInputSection .text-gray-600,
+#articleInputSection .text-gray-700, #articleInputSection .text-gray-800,
+#articleInputSection .text-gray-900 {
+  color: var(--wc-muted) !important;   /* #7A6045 — muted, not lost */
+}
+
+/* 3. Heavier text within containers: labels, headings, definition text    */
+/*    Darker Tailwind shades (700–900) map to full dry-ink primary.       */
+.wc-card .text-gray-700, .wc-card .text-gray-800, .wc-card .text-gray-900,
+#wordListCard .text-gray-700, #wordListCard .text-gray-800, #wordListCard .text-gray-900,
+#articleInputSection .text-gray-700, #articleInputSection .text-gray-800,
+#articleInputSection .text-gray-900 {
+  color: var(--wc-word-color) !important;   /* #1C1208 */
+}
+
+/* 4. Blue / indigo family — removes any residual modern-link blue         */
+.wc-card .text-blue-400, .wc-card .text-blue-500,
+.wc-card .text-blue-600, .wc-card .text-blue-700,
+.wc-card .text-indigo-400, .wc-card .text-indigo-500,
+.wc-card .text-indigo-600,
+#wordListCard .text-blue-400, #wordListCard .text-blue-500,
+#wordListCard .text-blue-600, #wordListCard .text-blue-700,
+#wordListCard .text-indigo-400, #wordListCard .text-indigo-500,
+#wordListCard .text-indigo-600,
+#articleInputSection .text-blue-400, #articleInputSection .text-blue-500,
+#articleInputSection .text-blue-600, #articleInputSection .text-blue-700,
+#articleInputSection .text-indigo-400, #articleInputSection .text-indigo-500,
+#articleInputSection .text-indigo-600 {
+  color: var(--wc-muted) !important;   /* amber-muted replaces cold blue */
+}
+
+/* 5. Buttons, selects, inputs — explicit color so form controls inherit   */
+/*    Tailwind sometimes locks color on interactive elements.              */
+.wc-card button,
+.wc-card select,
+.wc-card input,
+.wc-card label,
+#wordListCard button,
+#wordListCard select,
+#wordListCard input,
+#wordListCard label,
+#articleInputSection button,
+#articleInputSection select,
+#articleInputSection input,
+#articleInputSection label {
+  color: var(--wc-word-color) !important;
+}
+
+/* 6. Expand arrow — already scoped, but belt-and-suspenders */
+.wc-arrow {
+  color: var(--wc-muted) !important;
+}
+
+/* 7. SVG icons — force currentColor so they inherit from container        */
+.wc-card svg,
+#wordListCard svg,
+#articleInputSection svg {
+  color: currentColor;
+  fill: currentColor;
+}
+
+/* 8. Anchor links within containers — replace browser-default blue        */
+.wc-card a,
+#wordListCard a,
+#articleInputSection a {
+  color: var(--wc-accent) !important;   /* amber instead of blue */
+}
+.wc-card a:hover,
+#wordListCard a:hover,
+#articleInputSection a:hover {
+  color: var(--wc-word-color) !important;
+}
+
+
+/* ── NIGHT MODE ───────────────────────────────────────────────────────── */
+
+/* 1. Night base-color cascade */
+[data-theme="dark"] .wc-card,
+[data-theme="dark"] #wordListCard,
+[data-theme="dark"] #articleInputSection {
+  color: var(--wc-word-color) !important;   /* #EFE1C0 in dark token set */
+}
+
+/* 2. Tailwind gray neutralisation — night */
+[data-theme="dark"] .wc-card .text-gray-100,
+[data-theme="dark"] .wc-card .text-gray-200,
+[data-theme="dark"] .wc-card .text-gray-300,
+[data-theme="dark"] .wc-card .text-gray-400,
+[data-theme="dark"] .wc-card .text-gray-500,
+[data-theme="dark"] .wc-card .text-gray-600,
+[data-theme="dark"] .wc-card .text-gray-700,
+[data-theme="dark"] .wc-card .text-gray-800,
+[data-theme="dark"] .wc-card .text-gray-900,
+[data-theme="dark"] #wordListCard .text-gray-100,
+[data-theme="dark"] #wordListCard .text-gray-200,
+[data-theme="dark"] #wordListCard .text-gray-300,
+[data-theme="dark"] #wordListCard .text-gray-400,
+[data-theme="dark"] #wordListCard .text-gray-500,
+[data-theme="dark"] #wordListCard .text-gray-600,
+[data-theme="dark"] #wordListCard .text-gray-700,
+[data-theme="dark"] #wordListCard .text-gray-800,
+[data-theme="dark"] #wordListCard .text-gray-900,
+[data-theme="dark"] #articleInputSection .text-gray-100,
+[data-theme="dark"] #articleInputSection .text-gray-200,
+[data-theme="dark"] #articleInputSection .text-gray-300,
+[data-theme="dark"] #articleInputSection .text-gray-400,
+[data-theme="dark"] #articleInputSection .text-gray-500,
+[data-theme="dark"] #articleInputSection .text-gray-600,
+[data-theme="dark"] #articleInputSection .text-gray-700,
+[data-theme="dark"] #articleInputSection .text-gray-800,
+[data-theme="dark"] #articleInputSection .text-gray-900 {
+  color: var(--wc-muted) !important;   /* #956F42 — amber shadow */
+}
+
+/* 3. Heavier text shades → full candlelit vellum primary — night */
+[data-theme="dark"] .wc-card .text-gray-700,
+[data-theme="dark"] .wc-card .text-gray-800,
+[data-theme="dark"] .wc-card .text-gray-900,
+[data-theme="dark"] #wordListCard .text-gray-700,
+[data-theme="dark"] #wordListCard .text-gray-800,
+[data-theme="dark"] #wordListCard .text-gray-900,
+[data-theme="dark"] #articleInputSection .text-gray-700,
+[data-theme="dark"] #articleInputSection .text-gray-800,
+[data-theme="dark"] #articleInputSection .text-gray-900 {
+  color: var(--wc-word-color) !important;   /* #EFE1C0 */
+}
+
+/* 4. Blue family neutralisation — night */
+[data-theme="dark"] .wc-card .text-blue-400,
+[data-theme="dark"] .wc-card .text-blue-500,
+[data-theme="dark"] .wc-card .text-blue-600,
+[data-theme="dark"] .wc-card .text-indigo-400,
+[data-theme="dark"] .wc-card .text-indigo-500,
+[data-theme="dark"] #wordListCard .text-blue-400,
+[data-theme="dark"] #wordListCard .text-blue-500,
+[data-theme="dark"] #wordListCard .text-blue-600,
+[data-theme="dark"] #wordListCard .text-indigo-400,
+[data-theme="dark"] #wordListCard .text-indigo-500,
+[data-theme="dark"] #articleInputSection .text-blue-400,
+[data-theme="dark"] #articleInputSection .text-blue-500,
+[data-theme="dark"] #articleInputSection .text-blue-600,
+[data-theme="dark"] #articleInputSection .text-indigo-400,
+[data-theme="dark"] #articleInputSection .text-indigo-500 {
+  color: var(--wc-muted) !important;
+}
+
+/* 5. Buttons, selects, inputs — night */
+[data-theme="dark"] .wc-card button,
+[data-theme="dark"] .wc-card select,
+[data-theme="dark"] .wc-card input,
+[data-theme="dark"] .wc-card label,
+[data-theme="dark"] #wordListCard button,
+[data-theme="dark"] #wordListCard select,
+[data-theme="dark"] #wordListCard input,
+[data-theme="dark"] #wordListCard label,
+[data-theme="dark"] #articleInputSection button,
+[data-theme="dark"] #articleInputSection select,
+[data-theme="dark"] #articleInputSection input,
+[data-theme="dark"] #articleInputSection label {
+  color: var(--wc-word-color) !important;
+}
+
+/* 6. Anchor links — night: candleflame accent replaces blue */
+[data-theme="dark"] .wc-card a,
+[data-theme="dark"] #wordListCard a,
+[data-theme="dark"] #articleInputSection a {
+  color: var(--wc-accent) !important;
+}
+[data-theme="dark"] .wc-card a:hover,
+[data-theme="dark"] #wordListCard a:hover,
+[data-theme="dark"] #articleInputSection a:hover {
+  color: var(--wc-word-color) !important;
+}
+
+/* 7. Navbar text — ensure amber passage tone overrides any Tailwind leak  */
+.header-gradient,
+.header-gradient * {
+  color: #F0DDB8 !important;
+}
+
+[data-theme="dark"] .header-gradient,
+[data-theme="dark"] .header-gradient * {
+  color: #D9C9A8 !important;
+}
+
+/* 8. Navbar chips — keep amber-tinted glass tone, not gray                */
+.header-gradient .text-gray-400,
+.header-gradient .text-gray-300,
+.header-gradient .text-gray-200 {
+  color: rgba(240, 221, 184, 0.75) !important;
+}
+
+[data-theme="dark"] .header-gradient .text-gray-400,
+[data-theme="dark"] .header-gradient .text-gray-300,
+[data-theme="dark"] .header-gradient .text-gray-200 {
+  color: rgba(217, 201, 168, 0.70) !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   QUIZ SECTION — Perfume Recast
+   Director: Tom Tykwer | Film: Perfume: The Story of a Murderer (2006)
+   The quiz is a ritual — answer sheet spread on a scholar's desk.
+   Day:  afternoon parchment, reed-pen ink, gold ruled lines
+   Night: vellum under a single candle, amber shadow, near-black desk
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── 0. Quiz-scoped design tokens ──────────────────────────────────────── */
+/* Extends global --wc-* set with quiz-specific material aliases.          */
+:root {
+  --qz-parchment:    #F5EED8;               /* exam sheet surface — warm vellum */
+  --qz-ink:          #3D2B1F;               /* body text — reed pen, mid-dark   */
+  --qz-line:         #C8A45A;               /* gold ruled line / container edge */
+  --qz-muted:        var(--wc-muted);       /* #7A6045 faded brown              */
+  --qz-accent:       var(--wc-accent);      /* #C8952A amber action             */
+}
+[data-theme="dark"] {
+  --qz-parchment:    #1E1812;               /* night desk surface               */
+  --qz-ink:          #D4BFA0;               /* candlelit text                   */
+}
+
+
+/* ── 1. Modal overlays — dark parchment veil, not flat black ───────────── */
+
+#quizModal,
+#grammarQuizModal,
+#quizSettings {
+  background-color: rgba(30, 18, 10, 0.65) !important;  /* warm near-black */
+  backdrop-filter: blur(3px);
+}
+
+
+/* ── 2. Card containers — exam sheet material ──────────────────────────── */
+
+#quizModal > div,
+#quizSettings > div {
+  background: var(--qz-parchment) !important;
+  border: 1px solid var(--qz-line) !important;
+  border-radius: 10px !important;
+  box-shadow:
+    0 12px 40px rgba(61, 43, 31, 0.25),
+    inset 0 0 60px rgba(200, 149, 42, 0.04) !important;
+  color: var(--qz-ink) !important;
+}
+
+#grammarQuizModal > div {
+  background: var(--qz-parchment) !important;
+  border: 1px solid var(--qz-line) !important;
+  border-radius: 10px !important;
+  box-shadow:
+    0 12px 40px rgba(61, 43, 31, 0.25),
+    inset 0 0 60px rgba(200, 149, 42, 0.04) !important;
+  color: var(--qz-ink) !important;
+}
+
+
+/* ── 3. Headers — title + progress text ────────────────────────────────── */
+
+#quizModal .sidebar-title,
+#grammarQuizModal .sidebar-title,
+#quizSettings .sidebar-title {
+  color: var(--qz-ink) !important;
+}
+
+/* Progress text — muted classification subtitle, not cold gray */
+#quizProgress,
+#grammarQuizProgress {
+  color: var(--qz-muted) !important;
+}
+
+/* Mode label — amber accent replaces --theme-color blue */
+#quizModeLabel {
+  color: var(--qz-accent) !important;
+}
+
+/* Close buttons */
+#quizClose,
+#grammarQuizClose {
+  color: var(--qz-muted) !important;
+  transition: color 0.15s ease;
+}
+#quizClose:hover,
+#grammarQuizClose:hover {
+  color: var(--qz-ink) !important;
+}
+
+
+/* ── 4. Progress bar — 3px amber fill track ─────────────────────────────── */
+/* DOM shell added to index.html: .quiz-progress-track > .quiz-progress-fill */
+/* JS sets fill width via style="width: X%" — no JS changes required.       */
+
+.quiz-progress-track {
+  width: 100%;
+  height: 3px;
+  background: rgba(200, 149, 42, 0.15);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.quiz-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--wc-accent) 0%, #E8B860 100%);
+  border-radius: 2px;
+  transition: width 0.35s ease-out;
+}
+
+
+/* ── 5. Prompt / question text ─────────────────────────────────────────── */
+
+#quizPrompt {
+  color: var(--qz-ink) !important;
+  line-height: 1.7;
+}
+
+#grammarQuizInstruction {
+  color: var(--qz-ink) !important;
+  line-height: 1.7;
+}
+
+/* Grammar badge — amber instead of indigo */
+#grammarQuizPointName {
+  background: rgba(200, 149, 42, 0.12) !important;
+  color: var(--qz-accent) !important;
+  border: 1px solid rgba(200, 149, 42, 0.28) !important;
+}
+
+/* Original sentence citation box */
+#grammarQuizQuestion .rounded-lg.p-3 {
+  background: rgba(200, 149, 42, 0.06) !important;
+  border-left: 3px solid var(--qz-accent) !important;
+  border-radius: 6px !important;
+  color: var(--qz-ink) !important;
+}
+
+#grammarQuizQuestion .rounded-lg.p-3 .text-gray-400 {
+  color: var(--qz-muted) !important;
+}
+
+/* Hint text */
+#grammarQuizHint {
+  color: var(--qz-muted) !important;
+}
+
+/* Loading indicator */
+#grammarQuizLoading {
+  color: var(--qz-muted) !important;
+}
+
+
+/* ── 6. Answer inputs ──────────────────────────────────────────────────── */
+
+#quizAnswer,
+#grammarQuizAnswer {
+  background:   #FBF5E8 !important;
+  border:       1px solid rgba(200, 149, 42, 0.30) !important;
+  color:        var(--qz-ink) !important;
+  border-radius: 6px !important;
+}
+
+#quizAnswer::placeholder,
+#grammarQuizAnswer::placeholder {
+  color: #9A7A52 !important;
+}
+
+#quizAnswer:focus,
+#grammarQuizAnswer:focus {
+  border-color: rgba(200, 149, 42, 0.55) !important;
+  box-shadow:   0 0 0 2px rgba(200, 149, 42, 0.18),
+                0 0 14px rgba(200, 149, 42, 0.09) !important;
+  outline: none;
+}
+
+
+/* ── 7. Buttons — three roles ──────────────────────────────────────────── */
+
+/* ── 7a. Primary — amber stamp: Submit / Start Quiz ────────────────────── */
+.quiz-btn-primary,
+#quizSubmit,
+#grammarQuizSubmit,
+#qsStart {
+  background:    var(--qz-accent) !important;         /* #C8952A */
+  color:         #FDF6E3 !important;
+  border:        1px solid rgba(200, 149, 42, 0.40) !important;
+  border-radius: 8px !important;
+  font-weight:   500;
+  transition:    background 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.quiz-btn-primary:hover,
+#quizSubmit:hover,
+#grammarQuizSubmit:hover,
+#qsStart:hover {
+  background: #A87820 !important;
+  box-shadow: 0 4px 12px rgba(200, 149, 42, 0.35) !important;
+}
+
+/* ── 7b. Secondary — parchment-ink: IDK / ShowHint / Cancel ────────────── */
+#quizIDK,
+#grammarQuizShowHint,
+#qsCancel {
+  background:    rgba(61, 43, 31, 0.08) !important;
+  color:         var(--qz-ink) !important;
+  border:        1px solid var(--qz-line) !important;
+  border-radius: 8px !important;
+  transition:    background 0.2s ease, border-color 0.2s ease !important;
+}
+
+#quizIDK:hover,
+#grammarQuizShowHint:hover,
+#qsCancel:hover {
+  background:  rgba(200, 149, 42, 0.12) !important;
+  border-color: rgba(200, 149, 42, 0.45) !important;
+}
+
+/* ── 7c. Next — dark ink stamp: Next question ───────────────────────────── */
+.quiz-btn-next,
+#quizNext,
+#grammarQuizNext {
+  background:    var(--qz-ink) !important;            /* #3D2B1F deep ink */
+  color:         var(--qz-parchment) !important;
+  border:        1px solid transparent !important;
+  border-radius: 8px !important;
+  transition:    background 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.quiz-btn-next:hover,
+#quizNext:hover,
+#grammarQuizNext:hover {
+  background: #5C3D2A !important;
+  box-shadow: 0 0 0 1px var(--qz-line) !important;
+}
+
+/* ── 7d. Grammar done button ────────────────────────────────────────────── */
+#grammarQuizDone {
+  background:    var(--qz-accent) !important;
+  color:         #FDF6E3 !important;
+  border:        1px solid rgba(200, 149, 42, 0.40) !important;
+  border-radius: 8px !important;
+}
+#grammarQuizDone:hover {
+  background: #A87820 !important;
+  box-shadow: 0 4px 12px rgba(200, 149, 42, 0.30) !important;
+}
+
+
+/* ── 8. Feedback block — amber tint, not mint green ────────────────────── */
+
+#quizFeedback {
+  color: var(--qz-ink) !important;
+}
+
+/* Correct / scored feedback card */
+#grammarQuizFeedback {
+  background: rgba(200, 149, 42, 0.08) !important;
+  border:     1px solid var(--qz-line) !important;
+  color:      var(--qz-ink) !important;
+}
+
+#grammarQuizFeedbackScore {
+  color: var(--qz-accent) !important;
+}
+
+#grammarQuizFeedbackRef {
+  color: var(--qz-ink) !important;
+}
+
+#grammarQuizFeedbackText {
+  color: var(--qz-ink) !important;
+  opacity: 0.85;
+}
+
+/* Note at foot of feedback — replaces sage-green A3B18A */
+#grammarQuizFeedbackNote {
+  color:       var(--qz-muted) !important;
+  border-top:  1px solid rgba(200, 149, 42, 0.22) !important;
+  padding-top: 6px;
+}
+
+
+/* ── 9. Summary screen ──────────────────────────────────────────────────── */
+
+#grammarQuizSummary {
+  color: var(--qz-ink) !important;
+}
+
+/* Score — amber instead of Morandi sage */
+#grammarQuizSummaryScore {
+  color: var(--qz-accent) !important;
+}
+
+#grammarQuizSummaryText {
+  color: var(--qz-muted) !important;
+}
+
+
+/* ── 10. Quiz settings — radio & checkbox labels ───────────────────────── */
+
+#quizSettings label,
+#quizSettings .font-medium {
+  color: var(--qz-ink) !important;
+}
+
+#quizSettings input[type="radio"],
+#quizSettings input[type="checkbox"] {
+  accent-color: var(--qz-accent);
+}
+
+
+/* ── 11. Residual Tailwind gray neutralisation within modals ────────────── */
+
+#quizModal .text-gray-400, #quizModal .text-gray-500,
+#quizModal .text-gray-600, #quizModal .text-gray-700,
+#grammarQuizModal .text-gray-400, #grammarQuizModal .text-gray-500,
+#grammarQuizModal .text-gray-600, #grammarQuizModal .text-gray-700,
+#grammarQuizModal .text-gray-800,
+#quizSettings .text-gray-400, #quizSettings .text-gray-500,
+#quizSettings .text-gray-600 {
+  color: var(--qz-muted) !important;
+}
+
+#quizModal .text-gray-700, #quizModal .text-gray-800,
+#quizModal .text-gray-900,
+#grammarQuizModal .text-gray-700, #grammarQuizModal .text-gray-800,
+#grammarQuizModal .text-gray-900 {
+  color: var(--qz-ink) !important;
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   NIGHT MODE — Paris Cellar variant for quiz modals
+   Surface: #1E1812 (near-black warm desk)
+   Text:    #D4BFA0 (candlelit vellum)
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* Card containers — night */
+[data-theme="dark"] #quizModal > div,
+[data-theme="dark"] #quizSettings > div,
+[data-theme="dark"] #grammarQuizModal > div {
+  background: var(--qz-parchment) !important;         /* #1E1812 in dark token */
+  border: 1px solid rgba(200, 120, 42, 0.22) !important;
+  box-shadow:
+    0 0 0 1px rgba(200, 120, 42, 0.12),
+    0 12px 40px rgba(0, 0, 0, 0.70),
+    inset 0 1px 0 rgba(200, 120, 42, 0.10),
+    inset 0 0 60px rgba(200, 120, 42, 0.03) !important;
+  color: var(--qz-ink) !important;                    /* #D4BFA0 in dark token */
+}
+
+/* Titles — night */
+[data-theme="dark"] #quizModal .sidebar-title,
+[data-theme="dark"] #grammarQuizModal .sidebar-title,
+[data-theme="dark"] #quizSettings .sidebar-title {
+  color: var(--qz-ink) !important;
+}
+
+/* Answer inputs — night */
+[data-theme="dark"] #quizAnswer,
+[data-theme="dark"] #grammarQuizAnswer {
+  background:  #1A1208 !important;
+  border:      1px solid rgba(200, 120, 42, 0.22) !important;
+  color:       var(--qz-ink) !important;
+}
+
+[data-theme="dark"] #quizAnswer::placeholder,
+[data-theme="dark"] #grammarQuizAnswer::placeholder {
+  color: #6B5030 !important;
+}
+
+[data-theme="dark"] #quizAnswer:focus,
+[data-theme="dark"] #grammarQuizAnswer:focus {
+  border-color: rgba(200, 120, 42, 0.50) !important;
+  box-shadow:   0 0 0 2px rgba(200, 120, 42, 0.16),
+                0 0 14px rgba(200, 120, 42, 0.08) !important;
+}
+
+/* Primary buttons — night (warmer amber) */
+[data-theme="dark"] .quiz-btn-primary,
+[data-theme="dark"] #quizSubmit,
+[data-theme="dark"] #grammarQuizSubmit,
+[data-theme="dark"] #qsStart {
+  background: var(--qz-accent) !important;
+}
+
+[data-theme="dark"] .quiz-btn-primary:hover,
+[data-theme="dark"] #quizSubmit:hover,
+[data-theme="dark"] #grammarQuizSubmit:hover,
+[data-theme="dark"] #qsStart:hover {
+  background: #D98B30 !important;         /* warmer candleflame — night hover */
+  box-shadow: 0 4px 12px rgba(200, 120, 42, 0.40) !important;
+}
+
+/* Secondary buttons — night */
+[data-theme="dark"] #quizIDK,
+[data-theme="dark"] #grammarQuizShowHint,
+[data-theme="dark"] #qsCancel {
+  background:   rgba(212, 191, 160, 0.08) !important;
+  color:        var(--qz-ink) !important;
+  border-color: rgba(200, 120, 42, 0.22) !important;
+}
+
+[data-theme="dark"] #quizIDK:hover,
+[data-theme="dark"] #grammarQuizShowHint:hover,
+[data-theme="dark"] #qsCancel:hover {
+  background:   rgba(200, 120, 42, 0.14) !important;
+  border-color: rgba(200, 120, 42, 0.40) !important;
+}
+
+/* Next buttons — night */
+[data-theme="dark"] .quiz-btn-next,
+[data-theme="dark"] #quizNext,
+[data-theme="dark"] #grammarQuizNext {
+  background: #2E1E0C !important;         /* deeper ink, near-cellar black */
+  color:      var(--qz-ink) !important;
+}
+
+[data-theme="dark"] .quiz-btn-next:hover,
+[data-theme="dark"] #quizNext:hover,
+[data-theme="dark"] #grammarQuizNext:hover {
+  background: #3E2A10 !important;
+  box-shadow: 0 0 0 1px rgba(200, 120, 42, 0.30) !important;
+}
+
+/* Feedback — night */
+[data-theme="dark"] #grammarQuizFeedback {
+  background: rgba(200, 120, 42, 0.07) !important;
+  border:     1px solid rgba(200, 120, 42, 0.20) !important;
+}
+
+[data-theme="dark"] #grammarQuizFeedbackNote {
+  border-top: 1px solid rgba(200, 120, 42, 0.18) !important;
+}
+
+/* Grammar badge — night */
+[data-theme="dark"] #grammarQuizPointName {
+  background: rgba(200, 120, 42, 0.14) !important;
+  color:      var(--wc-accent) !important;
+  border:     1px solid rgba(200, 120, 42, 0.28) !important;
+}
+
+/* Original sentence box — night */
+[data-theme="dark"] #grammarQuizQuestion .rounded-lg.p-3 {
+  background:   rgba(200, 120, 42, 0.05) !important;
+  border-left:  3px solid rgba(200, 120, 42, 0.45) !important;
+}
+
+/* Summary score — night */
+[data-theme="dark"] #grammarQuizSummaryScore {
+  color: var(--wc-accent) !important;
+}
+
+/* Close buttons — night */
+[data-theme="dark"] #quizClose,
+[data-theme="dark"] #grammarQuizClose {
+  color: rgba(212, 191, 160, 0.55) !important;
+}
+
+[data-theme="dark"] #quizClose:hover,
+[data-theme="dark"] #grammarQuizClose:hover {
+  color: var(--qz-ink) !important;
+}
+
+/* Settings labels — night */
+[data-theme="dark"] #quizSettings label,
+[data-theme="dark"] #quizSettings .font-medium {
+  color: var(--qz-ink) !important;
+}
+
+/* Tailwind gray neutralisation — night within modals */
+[data-theme="dark"] #quizModal .text-gray-400,
+[data-theme="dark"] #quizModal .text-gray-500,
+[data-theme="dark"] #quizModal .text-gray-600,
+[data-theme="dark"] #quizModal .text-gray-700,
+[data-theme="dark"] #grammarQuizModal .text-gray-400,
+[data-theme="dark"] #grammarQuizModal .text-gray-500,
+[data-theme="dark"] #grammarQuizModal .text-gray-600,
+[data-theme="dark"] #grammarQuizModal .text-gray-700,
+[data-theme="dark"] #grammarQuizModal .text-gray-800,
+[data-theme="dark"] #quizSettings .text-gray-400,
+[data-theme="dark"] #quizSettings .text-gray-500,
+[data-theme="dark"] #quizSettings .text-gray-600 {
+  color: rgba(212, 191, 160, 0.60) !important;
+}
+
+[data-theme="dark"] #quizModal .text-gray-700,
+[data-theme="dark"] #quizModal .text-gray-800,
+[data-theme="dark"] #quizModal .text-gray-900,
+[data-theme="dark"] #grammarQuizModal .text-gray-700,
+[data-theme="dark"] #grammarQuizModal .text-gray-800,
+[data-theme="dark"] #grammarQuizModal .text-gray-900 {
+  color: var(--qz-ink) !important;
+}
+
+
+/* ── Reduced motion — Quiz ──────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .quiz-progress-fill {
+    transition: none !important;
+  }
+  .quiz-btn-primary,
+  .quiz-btn-next,
+  #quizIDK,
+  #grammarQuizShowHint,
+  #qsCancel,
+  #quizAnswer,
+  #grammarQuizAnswer {
+    transition: none !important;
   }
 }

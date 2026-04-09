@@ -1,172 +1,621 @@
-# Director's Treatment
+# storyboard.md — Day Mode Full Application
+**Film**: Perfume: The Story of a Murderer (2006) — Dir. Tom Tykwer, DP Frank Griebe
+**Scope**: Day Mode only — all 8 components-in-scope from decisions.md
+**Date**: 2026-04-09
 
-## Anti-Convergence Validation (Perfume / Tom Tykwer)
-
-**Q1: What specific visual problem does this film solve for this niche?**
-The vocabulary tool needs to make individual words feel *worth examining* — not just functional list items. Perfume uses extreme close-up and tactile surface rendering to make a single object (a scent source) feel like the most important thing in the frame. That precise cinematographic quality — "one specimen, examined with total seriousness" — is what the word card needs. The card must feel like Grenouille leaning in over a workbench. Not a SaaS table row.
-
-**Q2: Would this same film work equally well for three unrelated niches?**
-No. The Perfume visual grammar (parchment + candlelight + specimen-label typography) would be wrong for a fintech app, a social platform, or a fitness tracker. It works here specifically because vocabulary learning is about *isolating and studying individual objects* (words) — the same cognitive gesture the film applies to scent.
-
-**Q3: Picking the film or its reputation?**
-The justification comes from specific scenes: the Grasse market close-ups of flowers, skin, and glass; Baldini's cellar sequences with single-candle illumination and alchemical ledger props. Not from the film's general "dark aesthetic" reputation.
+> Phase 2 output. No CSS/HTML. No Phase 3.
 
 ---
 
-## Director Brief
+## Application Narrative Arc（Tom Tykwer / Perfume 導演弧線）
 
-- **Visual thesis**: Each word card is a specimen entry in a Provençal perfumer's ledger — examined with the same obsessive closeness Grenouille gives every scent source. Day mode: parchment lit by afternoon sun through amber glass. Night mode: vellum lit by a single candle in a stone cellar.
-- **Signature technique 1 → Web translation**: *Extreme close-up as meaning* → The English word (`wc-title strong`) is the sole typographic dominant — larger, heavier, and warmer than anything else in the card. No competing visual weight (badges, icons) at the same vertical zone.
-- **Signature technique 2 → Web translation**: *Dual light quality, no neutral middle* → Day mode pushes luminance high (near-overexposed parchment warmth); night mode drops to true near-black. There is no "comfortable medium gray" in either mode. Contrast is either warm-bright or warm-dark.
-- **Signature technique 3 → Web translation**: *Tactile surface as information* → Card surfaces use layered box-shadow instead of hard borders to convey depth. A noise texture at ≤3% opacity gives the card a vellum/parchment feel. This is the material, not decoration.
-- **Motion rules**: Expand/collapse transition is `0.28s ease-out` — deliberate but not slow. No bounce, no spring physics. The card body "unrolls" downward like a scroll. No hover float or card lift. Interaction is tactile pressure, not aerial buoyancy.
-- **Typography rules**: Word = `font-size: 1.5rem; font-weight: 700; letter-spacing: -0.01em` (specimen-label authority). Definition row = `font-size: 0.875rem; font-weight: 400` (classification subtitle). AI/example = `font-size: 0.9375rem; line-height: 1.7` (field note body). No italics anywhere except genuine English example sentences. No decorative quotation marks.
-
----
-
-## Site Cinematic Grammar (Component-scoped)
-
-Because scope is a single component, the "site grammar" governs the internal logic of `.wc-card` and its sub-elements only.
-
-- **Page-shell logic**: Each card is a closed document fragment. Collapsed state = cover/spine. Expanded state = open page.
-- **Navigation posture**: N/A — component-only scope
-- **Framing discipline**: Internal padding `18px 20px` (header), `6px 20px 20px` (body). The word headline has no competing icon or badge at the same line height. Arrow indicator is typographic (▸/▾), not SVG icon.
-- **Density cadence**: Header = sparse (word + definition only). Body = moderately dense (example sentence + AI block). Footer = minimal (2 small buttons max).
-- **Recurring material layers**: 
-  - Layer 1: Card background (parchment or cellar-black) with noise texture overlay
-  - Layer 2: AI block — a physically recessed sub-surface, darker than card
-  - Layer 3: Footer rule — a thin ruled line, not a full border
-- **Allowed composition families**: Alchemical document / Specimen ledger entry only
-- **What may repeat**: The header-to-body expand pattern; the footer ruled-line; the recessed AI block sub-surface
-- **What must vary**: Individual word cards must not look identical in typographic weight when the word itself has different syllabic length — letter-spacing compensates naturally
-- **Demo uniqueness guardrail**: This design must not resemble a generic card with warm colors applied. The absence of a visible card border (replaced by shadow depth) is the primary structural differentiator.
-
----
-
-## Component Arc: Word Card (`.wc-card`)
-
-### Component scene thesis
-The word card is a single exhibit in a museum of language — like one bottle on Baldini's shelf. Collapsed, it shows only the specimen label (word + brief definition). Expanded, the full record is revealed: the example text, the analysis below it, the provenance information.
-
-### One big idea
-The **word is the specimen**. Everything else in the card serves the act of examining that specimen. The English word title is the only element with commanding typographic weight. The supporting content (definition, example, AI analysis) is the field notebook around it.
-
-### Restraint statement
-No gradient backgrounds on the card surface. No border-radius above `10px`. No icon at the same visual level as the word. No animation on the texture layer. No colored badges in the header zone. The refraction accent (`--wc-prism`) is used *once* — as a single thin warm-gold rule below the word title, not as a repeating decorative element.
-
-### Material thesis — Day (Grasse)
-Card surface: `#F5EDDA` with 3% noise texture simulating parchment fiber. Shadow: `0 2px 8px rgba(100,70,20,0.10), 0 0 0 1px rgba(180,140,80,0.18)` — the border IS the shadow, not a separate border property. AI block recesses with `background: #EAD9BC` — measurably darker but in the same warm family.
-
-### Material thesis — Night (Paris Cellar)
-Card surface: `#18100A` — very dark, warm-tinted near-black. The eye perceives "stone wall in candlelight." Shadow: `0 4px 16px rgba(0,0,0,0.60), inset 0 1px 0 rgba(200,120,42,0.08)` — the inset shadow suggests a faint candle glow on the top edge. AI block: `#0E0906` — drops below the card into genuine shadow.
-
-### Signature composition
-**The Specimen Label Stack**: The word card header is a vertical document stack — not a horizontal flex row with an icon. The English word occupies its own full-width line at headline scale. Directly below it, the part-of-speech + definition read as a classification subtitle. The expand arrow sits at the trailing edge but does not anchor the visual hierarchy. This composition fails if reduced to a generic `flex: row, icon-left, text-right` layout.
-
-### Grid fallback test
-If this card were reduced to a generic `div.flex.items-center.justify-between` with icon + text, the specimen-label hierarchy would collapse entirely. The word would no longer feel like the subject of examination — it would become a row label. That collapse is the test the design must resist.
-
----
-
-## Scene Map (Card Sections as Cinematic Beats)
-
-### Scene 1 — Collapsed Header (Cover State)
-- **Beat**: Threshold / first encounter
-- **Function**: Word identification at minimum information density
-- **Archetype**: Specimen label / book spine
-- **Composition**: Word headline + definition subtitle, stacked vertically on left; expand arrow on trailing right
-- **Camera ref**: Close-up / portrait orientation — the word fills the frame
-- **Interaction ref**: Click/tap anywhere on header → expand body (no hover float, no card lift)
-- **Entrance**: On initial list render — `opacity: 0 → 1` over `180ms` with `translateY(4px → 0)` — subtle, not performative
-- **Visual elements**: Noise texture on card surface; warm-gold thin separator below word title; no icons in header zone
-- **Why this exists**: The collapsed state must feel complete as a *label*, not as a truncated SaaS row
-
-### Scene 2 — Expanded Body (Open Page State)
-- **Beat**: Deep examination / the specimen record
-- **Function**: Full entry — example sentence + AI analysis
-- **Archetype**: Open ledger page / specimen record
-- **Composition**: Two distinct sub-surfaces: article sentence as inline body text; AI block as physically recessed panel
-- **Camera ref**: Pull-back reveal — space opens below the header to expose the record
-- **Interaction ref**: Expand animation `max-height: 0 → auto` via `grid-template-rows` trick, `0.28s ease-out`
-- **Visual elements**: AI block uses recessed background + top-inset shadow to appear below card surface; `wc-ai-zh` (Chinese translation) is measurably smaller and lighter than the English sentence
-- **Why this exists**: The expanded card must feel like turning a page — a spatial gesture, not a height toggle
-
-### Scene 3 — Footer Action Row
-- **Beat**: Exit / curation decision
-- **Function**: Minimal action affordance — save or mark as reviewed
-- **Archetype**: Ledger signature line
-- **Composition**: Ruled top line (`border-top: 1px solid var(--wc-rule)`); buttons are text-weight (`font-size: .8125rem; font-weight: 400`), no fill, no prominent border
-- **Camera ref**: Cut to close-up of the page footer — the ruled line anchors the bottom of the document
-- **Interaction ref**: Save button hover — text color shifts to accent (`--wc-accent`); no background fill change
-- **Visual elements**: Single ruled line only; buttons read as handwritten annotations, not product CTAs
-- **Why this exists**: The footer must not compete with the word or the example sentence. It is marginalia, not a call to action.
-
----
-
-## Prestige Calibration Pass
-
-1. What does the viewer remember after 3 seconds? → The English word, large and authoritative, on a warm parchment surface
-2. What is intentionally absent? → No sage green, no cold gray, no pill badges, no SVG icon in the header row, no gradient background
-3. Which detail makes it feel expensive? → The shadow-as-border technique — the card does not have a visible border line; depth is created by light, not by a drawn edge
-4. If 30% of effects were removed, would it be stronger? → Yes. The noise texture alone plus the shadow-as-border is sufficient. The thin gold separator below the word is the only visible accent element.
-5. Would it still feel directed without palette and type? → Yes — the vertical specimen-label stack is structurally different from current SaaS row layout
-6. What essential idea breaks if reduced to a generic card grid? → The hierarchy between "word as headline" and "definition as subtitle" collapses into label-value equality — both would become the same visual weight
-
----
-
-## Color Token Summary (CSS Variables to Override)
-
-### Day Mode (Grasse) — overrides on `.wc-card` scope
+Tom Tykwer 不在標準導演庫中。以下弧線從電影本身的場景節奏推導：
 
 ```
---wc-surface:   #F5EDDA
---wc-ai-bg:     #EAD9BC
---wc-text:      #1C1208
---wc-muted:     #7A6045
---wc-border-sh: rgba(180,140,80,0.18)   /* shadow-border */
---wc-shadow:    rgba(100,70,20,0.10)
---wc-accent:    #C8952A
---wc-rule:      #D0B07C
---wc-prism:     rgba(200,149,42,0.12)
+《香水》視覺節奏：世界確立 → 嗅覺遭遇 → 強迫性解剖 → 標本收藏 → 最終試煉 → 靜默餘韻
 ```
 
-### Night Mode (Paris Cellar) — overrides inside `[data-theme="dark"]`
-
-```
---wc-surface:   #18100A
---wc-ai-bg:     #0E0906
---wc-text:      #EFE1C0
---wc-muted:     #956F42
---wc-border-sh: rgba(200,120,42,0.08)   /* inset candle edge */
---wc-shadow:    rgba(0,0,0,0.60)
---wc-accent:    #C8782A
---wc-rule:      #2E1E0C
---wc-glow:      rgba(200,120,42,0.08)
-```
+| 場景 | Beat | 電影對應 | 應用場景對應 |
+|------|------|---------|------------|
+| 1 | B2 Establishing Shot | 巴黎市集鳥瞰——感官世界在 Grenouille 出現前先存在 | 頁面底材 + 頁頭：工作坊空間在使用者開始工作前先確立 |
+| 2 | B7 The Encounter | Grenouille 第一次嗅到「那個味道」——原料呈現 | 文章輸入區：使用者帶入需要解析的原始語言材料 |
+| 3 | B10 Deep Dive | Grenouille 在 Baldini 書房逐行研究配方——強迫性分析 | AI 分析區 / 單字卡 detail 展開：詞彙被解剖 |
+| 4 | B6 World Exploration | 格拉斯花田——大量標本的系統性收集與整理 | **右側單字清單面板（Hero Scene）**：收藏清單 = 帳冊 |
+| 5 | B18 Confrontation (adapted) | 最終香水測試——把積累的知識付諸一次決定性考驗 | 測驗 Modal：單字清單化為對話挑戰 |
+| 6 | B19 Quiet Moment | 橋上結局——成果已在，靜靜地存在 | 測驗結束摘要 / 回到清單：反思與留存 |
 
 ---
 
-## Readability Verification
+## 1. Cinematic Grammar（全站鏡頭語法，12 條）
 
-All foreground/background pairs checked against WCAG 2.1 AA (4.5:1 minimum):
-
-| Pair | Day mode contrast | Night mode contrast | Pass? |
-|------|-----------------|-------------------|-------|
-| Word text on card surface | `#1C1208` on `#F5EDDA` | `#EFE1C0` on `#18100A` | Day ~14:1 / Night ~12:1 ✓ |
-| Muted text on card surface | `#7A6045` on `#F5EDDA` | `#956F42` on `#18100A` | Day ~5.2:1 / Night ~5.8:1 ✓ |
-| Muted text on AI block | `#7A6045` on `#EAD9BC` | `#956F42` on `#0E0906` | Day ~4.8:1 / Night ~6.1:1 ✓ |
-| Accent on card surface | `#C8952A` on `#F5EDDA` | `#C8782A` on `#18100A` | Used for icon/accent only, not body text ✓ |
-
-All body text pairs exceed 4.5:1. The cinematic atmosphere does not reduce readability.
+這 12 條是整個 Day Mode 的「電影拍攝規則」——任何元件若違反其中一條，即是跑出電影之外。
 
 ---
 
-## What Phase 3 Must Produce
+**CG-1：光源方向是固定的，且是整頁唯一的。**
 
-1. Complete CSS for `.wc-card`, `.wc-header`, `.wc-title`, `.wc-body`, `.wc-ai`, `.wc-ai-text`, `.wc-ai-zh`, `.wc-footer`, `.wc-btn-save`, `.wc-rel-chip`, `.wc-del-corner`
-2. Day mode tokens via `:root` override block scoped to `.wc-card`
-3. Night mode tokens via `[data-theme="dark"] .wc-card` override block
-4. Noise texture via CSS `filter` or `::after` pseudo-element (no external image)
-5. Shadow-as-border technique (no `border` property on card; depth via `box-shadow` only)
-6. Expand/collapse animation — `grid-template-rows` approach, `0.28s ease-out`
-7. No changes to any JS logic, Python backend, or API calls
+左上 30–40° 入射，模擬格拉斯作坊左牆木格窗的午後漫射日光。
+這不是裝飾選擇——它是整頁深度系統的物理基礎。
+- 所有陰影的 x offset 必須為正（往右），y offset 必須為正且略大（往下）。
+- 同一頁面上不允許陰影方向矛盾的元件並存（例如一個卡片陰影往右、另一個往左）。
+- 最靠近光源的邊（卡片頂邊、左邊）是最亮的邊；最遠的邊（底邊、右邊）是最暗的邊。
+
+---
+
+**CG-2：深度靠光影表達，不靠描邊。**
+
+「描邊」是現代 SaaS 的語言。「光影」是 18 世紀的物理現實。
+- 容器的邊界由其陰影（向外）和 rim light（向內）共同構成，不由 `border` 屬性構成。
+- 如果移除所有 `box-shadow` 後容器消失，說明設計在工作。如果移除後容器仍清晰可辨（靠 border），說明設計退回了 SaaS 模式。
+- **唯一例外**：帳冊橫線（row divider），這是墨水在紙上的印記，它是「物件」不是「邊界」——使用極低對比度的暖棕透明線，模擬帳冊內頁的分行印記。
+
+---
+
+**CG-3：每個表面都有微材質。純色平面不存在。**
+
+電影裡每個物體都有材質——蠟、紙、石頭、皮革。純色物體在這個世界裡是不自然的。
+三層材質（底材/容器/互動）必須同時在場，但它們的強度要從後到前遞減：
+- 底材（體量最大）：最弱，2–3%，幾乎只能感覺不到但不能移除
+- 容器：中等，3–4%，靜止時才能察覺，滾動時幾乎感知不到
+- 互動元件：最克制，1–2%，只在邊緣增加磨損感，不干擾可讀性
+
+---
+
+**CG-4：暗角是鏡頭，不是設計元素。**
+
+電影攝影師在調色時會加入 lens vignette（鏡頭暗角）——讓觀眾的視線本能地聚向中心。
+整個頁面必須有這個效果：
+- 中心區域最亮（這是桌面，工作的地方）
+- 四角自然收暗 8–14%（這是視野邊緣，鏡頭收光之處）
+- 效果應是「感覺像在看桌上的紙頁」，而非「感覺有黑框」——對比不能強到讓人注意到有暗角，但移除後頁面會感覺「漂浮在空氣裡」
+
+---
+
+**CG-5：Rim Light 是區分「前景物件」和「背景表面」的唯一工具。**
+
+在電影裡，rim light（邊緣光）讓主體從背景中「站出來」，而不是靠描邊。
+在這個 UI 裡，rim light 的功能完全相同：
+- 每個「前景物件」（卡片、modal、按鈕表面）的頂邊或左邊必須有一條非常淡的琥珀金 inset 高光
+- 這條高光告訴眼睛：「這個物體是立起來的，它有厚度，它是從桌面上取起來的東西」
+- 背景表面（body、主 grid 容器）不能有 rim light——它們是桌面，不是物件
+
+---
+
+**CG-6：顏色暖度遞進原則——越深入越暖，越外層越冷。**
+
+這反映了電影的光線物理：光源（窗戶）打進來的是白天的漫射光（帶微量藍）；內部陰影是暖色（木頭、蠟、皮革的反射）。
+- 頁面背景：最外層，帶最輕微的綠灰抑制（hue 偏向 42–44°，最涼）
+- 容器表面（卡片/面板）：比背景暖（hue 38–42°）
+- 次要表面（AI 塊、recessed 區）：更暖且更深（hue 36–38°）
+- 文字：最暖的顏色（乾燥棕墨，hue 28–35°）
+
+這條規則防止畫面「從外到內全部一個溫度」——那是 SaaS 的等溫設計，不是有光源的空間。
+
+---
+
+**CG-7：視線錨點只有一個，其餘全部退後。**
+
+在 Tykwer 的構圖裡，畫面永遠有一個主角（Grenouille 的手、一朵花、一瓶香水）。其他元素構成「環境」，不構成「競爭視覺」。
+應用到 UI：
+- 在任何給定的視窗，視線最重的元素只能有一個
+- Word List 面板裡：英文單字是主角，其他所有標籤/徽章/按鈕都是環境
+- 主要 Section 卡片裡：當有 AI 分析結果時，分析文字是主角
+- 當多個卡片同時可見：眼睛應能在 3 秒內找到「現在誰是主角」的明確答案
+
+---
+
+**CG-8：「非完美」語法——允許哪些微瑕，以及工程邊界。**
+
+18 世紀的帳冊不是印刷品。允許、甚至鼓勵這些微不完美：
+- 材質紋理的不均勻分布（不要均勻重複的 tile 紋理，要有機的隨機分布）
+- 陰影的輕微不對稱（同一個卡片，左陰影可以比右陰影稍輕）
+- 帳冊橫線的輕微顏色波動（不要每條線完全等同的透明度——用 0.12–0.20 之間的隨機感）
+- 字體在長標題時的自然字距壓縮（不要強制等字距）
+
+**工程邊界（這條線不能越）：**
+
+允許的非完美只存在於**材質層、陰影 alpha、透明度**這三個視覺屬性上——它們的隨機性由 CSS 實作一次後就固定，不是「每次渲染都不同」。
+
+不允許的非完美類型如下，碰到就是 bug 而非美學：
+
+| 類型 | 說明 |
+|------|------|
+| Layout 幾何偏移 | 任何 padding、margin、基線、對齊的數值必須一致——「歪了一點點」不是工坊風格，是排版錯誤 |
+| 顏色不一致 | 同類容器（例如所有 `.wc-card`）底色必須完全相同——不同卡片的背景色有差異是 bug |
+| 陰影方向矛盾 | 同一畫面中不能出現一個卡片往右下、另一個往左下的陰影方向差異 |
+| 字型意外切換 | 同類型的文字（例如所有定義文字）必須用同一套字型方案，不能因條目長度、語言、渲染環境而隨機切換 |
+
+一句話原則：**幾何和顏色必須精確；材質和陰影強度可以有機。**
+
+---
+
+**CG-9：互動是「觸摸物體」，不是「點擊按鈕」。**
+
+電影裡 Grenouille 觸摸物體時有重量感——他不是點擊一個 UI 元素，他在感受一個實體。
+互動翻譯規則：
+- Hover：光的微量變化（rim light 稍亮、表面對比稍增）——物體被光照亮，不是懸浮或放大
+- Active/Press：表面輕微內陷（box-shadow 的 inset 增加，rim 稍暗）——手指壓在蠟封上
+- Focus：左邊緣被光線捕捉（左 border 加深而非加藍）——凹槽被光線照到邊緣
+- 禁止：卡片 hover 時整個卡片上浮（`translateY(-2px)`）——帳冊頁不會在你看它時飛起來
+
+---
+
+**CG-10：轉場是「翻頁」，不是「淡入淡出」。**
+
+這個空間裡的所有顯示/隱藏行為，在視覺上都應引用「物理紙張的展開」：
+- 顯示：從頂端往下展開（`max-height` 或 `grid-template-rows`），速度 260–300ms，ease-out
+- 隱藏：往上收起，速度比展開稍快（250ms），ease-in
+- Modal 出現：整體從上方輕落（`translateY(-12px → 0)`），同時 `opacity: 0 → 1`，230ms ease-out——像把一本小冊子放在桌上
+- 禁止：左右 slide in（這不是抽屜，這是帳冊）；彈性/彈跳 spring（帳冊不會彈）
+
+---
+
+**CG-11：琥珀金是稀有光——用量規則與計數口徑。**
+
+在電影裡，直射的陽光只打在一個點上——Grenouille 手中的玻璃瓶、窗台上的花。它不是到處都有的光。
+琥珀金 accent 的使用頻率直接對應這個稀有性：
+- 每個可見區域（viewport）中，琥珀金最多出現在 3–4 個點上
+- 必須出現：active 狀態的標示（active tab 邊線、selected 單字的指示）；關鍵分隔線（帳冊橫線等效線）；focus ring
+- 禁止出現：任何容器的大面積底色；按鈕的整體填色；任何 badge 的整體背景
+
+**「點（point）」的計數口徑：**
+
+| 類型 | 算幾點 | 說明 |
+|------|-------|------|
+| Active tab 底線（2px 琥珀金） | 1 點 | 固定可見，高飽和 accent，計入 |
+| Focus ring（input/button focus） | 1 點 | 固定可見，計入；但同時只有一個元素 focus，所以不會疊加 |
+| Selected / marked 狀態的 save 按鈕色 | 1 點 | 持續可見的 accent 色，計入 |
+| 帳冊橫線（0.12–0.20 透明度的暖棕線） | 0 點 | 飽和度極低，是墨色而非 accent；不計入 3–4 點配額 |
+| Hover rim light 的琥珀金高光 | 0 點 | 短暫光感，使用者不 hover 時不可見；不計入；但其飽和度必須低於主 accent（rim 是光，不是顏色標記） |
+| `.wc-card` header 下的 1px 細線 | 1 點 | 高飽和 accent 可見線，計入 |
+
+一句話原則：**可見時間超過 1 秒且高飽和的琥珀色算 1 點；短暫互動光感和低飽和墨色線不計入。**
+
+---
+
+**CG-12：留白是呼吸，不是浪費空間。**
+
+格拉斯作坊裡的架子沒有放滿——每個玻璃瓶之間有空隙，讓你看清每一個。
+在 UI 裡：
+- 容器內部 padding 應比「剛好夠用」多出 20–30%（讓內容物有呼吸感）
+- 不要把所有功能按鈕堆在一排——按鈕之間的間距傳達「這些是被精心放置的物件」
+- 不要把整個面板填滿內容——空白的存在讓有內容的地方更有重量
+
+---
+
+**CG-13：線條的分類——允許哪些線，禁止哪些線。**
+
+CG-2 說「深度靠光影，不靠描邊」，但這不代表 1px 線在所有地方都被禁止。區別在於線條的**語意**，而非線條本身的存在。
+
+| 線條類型 | 定義 | 允許？ | 例子 |
+|---------|------|-------|------|
+| **帳冊橫線（Ledger Line）** | 物件：帳冊紙頁上的分行印記。暖棕、低對比、帶透明度。它是書寫介質的一部分。 | ✓ 允許 | Row divider、section 標題下的分隔、modal 標題底線、帳冊章節線 |
+| **UI Border（描邊）** | 框架：用線條圈出一個容器的輪廓。冷灰或固定顏色。它是告訴眼睛「這裡是邊界」的視覺指令。 | ✗ 禁止 | 卡片的 `border: 1px solid`、tabs 的外框、輸入框的四邊等粗線 |
+
+**帳冊橫線的技術特徵（Phase 3 參考）：**
+- 顏色：`rgba(暖棕色, 0.12–0.20)`——低對比、帶透明度，不是固定顏色
+- 位置：橫向分隔（水平線）；不出現垂直帳冊線（帳冊是水平排版的）
+- 允許微波動：同一頁面內的多條帳冊橫線，alpha 值可在 0.12–0.20 之間輕微變化（有機感）；**波動必須由 row index 決定**（例如：`index % 3 === 0` 用 0.20、`=== 1` 用 0.15、`=== 2` 用 0.12），確保分頁切換或排序重排後橫線的 alpha 不跳動——不是每次渲染隨機產生
+- 禁止：把帳冊橫線用作「容器輪廓」（四邊框），它只能是水平分行線
+
+**輸入框邊框的特殊規則**：Input/textarea/select 的四邊可以有邊框，但必須視為「書寫槽的凹槽邊緣」而非「UI border」：使用暖棕透明色（`rgba(120, 85, 30, 0.22)`），不用冷灰；focus 時加深左邊緣，其他三邊保持原色。
+
+---
+
+**CG-14：字型域——哪類文字用哪套字型。**
+
+全站的文字分為三個域。這個分工必須在 Phase 3 固定，不允許隨機混用。
+
+| 文字域 | 包含的文字 | 字型方向 | 不使用 |
+|--------|---------|---------|-------|
+| **主角文字**（英文單字、section 主標題） | `.wc-title strong`、`section-h` 標題、頁面 H1–H2 等級 | 人文主義 serif（EB Garamond、Lora、Crimson Pro、Georgia fallback）——標本名稱、帳冊大字 | Times New Roman（太法庭）、Playfair（太奢侈品）、Merriweather（太板） |
+| **UI 標籤文字**（按鈕、tab、badge、form label、小號 UI 文字） | `.btn-primary-m`、`.tab`、`.enrich-badge`、`select`、`input` placeholder、tooltip 標題 | 人文主義 sans-serif（Jost、DM Sans、Source Sans 3）——有個性但不難讀，帶手稿標籤感 | Inter（太系統化）、Roboto（太 Material）、Nunito（太可愛）|
+| **中文文字**（所有中文 UI 文字和定義） | 中文解釋、中文 AI 翻譯、中文 UI label、中文 placeholder | 維持系統 CJK 字型（Noto Sans TC 或系統 fallback）——可讀性優先，不強求字型風格 | 任何強制指定的特殊中文字型（會增加載入負擔且效益低）|
+
+**第四域——數字 / 金額 / 進度**：
+
+介面中有 NT$、token 數、百分比、測驗分數、頁碼等數字資訊。這些數字若套用 serif 正文字型，容易出現字距對齊問題（serif 數字通常是 proportional，不等寬）；若套用預設字型，又容易跳出暖色系。
+
+規則：
+- 字型：使用與 UI 標籤域相同的 humanist sans-serif，並啟用 `font-variant-numeric: tabular-nums`——確保數字等寬對齊
+- 色彩：完全遵守墨色系（主文字色或 muted 棕墨色）；不允許使用任何冷灰、冷藍、或螢光色顯示數字
+- 例外允許：費用金額（NT$）在 header navbar 裡可以使用純白文字（因為 header 背景較深），但字型和對齊規則仍適用
+
+**混用規則**：同一個句子中如果出現中英混排（例如「學習 vocabulary」），英文部分使用對應域的字型，中文部分使用中文字型，由瀏覽器的 unicode-range 自動切割處理。不要對中文段落強制套 serif 英文字型。
+
+---
+
+## 2. Hero Scene Storyboard：Word List（`#wordListCard`）
+
+### 場景論述
+
+這是香料作坊裡「工作桌右側角落」的帳冊——一本攤開的羊皮紙帳冊，記錄著所有已經辨識、分析、收藏的香料標本（= 英文詞彙）。
+
+電影場景對應：Baldini 的工作室裡，書架一角有一本翻開的帳冊，字跡有濃有淡，每一行都是一個配方、一個名字、一個分量。Grenouille 在這本帳冊裡尋找的不是「一個清單條目」——他在尋找一個他熟悉的標本。
+
+**這個面板不是「右側資料管理欄」。它是這個工具的中心記憶體。使用者在這裡看到學習的積累，選擇要複習的內容，發動測驗。它必須是整個頁面裡視覺上最考究、最有分量的容器。**
+
+---
+
+### 構圖：視覺權重
+
+`#wordListCard` 在整體版面中的角色是「固定在右側的厚重帳冊」，左側主內容區是「當前的工作紙張」。
+
+- 右側面板的視覺重量應略高於左側 section cards——更深一點的背景、更明顯的陰影（代表帳冊是一個有厚度的物件，不是一張紙）
+- 視覺上的方法：面板底色比左側 section cards 的底色深 3–5% 的明度（但同樣的色相，不換顏色）
+- 面板的 box-shadow 應比左側 section cards 更有立體感——陰影 y-offset 稍大，blur 稍廣，代表它在桌面上更厚
+- 面板頂邊的 rim light 要比 section cards 的 rim light 稍微明顯——這本帳冊的封面被光打到了
+
+---
+
+### 深度層次（由後到前）
+
+| 層次 | 物件 | 視覺處理 |
+|------|------|---------|
+| L0：頁面底材 | body / grid wrapper | 最淡的暖米色 + 細噪點 + 暗角 |
+| L1：面板底座 | `#wordListCard` 整體 | 比 body 深 3–5% 明度的羊皮紙底 + parchment 纖維紋理 + 定向陰影（左上→右下）+ 頂邊 rim light |
+| L2：面板頭部 | Tab 群組區 + 按鈕列 | 與 L1 相同底色，用頂部 border（帳冊橫線等效線）與 L3 分隔 |
+| L3：列表區域 | `#sidebarTodayList` 捲動容器 | 比 L1 稍深（如同翻開帳冊後的內頁，略比封面暗一個色階）|
+| L4：單字卡（收折） | `.wc-card`（collapsed） | 已有 `theme-perfume-wc.css`，確保與新底色協調 |
+| L5：單字卡（展開） | `.wc-card`（expanded） | 展開的頁，用 grid-rows 展開動畫 |
+| L6：hover / selected 狀態 | 被懸停或被選取的 `.wc-card` | 輕微表面亮化（rim light 稍強）——光「找到」了這個標本 |
+| L7：badge/chip（前景元素） | `.enrich-badge`、詞性標籤 | 最小的前景物件，用暖棕墨色底 + 淡米色字，不用冷色系 |
+
+---
+
+### Tab 群組（今日 / 複習 / 全部）：視覺鏡頭
+
+**場景定義**：帳冊的「書籤分頁」——染色皮革或布料帶，夾在不同章節之間。
+
+| 狀態 | 視覺處理 | 禁止 |
+|------|---------|------|
+| 非 active tab | 羊皮紙底（同 L1），文字為 muted 棕墨色，無邊框強調 | 冷藍底色、灰色底色 |
+| Active tab | 底色比非 active 深 4–6%（像書籤被拉出、更立體）；**底部邊線**用琥珀金 2px，不用整體改色 | 整個 tab 背景改為 accent 金色 |
+| Tab 群組容器 | 有一條棕墨色頂邊分隔線（像帳冊章節線）；底部不需線，直接接列表區 | 冷灰 border |
+| Active tab 轉換 | 琥珀金底線從前一個 tab 位置滑動到新位置（**180–220ms ease-out，不用 spring**）——書籤被拉過去的感覺：物理、有重量、乾淨 | 整個 tab 淡入淡出（感覺不對）；底線有發光/模糊光暈（Modern slider 感）；任何彈跳（spring easing）；速度低於 150ms（太快，感覺不到物理重量）|
+
+---
+
+### 按鈕列（開始測驗 / 文法測驗）
+
+**場景定義**：帳冊背面的「練習章節」入口——不是封面大字，而是帳冊後半頁的標題行。
+
+| 按鈕 | 視覺定義 | 具體處理 |
+|------|---------|---------|
+| Primary（開始測驗） | 深墨色底（接近主文字色，hue 30–35°, L 15–22%）+ 米色文字 + 頂邊琥珀金 rim（inset 1px）| 不是鼠尾草綠；不是整顆金色；像一個壓印的蠟封 |
+| Outline（文法測驗） | 透明底 + 棕墨色邊框（帳冊橫線等級的顏色）+ muted 棕墨字 | hover 時邊框加深、文字稍暖，不加背景底色 |
+| 按鈕間距 | 兩個按鈕之間的間隔傳達「這兩個是分別放置的物件」——不要緊貼，gap 8–10px | 不要比兩個 tab 更大——按鈕不是主角，列表才是 |
+
+---
+
+### Row 分隔：帳冊橫墨線系統
+
+**核心原則**：相鄰兩個 `.wc-card` 之間的視覺分隔不是邊框，是空間 + 極淡的痕跡。
+
+方案一（首選）：
+- `space-y-2` 在 `#sidebarTodayList` 提供空間（卡片之間有自然呼吸）
+- 每個 `.wc-card` 底部加一條 `1px` 的棕墨線：`rgba(120, 85, 30, 0.15)`——極低對比度，模擬帳冊內頁分行印記
+- 最後一張卡片的底部不加線
+
+方案二（備選，適合「全部」列表中條目很多時）：
+- 奇數條目背景：L3 底色
+- 偶數條目背景：比 L3 深 1% 明度（肉眼只能感覺輕微的交替，不是斑馬條）
+- 配合頂部極淡橫線
+
+**方案選擇規則（Phase 3 強制遵守）：**
+
+| Tab 狀態 | 使用方案 | 原因 |
+|---------|---------|------|
+| 今日 / 複習（Today / Due） | **方案一**（space-y + 淡橫線） | 條目少，間距給每個標本足夠的呼吸，橫線的存在感合理 |
+| 全部（All） | **方案二**（極淡斑馬 + 更淡橫線） | 條目多，純間距會讓列表顯得過長；交替底色提供視線導引，但必須用暖色系交替，不是冷色斑馬條 |
+
+同一 tab 內不可同時混用兩種方案。
+
+**兩個方案都禁止**：
+- `border-bottom: 1px solid var(--border)`（沿用舊冷灰變數）
+- `border-bottom: 1px solid #e5e7eb`（Tailwind 冷灰）
+- 顯眼的間距（gap 過大導致列表失去「帳冊連貫頁面」的感覺）
+
+---
+
+### Hover / 選取 / 互動鏡頭
+
+| 互動 | 鏡頭語意 | 視覺處理 |
+|------|---------|---------|
+| Mouse hover on `.wc-card` | 光「找到」這個標本——光源在這個卡片上稍微集中 | 頂邊 rim light 從 `rgba(255,220,140,0.25)` 稍升至 `rgba(255,220,140,0.38)` |
+| 點擊展開 | 翻開帳冊的這一頁——下方空間「展開」 | `grid-template-rows: 0fr → 1fr`，280ms ease-out。整張卡片不移動，只有內部內容向下展開 |
+| Save（加入/從清單移除） | 在帳冊上蓋章或擦除標記 | save 按鈕 color 變為 accent 琥珀金（已標記狀態）；unhover 後 accent 保留，說明這個標本已被「標記」 |
+| Hover 後離開 | 光「離開」這個標本——恢復原狀 | rim light 回到 0.25 強度，150ms ease-out |
+| 分頁（Prev/Next） | 在帳冊裡翻頁——整個列表切換 | 新的條目從上方以 `opacity: 0 → 1` + `translateY(-4px → 0)` 輕柔進入，40ms stagger per card |
+| 展開後 scroll | 用手指沿帳冊頁面向下滑 | 無特殊效果，僅原生 scroll——帳冊不需要 parallax |
+
+---
+
+### 篩選列（「全部」Tab 下的 filter）
+
+**場景定義**：帳冊頁面上方的「分類標籤列」——像舊帳冊裡的索引分類標記。
+
+| 元件 | 視覺處理 |
+|------|---------|
+| `#allSearch` input | 凹入帳冊表面的書寫槽——底色比 L3 深、有 inset shadow（模擬凹槽）；focus 時左邊框加深（光打在凹槽邊緣） |
+| `#allPos`、`#allLevel` select | 同 input 凹槽感——像一個有蓋子的標籤格；下拉時 `transform-origin: top` 向下展開（模擬翻開標籤） |
+| `#allSort` select | 同上，寬一點，佔全寬 |
+| placeholder 文字 | muted 棕墨色（hue 28–32°, L 62–65%），不是冷灰 |
+
+---
+
+### Badge / Chip 在 Word List 中的規則
+
+| Badge 類型 | 在帳冊裡的物件對應 | 視覺處理 |
+|-----------|----------------|---------|
+| 詞性標籤（n., v., adj.）| 帳冊條目旁的類別印記——像用暗墨蓋的小印章 | 暖棕墨底（hue 30–33°, L 28–35%）+ 米色文字；邊角 2–3px radius（印章有邊角，不是藥丸形）；字號 0.7rem |
+| Mastered / Due 徽章 | 帳冊條目旁的狀態記號——像用不同墨水蓋的進度章 | Mastered：暖墨綠（hue 70–80°, L 30–36%）+ 米色字；Due：深琥珀（accent 方向，低飽和版本）+ 深底字；**兩者都不是冷色系** |
+| Enrich badge（TR/GR）| 帳冊條目旁的附加標記——像用棕紅墨加的備注符號 | 現有的 `#EEF2E8` 冷綠底需替換：改為暖棕底（hue 36°, L 82%）+ 深棕字；不用藍色 |
+
+---
+
+### 琥珀金在 Word List 的完整使用清單
+
+| 允許（克制使用） | 禁止 |
+|----------------|------|
+| Active tab 底部邊線（2px） | Active tab 整個背景改為金色 |
+| `.wc-card` 展開後 header 下方的細線（1px，每個卡片只有這一條） | Word list 整體背景底色帶金色 |
+| Mastered 狀態的 badge（但用飽和度降低版，不用純 accent） | 測驗按鈕整顆金底 |
+| 焦點環（input/select focus ring） | Badge 系列的主要背景色 |
+| Hover 時卡片頂邊 rim 加亮 | 分頁器的底色 |
+| 分頁器當前頁碼的文字色 | 任何大面積背景 |
+
+---
+
+## 3. Secondary Scenes
+
+---
+
+### 場景 A：頁面底材（`body` + global vignette）
+
+**場景論述**：這是工作坊的石灰牆面和石板地面——使用者的眼睛在這裡「著地」，然後才注意到桌上的物件。底材不是設計的主角，但移除它整個空間會感覺漂浮在空中。
+
+**構圖與氛圍**：
+- 底色：暖米白帶微量綠灰抑制（防止「奶油廣告感」）。看起來是舊石灰牆被午後陽光長年曬過的顏色——有溫度，有歲月，但不豔麗。
+- 全頁細顆粒噪點：`feTurbulence`，極低強度（2–3%），`overlay` 混合。靜止時幾乎感知不到，但給了整個空間「空氣裡有粉塵」的感覺。
+- 暗角：`radial-gradient` 從中心透明到四角 8–14% 暗。效果是「這個空間是被一個鏡頭框起來的」，而不是「無限延伸的白板」。
+- 無任何線條、格線、重複 tile——底材是有機的，不是印刷背景圖。
+
+**禁止**：任何顏色塊（底部漸層、頂部漸層等）；重複的 tile 圖案；純色無紋理。
+
+---
+
+### 場景 B：主要 Section 卡片（`#articleInputSection`、`#aiResult`、`#readerSection`）
+
+**場景論述**：工作桌上攤開的工作紙張——一張張疊在桌面上的羊皮紙文件，每一張都是正在進行的工作的一部分。它們比底材（桌面/牆面）「輕」，因為它們是可以移動的。
+
+**構圖**：
+- 底色比 body 暖、比 body 淺（更接近「新鮮羊皮紙」vs 「舊石灰牆」的對比）
+- 定向陰影：x=2px, y=4–6px, blur=16px, 暖棕色 `rgba(80,50,15,0.10)`——陰影告訴眼睛光從左上打來
+- 頂邊 inset rim light：`inset 0 1px 0 rgba(255,220,140,0.30)`——模擬頁面頂邊被光打亮
+- 容器內部 padding：比目前增加 20%——內容需要有「這張紙很大、上面的字有呼吸感」的感覺
+- 第二層材質（parchment fiber，3–4% soft-light）疊在 section card 的 `::after` 上
+
+**卡片深度層次**：
+- 主 section card：L1（工作紙）
+- 嵌套的 AI 分析塊（`.wc-ai`）：L2（紙張上貼了一塊更深的便箋——recessed, 不是懸浮）
+- Section 標題（`.section-h`）：文字顏色在最高對比度，但字體大小受控，不過大
+
+---
+
+### 場景 C：Modal（`#quizModal`、`#quizSettings`、`#grammarQuizModal`）
+
+**場景論述**：在帳冊旁邊突然翻開的一本小冊子，或從文件夾裡取出的一張考題——它比帳冊更有臨時性，但比 body 更有物質感。Modal 不是對話框（那是系統語言），而是「桌面上被翻開放在前方的一個物件」。
+
+**構圖**：
+- Modal overlay（backdrop）：`rgba(40,25,8,0.55)` — 暖棕透明，讓底層的工作桌稍微退到陰影中，而不是被冷黑遮蓋。**Day Mode 驗收語句**：Modal 開啟後，在 modal 容器邊緣以外的背景區域，應仍可隱約看出頁面的羊皮紙底色和材質紋理；如果背景變成純黑色或材質完全消失，overlay 的 alpha 過高，需降低至 0.45–0.50 並驗收
+- Modal 容器：比 section card 更淡（接近「拿在手裡的小冊子」的感覺，不是「工作桌上的大頁面」）——底色比 section card 稍亮 2–3%
+- Modal 陰影：更深、更立體，因為它是懸浮在桌面上方的物件。y offset 稍大（8–10px）、blur 更廣（24–32px）——它比任何其他物件都更「懸浮」
+- 頂邊 + 左邊 rim light：inset 高光在頂邊和左邊都出現（`inset 0 1px 0 rgba(255,220,140,0.35), inset 1px 0 0 rgba(255,220,140,0.20)`）——光從左上打來，兩個邊都被光碰到了
+- Modal 出現動畫：從上輕落（`translateY(-10px → 0)` + `opacity: 0 → 1`），230ms ease-out——像把小冊子輕放在桌上
+- 關閉按鈕（✕）：muted 棕墨色，hover 後加深至主文字色，無背景底色——像帳冊上的一個手寫的「取消」符號
+
+**Modal 內部層次**：
+- 標題行：主文字色，略重（font-weight 600），有一條帳冊橫線等效線作為分隔（不是 `<hr>` 或 border-bottom 的冷灰線）
+- 內文區：次要表面底色（比 modal 容器略深，recessed 感）
+- 按鈕行：在底部，用帳冊橫線分隔，按鈕視覺重量適中
+
+---
+
+### 場景 D：Inputs / Tabs / Badges（舞台道具）
+
+**場景論述**：在這個工作坊裡，輸入框是「刻在石板上的書寫槽」，Tab 是「帳冊的書籤分頁條」，Badge 是「蠟封印記或墨水標記」。這三類元件是舞台上的道具，不是主角，但它們必須與整個空間的材質語言一致。
+
+**Inputs（書寫槽）**：
+- 底色：比 section card 深 4–5%（recessed，凹入表面）——寫字的地方比放紙張的地方更深入
+- Inset shadow：`inset 0 1px 3px rgba(80,50,15,0.12)`——模擬凹槽深度
+- Border：極淡的暖棕（帳冊橫線等級，`rgba(120,85,30,0.22)`），而不是冷藍或冷灰的 1px 線
+- Focus 狀態：左邊框從淡變深（`rgba(120,85,30,0.22) → rgba(160,100,30,0.55)`）——光打在書寫槽的左邊緣，讓書寫區更清晰。同時加 focus ring（琥珀金，`rgba(200,149,42,0.25)` 3px spread）
+- Placeholder：muted 棕墨色（hue 28–32°, L 60–65%），不是冷灰 `#9ca3af`
+- Textarea 的 resize handle：隱藏或替換為極淡的棕墨色角落標記——不用系統 default（那是冷灰的塑膠感）
+
+**`.input-tab`（文章輸入的分頁 Tab）**：
+- 非 active：muted 棕墨文字，底部邊線 `transparent`，背景透明——退縮成環境
+- Active：棕墨文字加深，底部邊線改為琥珀金 2px——「這個書籤被拉出來了」
+- Hover：文字從 muted 緩慢加深（150ms），底線不出現——hover 只是「看了一眼這個書籤」
+
+**Badges（墨水標記 / 蠟封印記）**：
+- Navbar 裡的 `.chip`（Mastered 數、Due 數）：目前是 `rgba(255,255,255,0.28)` 半透明白——這需要改為 `rgba(200,180,140,0.35)` 暖米半透明（在深色 header 上也帶暖調）
+- `.enrich-badge`（TR/GR 標籤）：把冷綠/冷藍底換為暖棕底，像用暖墨蓋的類別印章
+- 所有 badge 的 border-radius 降至 2–4px——印章、蠟封的形狀不是藥丸形
+
+---
+
+### 場景 E：主要 Section 卡片（共用 wrapper 互動規格）
+
+> 場景 B 描述了視覺隱喻與構圖。本場景補充「互動節奏」與「禁止清單」，讓 Phase 3 工程可直接引用。
+
+**視覺隱喻**：工作桌上攤開的工作紙張（fresh parchment sheets）。使用者在這些紙張上書寫、分析、閱讀。它們比底材輕（可以被移動），比帳冊面板輕（那本帳冊有厚度，這些紙張只是一頁）。
+
+**構圖角色**：承載（passive container）。Section cards 不主動引導使用者——它們提供容納與空間。沒有懸浮感，沒有呼喚「點我」的視覺訊號。它們靜靜地躺在桌面上。
+
+**HTML 對應**：`<section class="bg-white rounded-xl shadow p-6">` 是共用的 Tailwind wrapper pattern，覆蓋範圍：
+- `#articleInputSection`（文章輸入）
+- `#aiResult`（AI 分析結果）
+- `#readerSection`（閱讀模式）
+- 未命名 section（常用字、文法分析等）
+
+**互動節奏**：
+
+| 狀態 | 視覺處理 | 原因 |
+|------|---------|------|
+| **Base** | 羊皮紙底色（`--color-surface-card`）、定向陰影（SH-1）、頂邊 rim light | 紙張靜靜地擺在桌面 |
+| **Hover（容器層）** | **無任何視覺變化** | Section cards 是被動容器，它們不「回應」使用者的游標——工作桌上的一張紙不會因為你把手靠近而改變顏色 |
+| **子元件互動** | `.section-h`、返回按鈕等有各自的 hover/active 規格 | 容器不反應，但容器內的元件可以 |
+| **不存在的狀態** | Focus（外框）、Active（整容器按壓） | Section containers 不是可點擊物件，不需要這兩種狀態 |
+
+**`#readerSection` 例外**：
+
+`#readerTitle`（`id="readerTitle"`）沒有 `.section-h` class，需要單獨指定 `--color-ink-1`。
+
+返回按鈕（`#readerBackBtn`）原本有 `bg-gray-100 hover:bg-gray-200 text-gray-700`，狀態機：
+- Base：透明底 + `--color-input-border` groove 框線
+- Hover：文字加深（ink-2 → ink-1），框線加深（`--color-input-border-foc`），無背景
+- Active：inset 壓痕（`inset 0 1px 0 white-35%, inset 0 -1px 0 dark-18%`）
+- Focus-visible：琥珀光圈（與 pager 按鈕相同）
+
+**Negative constraints**：
+- **禁止 hover 染背景**：`bg-gray-100` 在容器 hover 時不應出現任何背景色變化
+- **禁止描邊深度**：容器邊界靠 SH-1 + rim light，不靠 `border: 1px solid`
+- **禁止冷色系陰影**：所有 `box-shadow` 使用 `rgba(80,50,15,x)` 暖棕
+- **禁止 border-radius 超過 8px**：`rounded-xl`（12px）→ `--radius-container`（8px）
+
+---
+
+### 場景 F：Pager（頁碼欄）
+
+**視覺隱喻**：帳冊每一章末尾的頁碼印記——細小的手寫墨字，告訴讀者目前在第幾頁。它不引人注意，但如果消失了，在厚重帳冊裡會迷失方向。分頁器按鈕是「翻頁的動作」，而不是「一個要被點擊的按鈕」。
+
+**構圖角色**：導覽（orientation aid）。出現在今日 / 複習 / 全部三個列表的底部。視覺重量最低——它是帳冊的索引，不是封面。
+
+**互動節奏（狀態機）**：
+
+| 狀態 | 視覺處理 | 材質感類比 |
+|------|---------|-----------|
+| **Base** | 透明底 + 1px `--color-input-border` groove 框線 + `--color-ink-2` 文字 | 書頁邊緣的留白與細線 |
+| **Hover** | 透明底（不變）+ 框線加深至 `--color-input-border-foc` + 文字加深至 `--color-ink-1` | 手指靠近書頁，書頁邊緣清晰起來 |
+| **Active（按壓中）** | 透明底 + inset 壓痕（`inset 0 1px 0 rgba(255,255,255,0.35)` 上 + `inset 0 -1px 0 rgba(42,35,22,0.18)` 下） | 蠟印下按——上方有高光反射，下方有壓印陰影 |
+| **Focus（`:focus`）** | `outline: none`（清除瀏覽器預設藍框） | 滑鼠點擊不應出現焦點環 |
+| **Focus-visible（`:focus-visible`）** | `outline: 2px solid --color-accent-focus`（琥珀光圈）+ `outline-offset: 2px` | 鍵盤導覽的光標——只有鍵盤才會出現 |
+| **Disabled** | `--color-ink-3` 文字 + `opacity: 0.45` + `pointer-events: none` + `outline: none` | 褪色的舊墨字——翻到這裡不能再翻了 |
+
+**頁碼文字**（span）：`--color-ink-2`（muted 棕墨色），非冷灰 `text-gray-500`。
+
+**`aria-disabled` vs 原生 `disabled`**：本專案 JS 使用原生 `btn.disabled = true/false`，不使用 `aria-disabled`。原生 disabled 自動從 tab order 移除，不需額外 `tabindex="-1"`。`pointer-events: none` 作為防禦性加層。
+
+**Negative constraints**：
+- **禁止冷灰**：`bg-gray-100`、`hover:bg-gray-200`、`text-gray-500` 全部清零
+- **禁止 hover 染背景**：hover 只加深文字和框線，背景永遠透明
+- **禁止 focus 環在滑鼠點擊時出現**：`:focus { outline: none }` + `:focus-visible { 琥珀光圈 }` 分離
+- **禁止把 disabled 按鈕的視覺設計成與 inactive 按鈕相同**：必須有可辨識的淡化（opacity + ink-3）
+
+---
+
+## 4. Negative Storyboard（跑偏示例）
+
+如果出現以下任何一種外觀，表示設計已偏離電影語言：
+
+---
+
+**跑偏 1：Primary Button 用整顆琥珀金底色**
+
+看起來：`background: #C8952A; color: #fff` 的整個按鈕是金色的。
+
+為什麼錯：琥珀金是稀有的光，不是底色。這讓整個面板變成「蜂蜜廣告」。Primary button 的正確語言是「深墨色底 + 頂邊金色 rim」——像一個壓印在帳冊上的蠟封標記，而不是一個發光的金牌。
+
+---
+
+**跑偏 2：Modal 有冷黑 overlay 和現代圓角 16px**
+
+看起來：`background: rgba(0,0,0,0.5)` 的背景 + 純白 `#fff` 的 modal 容器 + `border-radius: 16px` 標準圓角。
+
+為什麼錯：冷黑 overlay 是現代 SaaS 的語言（「網頁暗下來了，彈窗出現了」）。這個空間裡的 overlay 應是「桌面退到暖色陰影裡」，而不是「螢幕被黑幕覆蓋」。Modal 容器的 16px 圓角加純白底讓它看起來像 Shadcn Dialog，與整個羊皮紙空間格格不入。
+
+---
+
+**跑偏 3：Word List 的 Row 用 `border-bottom: 1px solid #e5e7eb`**
+
+看起來：冷灰的 Tailwind 分隔線，每一條都完全一致、完全清晰、完全冷調。
+
+為什麼錯：這是 Linear/Notion 的 list divider 語言。帳冊裡的橫線是墨水壓印在紙上的、帶透明度的暖棕痕跡，不是 CSS reset 的冷灰線。一旦出現這條線，所有羊皮紙材質感都被覆蓋了。
+
+---
+
+**跑偏 4：陰影是完全對稱的全方向柔焦**
+
+看起來：`box-shadow: 0 4px 16px rgba(0,0,0,0.15)`（x=0，完全置中）。
+
+為什麼錯：沒有方向的陰影意味著「沒有光源」。在 Google Material Design 的世界裡這是標準做法，在格拉斯作坊的世界裡這是物理錯誤。所有陰影必須有方向，且方向必須一致（左上 → 右下）。
+
+---
+
+**跑偏 5：Input Focus Ring 是藍色或紫色**
+
+看起來：`box-shadow: 0 0 0 3px rgba(59,130,246,0.4)`（Tailwind focus blue）或 `rgba(99,102,241,0.4)`（Tailwind indigo）。
+
+為什麼錯：藍色在這個空間裡不存在——整個色板是暖棕/琥珀/米色系。藍色 focus ring 讓輸入框瞬間變成「填 Google 表單」的感覺。Focus ring 必須是琥珀金方向 `rgba(200,149,42,0.30)`。
+
+---
+
+**跑偏 6：Active Tab 用冷藍底或整顆背景改色**
+
+看起來：`background: #EEF2FF; color: #4F46E5`（indigo active tab），或 `background: var(--primary)`（鼠尾草綠）。
+
+為什麼錯：Tab 的 active 狀態是書籤被拉出來的感覺，不是「這個按鈕被選中了所以它變色了」。Active 狀態的視覺語言應是底部邊線（物理的書籤標記），而不是整個背景色改變。整體改色 = SaaS pill navigation，不是帳冊分頁條。
+
+---
+
+**跑偏 7：容器有清晰的 `border: 1px solid var(--border)`**
+
+看起來：card 的邊界是一條 `1px solid` 的線，移除 box-shadow 後 card 仍清晰可辨。
+
+為什麼錯：帳冊頁面的邊界是光打在邊緣形成的。如果移除陰影、移除 rim light，這張紙就應該「融入」桌面——這才說明深度系統是靠光影建立的。一旦容器有清晰 border，深度系統就退化成描邊系統，整個空間感消失。
+
+---
+
+**跑偏 8：整個頁面背景是純色平面 `#F2F3EE`**
+
+看起來：背景是均勻的莫蘭迪米色，沒有任何噪點、沒有暗角、像一個顏色選取器的色塊。
+
+為什麼錯：這是前一版設計的狀態。純色平面背景讓整個空間感覺像「換了顏色的 SaaS」，而不是「有材質的工作坊」。所有的 section card、modal、word list panel 都必須放在一個「有物理質感的表面」上，而不是一個純色背景上。
+
+---
+
+**跑偏 9：所有 Badge/Chip 都是藥丸形（border-radius 9999px）**
+
+看起來：圓形帶橫線形狀的標籤，像 GitHub 的 label pill 或 Linear 的 status chip。
+
+為什麼錯：帳冊裡的類別標記是蠟封、印章、方形小票——它們有角。藥丸形 badge 是現代 SaaS 的 affordance 語言（表示可點擊的 tag），在這個工作坊裡是異物。Badge 的 radius 上限是 4px。
+
+---
+
+**跑偏 10：Header 使用冷色系漸層**
+
+看起來：現在的 `linear-gradient(135deg, var(--primary-dark), var(--primary))` 是鼠尾草綠漸層。如果換了電影色調但仍保留「多色漸層」的做法（例如：琥珀 → 棕橙的漸層橫幅）。
+
+為什麼錯：格拉斯工作坊的頂部是天花板，不是一個廣告橫幅。如果 header 用了強漸層，它會搶奪整個頁面最上方的視覺注意力，讓工作桌（主要內容區）退場。Header 的視覺重量應比 word list panel 低，不是高。
+
+---
+
+## Anti-Convergence 驗證
+
+**Beat sequence check（Tom Tykwer / Perfume 弧線）**
+- ✓ 弧線是 B2 → B7 → B10 → B6 → B18 → B19，不是通用行銷弧線（Hero → Features → Stats → CTA → Footer）
+- ✓ 至少 2 個場景（Word List + Modal）結構上與預設行銷版型明顯不同
+- ✓ 所有場景都從「電影特定場景」（帳冊、翻頁、標本架）出發，而非從通用 UI 模式出發
+
+**Hero archetype check**
+- Word List 的構圖：攤開的帳冊（Archive document）——不在標準 hero archetype 庫中，但源自電影的真實場景（Baldini 的書房帳冊）。這是正確的（庫應為靈感，不是限制）
+
+**Shell-ban list 執行驗證**
+- ✓ 沒有白色/淺藍卡片（改為羊皮紙暖棕）
+- ✓ 沒有 navy/slate dark mode（Day Mode 只做）
+- ✓ 沒有鼠尾草綠 primary accent
+- ✓ 沒有圓角 12px + 1px border only 的通用卡片（改為 shadow-as-border）
+- ✓ 沒有 muted cool gray `#6B7280` 文字
+- ✓ 沒有 icon-heavy action row 作為視覺主角

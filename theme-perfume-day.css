@@ -1,0 +1,469 @@
+/*
+ * theme-perfume-day.css
+ * Perfume (2006) — Day Mode
+ * Film: Perfume: The Story of a Murderer, Dir. Tom Tykwer, DP Frank Griebe
+ * Source of truth: compiled-spec.md
+ *
+ * Step 0 — Global Tokens (§2A–2G)
+ * Step 1 — Page background + M-1 texture + vignette (§3.1)
+ */
+
+:root {
+
+  /* ── 2A. Color Tokens ─────────────────────────────────────────────────── */
+
+  /* Background & Surface */
+  --color-bg:               #EDEBE4;   /* page floor; hue ~43°, L ~92% */
+  --color-surface-card:     #F0E8D4;   /* section card; fresh parchment */
+  --color-surface-panel:    #E8DCCA;   /* word list panel; old book cover */
+  --color-surface-recessed: #DFD0B8;   /* AI block, input bg, modal inner */
+  --color-surface-modal:    #F3ECDF;   /* modal container; paper held up */
+  --color-surface-panel-alt:#E3D7C0;   /* color-mix() fallback for Scheme B alternating rows */
+
+  /* Ink (text) */
+  --color-ink-1:            #1C1208;   /* primary; dried brown-black ink */
+  --color-ink-2:            #7A6045;   /* secondary/muted; faded brown ink */
+  --color-ink-3:            #A08568;   /* placeholder, disabled label */
+
+  /* Accent */
+  --color-accent:           #C8952A;   /* amber gold; sun through glass vessel */
+  --color-accent-dim:       #9E7B38;   /* mastered badge bg; desaturated accent */
+  --color-accent-focus:     rgba(200, 149, 42, 0.25);  /* focus ring spread */
+
+  /* Ledger Lines (CG-13) — alpha varies by row index % 3 */
+  --color-ledger-hi:        rgba(120, 85, 30, 0.20);   /* index % 3 === 0 */
+  --color-ledger-mid:       rgba(120, 85, 30, 0.15);   /* index % 3 === 1 */
+  --color-ledger-lo:        rgba(120, 85, 30, 0.12);   /* index % 3 === 2 */
+  --color-ledger-section:   rgba(120, 85, 30, 0.22);   /* section/header dividers */
+
+  /* Rim Light (CG-5) — inset top/left shadows simulate physical elevation */
+  --color-rim-card:         rgba(255, 220, 140, 0.30); /* section card top rim */
+  --color-rim-panel:        rgba(255, 220, 140, 0.38); /* word list panel top rim */
+  --color-rim-modal-top:    rgba(255, 220, 140, 0.35); /* modal top rim */
+  --color-rim-modal-left:   rgba(255, 220, 140, 0.20); /* modal left rim */
+  --color-rim-btn:          rgba(255, 220, 140, 0.28); /* primary button top rim */
+  --color-rim-hover:        rgba(255, 220, 140, 0.38); /* hover state rim (transient) */
+
+  /* Input Borders (CG-13 special rule) */
+  --color-input-border:     rgba(120, 85, 30, 0.22);   /* default groove edge */
+  --color-input-border-foc: rgba(160, 100, 30, 0.55);  /* left border on focus */
+
+  /* Modal Overlay */
+  --color-overlay:          rgba(40, 25, 8, 0.55);     /* warm brown; day-mode air */
+
+  /* Card separator — Option A (recommended): desaturated, counts as 0 accent points */
+  --color-card-separator:   rgba(160, 110, 30, 0.35);
+
+  /* Badge Semantic Colors */
+  --color-badge-pos-bg:      #3E3018;  /* part-of-speech; dark warm ink */
+  --color-badge-pos-fg:      #E8DCCA;  /* part-of-speech text; pale parchment */
+  --color-badge-mastered-bg: #4A5C2F;  /* mastered; dark moss-olive */
+  --color-badge-mastered-fg: #D8E0C4;  /* mastered text; pale moss-cream */
+  --color-badge-due-bg:      #7A5020;  /* due; dark amber-brown */
+  --color-badge-due-fg:      #EAD9BC;  /* due text; parchment */
+  --color-badge-enrich-bg:   #E4D5BA;  /* enrich badge (TR/GR) bg; warm tan */
+  --color-badge-enrich-fg:   #5C3D1A;  /* enrich badge text; dark brown */
+  --color-chip-navbar:       rgba(200, 180, 140, 0.35); /* navbar chip; warm semi-transparent */
+
+  /* ── 2B. Shadow Ladder ────────────────────────────────────────────────── */
+  /* All shadows: rgba(80, 50, 15, x) — warm brown, never rgba(0,0,0,x)    */
+  /* x-offset positive (right), y-offset positive + larger (down-dominant) */
+
+  --shadow-sh1: 2px 4px 16px rgba(80, 50, 15, 0.10);   /* section cards */
+  --shadow-sh2: 3px 6px 20px rgba(80, 50, 15, 0.14);   /* word list panel */
+  --shadow-sh3: 3px 8px 28px rgba(80, 50, 15, 0.22);   /* modal container */
+  --shadow-sh-groove: inset 0 1px 3px rgba(80, 50, 15, 0.12); /* inputs, recessed */
+  --shadow-sh-btn: 1px 2px 6px rgba(80, 50, 15, 0.18); /* primary button */
+
+  /* ── 2E. Radius & Spacing ─────────────────────────────────────────────── */
+
+  --radius-container: 8px;
+  --radius-modal:     8px;
+  --radius-btn:       6px;
+  --radius-input:     6px;
+  --radius-badge:     3px;  /* max 4px — never border-radius: 9999px on badges */
+  --radius-badge-max: 4px;
+
+  --pad-card:     20px 22px;  /* section card internal padding */
+  --pad-panel:    18px 20px;  /* word list panel internal padding */
+  --pad-modal:    22px 24px;  /* modal container padding */
+  --gap-btn-row:  8px;        /* gap between sibling buttons */
+  --gap-card-list:8px;        /* space-y between .wc-card items */
+
+  /* ── 2F. Motion Tokens ────────────────────────────────────────────────── */
+
+  --motion-expand:      280ms ease-out;   /* card expand (grid-rows 0fr → 1fr) */
+  --motion-collapse:    250ms ease-in;    /* card collapse; slightly faster */
+  --motion-modal-in:    230ms ease-out;   /* modal appear */
+  --motion-modal-out:   200ms ease-in;    /* modal disappear */
+  --motion-tab-slide:   200ms ease-out;   /* tab underline slide; no spring */
+  --motion-hover:       150ms ease-out;   /* hover surface transition */
+  --motion-focus:       120ms ease-out;   /* focus ring appear */
+  --motion-entrance:    160ms ease-out;   /* list item entrance base */
+  --motion-stagger:     40ms;             /* per-item stagger increment */
+
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Step 1 — Page Background + Texture + Vignette (compiled-spec.md §3.1)
+   CG rules applied: CG-1, CG-2, CG-3, CG-4, CG-6, CG-8
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/*
+ * Stacking plan (root stacking context):
+ *   z-index: 0  →  body::before  (M-1 texture, fixed)
+ *   z-index: 1  →  body::after   (vignette, fixed)
+ *   z-index: 2  →  header, main  (content — pushed above pseudo-elements)
+ *   z-index: 50–9999  →  modals/overlays (direct body children, unaffected)
+ *
+ * body::before and body::after use position:fixed — positioned to viewport.
+ * header and main get position:relative + z-index:2 to appear above them.
+ * All modals (#quizModal etc.) are direct <body> siblings of <main>, so they
+ * are NOT trapped in main's stacking context and their z-index:50 works as-is.
+ */
+
+/* ── Body: warm parchment base ── */
+body {
+  background: var(--color-bg) !important;  /* overrides theme-ocean.css !important */
+  color: var(--color-ink-1) !important;    /* replaces cold text-gray-800 */
+}
+
+/* ── M-1: Ground texture (fine powder grain) ── */
+/* SVG feTurbulence fractalNoise, seed locked → non-random on each load (CG-8) */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' seed='42' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 200px 200px;
+  opacity: 0.025;
+  mix-blend-mode: overlay;
+}
+
+/* ── Vignette: corners darker than center (CG-4) ── */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(40, 25, 8, 0.12) 100%);
+}
+
+/* ── Content layer: above texture + vignette ── */
+/* Modals are siblings of <main>, not children — they are NOT affected by this stacking context */
+header,
+main {
+  position: relative;
+  z-index: 2;
+}
+
+/* ── #mainGrid: transparent — let body bg (parchment floor) show through ── */
+#mainGrid {
+  background: transparent;
+}
+
+/* ── Reduced-motion: disable blend-mode grain ── */
+@media (prefers-reduced-motion: reduce) {
+  body::before {
+    display: none;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Component Overrides — Tab System (compiled-spec.md §3.3b)
+   Moved here from theme-perfume-wc.css so wc file stays .wc-card-only.
+   Selector hook: JS adds/removes .tab--active (not bg-gray-100).
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Sidebar tab group container ── */
+/* Only a top ledger line — no SaaS card border all around (CG-13) */
+#tabGroup {
+  border: none !important;
+  border-top: 1px solid var(--color-ledger-section) !important;
+  border-radius: 0 !important;       /* ledger strip, not pill */
+  overflow: hidden;
+}
+
+/* ── Sidebar tab buttons — base (inactive) ── */
+#tabToday,
+#tabDue,
+#tabAll {
+  background: transparent !important;
+  color: var(--color-ink-2) !important;
+  border: none !important;
+  transition: color 150ms ease-out !important;  /* text only; no bg animation */
+}
+
+/* ── Hover: deepen text only — no amber flood (CG-11) ── */
+#tabToday:hover,
+#tabDue:hover,
+#tabAll:hover {
+  background: transparent !important;
+  color: var(--color-ink-1) !important;
+}
+
+/* ── Active tab: warm-deeper bg + 2px amber underline (1 accent point, CG-11) ── */
+#tabToday.tab--active,
+#tabDue.tab--active,
+#tabAll.tab--active {
+  background: #DED2C0 !important;   /* fallback: color-mix(panel 95% + ink-1 5%) pre-computed */
+  background: color-mix(in srgb, var(--color-surface-panel) 95%, var(--color-ink-1) 5%) !important;
+  color: var(--color-ink-1) !important;
+  font-weight: 600 !important;
+  box-shadow: inset 0 -2px 0 var(--color-accent) !important;  /* 2px amber underline */
+}
+
+/* ── Night mode sidebar tabs ── */
+[data-theme="dark"] #tabToday,
+[data-theme="dark"] #tabDue,
+[data-theme="dark"] #tabAll {
+  background: transparent !important;
+  color: var(--wc-muted) !important;
+  border: none !important;
+}
+
+[data-theme="dark"] #tabToday:hover,
+[data-theme="dark"] #tabDue:hover,
+[data-theme="dark"] #tabAll:hover {
+  background: rgba(200, 120, 42, 0.10) !important;
+  color: var(--wc-word-color) !important;
+}
+
+[data-theme="dark"] #tabToday.tab--active,
+[data-theme="dark"] #tabDue.tab--active,
+[data-theme="dark"] #tabAll.tab--active {
+  background: rgba(200, 120, 42, 0.14) !important;
+  color: var(--wc-accent) !important;
+  box-shadow: inset 0 -2.5px 0 var(--wc-accent) !important;
+}
+
+/* ── Input tabs (.input-tab--active) — article section ── */
+/* Day: ink-1 text + 2px amber underline; same grammar as sidebar tab */
+#articleInputSection .input-tab--active {
+  color: var(--color-ink-1) !important;
+  border-bottom-color: var(--color-accent) !important;
+}
+
+/* Night: candleflame accent text + underline */
+[data-theme="dark"] #articleInputSection .input-tab--active {
+  color: var(--wc-accent) !important;
+  border-bottom-color: var(--wc-accent) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Component Overrides — Row Divider System (compiled-spec.md §3.3a)
+   Scheme A: Today / Due — breathing space + ledger bottom line
+   Scheme B: All — dense ledger page, alternating tone, top border
+   DOM: ul > li > div.wc-card
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Scheme A: Today / Due ─────────────────────────────────────────────── */
+/* Preserve space-y-2 (8px gap). Add ledger line below non-last items.      */
+
+#sidebarTodayList li:not(:last-child),
+#sidebarDueList li:not(:last-child) {
+  border-bottom: 1px solid;  /* color assigned by nth-child below */
+}
+
+/* Alpha jitter by position index (fixed at render — CG-8) */
+#sidebarTodayList li:nth-child(3n+1):not(:last-child),
+#sidebarDueList   li:nth-child(3n+1):not(:last-child) {
+  border-bottom-color: var(--color-ledger-hi);   /* rgba(120,85,30, 0.20) */
+}
+#sidebarTodayList li:nth-child(3n+2):not(:last-child),
+#sidebarDueList   li:nth-child(3n+2):not(:last-child) {
+  border-bottom-color: var(--color-ledger-mid);  /* rgba(120,85,30, 0.15) */
+}
+#sidebarTodayList li:nth-child(3n):not(:last-child),
+#sidebarDueList   li:nth-child(3n):not(:last-child) {
+  border-bottom-color: var(--color-ledger-lo);   /* rgba(120,85,30, 0.12) */
+}
+
+/* ── Scheme B: All ─────────────────────────────────────────────────────── */
+/* Dense ledger page: no gap, alternating bg tone, top-border dividers.     */
+
+/* Override Tailwind space-y-2 margin */
+#sidebarAllList > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 0 !important;
+}
+
+/* Alternating background on .wc-card (overrides wc.css with !important) */
+#sidebarAllList li:nth-child(odd) .wc-card {
+  background: var(--color-surface-panel) !important;
+}
+#sidebarAllList li:nth-child(even) .wc-card {
+  /* ~3% darker than panel; fallback pre-computed token, then color-mix */
+  background: var(--color-surface-panel-alt) !important;
+  background: color-mix(in srgb, var(--color-surface-panel) 97%, var(--color-ink-1) 3%) !important;
+}
+
+/* Top ledger line on all items; skip first (nothing above it) */
+#sidebarAllList li {
+  border-top: 1px solid;
+}
+#sidebarAllList li:first-child {
+  border-top: none;
+}
+
+/* Alpha jitter for top border */
+#sidebarAllList li:nth-child(3n+1) {
+  border-top-color: var(--color-ledger-hi);    /* 0.20 */
+}
+#sidebarAllList li:nth-child(3n+2) {
+  border-top-color: var(--color-ledger-mid);   /* 0.15 */
+}
+#sidebarAllList li:nth-child(3n) {
+  border-top-color: var(--color-ledger-lo);    /* 0.12 */
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Component Overrides — Pager (compiled-spec.md §3.3, pager area)
+   Targets: #todayPager, #duePager, #allPager — buttons + page-info span
+   Override Tailwind: bg-gray-100 hover:bg-gray-200 text-gray-500
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Pager buttons — base state */
+/* Ghost-warm: transparent bg, input-border groove edge, ink-2 text */
+#todayPager button,
+#duePager   button,
+#allPager   button {
+  background: transparent !important;
+  color: var(--color-ink-2) !important;
+  border: 1px solid var(--color-input-border) !important;  /* warm groove edge */
+  border-radius: var(--radius-btn) !important;
+  transition: color 150ms ease-out, border-color 150ms ease-out !important;
+}
+
+/* Hover: text deepens + edge slightly warmer; no background flood */
+#todayPager button:hover,
+#duePager   button:hover,
+#allPager   button:hover {
+  background: transparent !important;
+  color: var(--color-ink-1) !important;
+  border-color: var(--color-input-border-foc) !important;
+}
+
+/* Pressed (:active): paper-pressure groove — inset top highlight + bottom shadow */
+/* No background change; tactile depth via inset shadows only */
+#todayPager button:active,
+#duePager   button:active,
+#allPager   button:active {
+  background: transparent !important;
+  box-shadow:
+    inset 0  1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -1px 0 rgba(42,  35,  22,  0.18) !important;
+}
+
+/* Focus: suppress browser native outline (blue ring) on mouse click */
+#todayPager button:focus,
+#duePager   button:focus,
+#allPager   button:focus {
+  outline: none !important;
+}
+
+/* Focus-visible: amber ring — keyboard nav only */
+#todayPager button:focus-visible,
+#duePager   button:focus-visible,
+#allPager   button:focus-visible {
+  outline: 2px solid var(--color-accent-focus) !important;
+  outline-offset: 2px !important;
+  border-color: var(--color-input-border-foc) !important;
+}
+
+/* Disabled: recede to faded ink; block hover/focus states entirely */
+#todayPager button:disabled,
+#duePager   button:disabled,
+#allPager   button:disabled,
+#todayPager button[aria-disabled="true"],
+#duePager   button[aria-disabled="true"],
+#allPager   button[aria-disabled="true"] {
+  color: var(--color-ink-3) !important;
+  border-color: var(--color-input-border) !important;
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;  /* prevent hover/active from polluting disabled state */
+  outline: none !important;
+}
+
+/* Page-info span — ink-2, not cold text-gray-500 */
+#todayPageInfo,
+#duePageInfo,
+#allPageInfo {
+  color: var(--color-ink-2) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Step 3 — Section Cards (compiled-spec.md §3.2)
+   Targets: <section> elements only (not divs — modals/wordListCard/pet safe)
+   CG rules: CG-1, CG-2, CG-3, CG-5, CG-6, CG-9, CG-12
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Section card base ── */
+/* SH-1 + rim inset on top edge; no border (depth from shadow only, CG-2) */
+section.bg-white.rounded-xl.shadow {
+  background:    var(--color-surface-card) !important;  /* #F0E8D4 fresh parchment */
+  color:         var(--color-ink-2) !important;
+  border:        none !important;
+  border-radius: var(--radius-container) !important;    /* 8px */
+  padding:       var(--pad-card) !important;            /* 20px 22px */
+  box-shadow:
+    2px 4px 16px rgba(80, 50, 15, 0.10),                /* SH-1 directional warm shadow */
+    inset 0 1px 0 var(--color-rim-card) !important;     /* rim: candlelight on top edge */
+}
+
+/* Section containers are passive — no hover state per spec §3.2 */
+/* (Hover on child elements is handled per-component) */
+
+/* ── .section-h: D1 heading, dry ink, warm icon ── */
+.section-h {
+  color: var(--color-ink-1) !important;
+}
+
+.section-h svg {
+  color: var(--color-ink-2) !important;   /* slightly muted icon; inherits direction from text */
+  fill: none;                             /* preserve stroke-based icons (not filled) */
+}
+
+/* ── readerSection: title has no .section-h class ── */
+#readerSection #readerTitle {
+  color: var(--color-ink-1) !important;
+}
+
+/* ── readerSection: back button — ghost-warm, same state machine as pager ── */
+#readerSection button {
+  background:    transparent !important;
+  color:         var(--color-ink-2) !important;
+  border:        1px solid var(--color-input-border) !important;
+  border-radius: var(--radius-btn) !important;
+  box-shadow:    var(--shadow-sh-btn);
+  transition:    color var(--motion-hover), border-color var(--motion-hover) !important;
+}
+
+#readerSection button:hover {
+  background:   transparent !important;
+  color:        var(--color-ink-1) !important;
+  border-color: var(--color-input-border-foc) !important;
+}
+
+#readerSection button:active {
+  box-shadow:
+    inset 0  1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -1px 0 rgba(42, 35, 22, 0.18) !important;
+}
+
+#readerSection button:focus        { outline: none !important; }
+#readerSection button:focus-visible {
+  outline:        2px solid var(--color-accent-focus) !important;
+  outline-offset: 2px !important;
+  border-color:   var(--color-input-border-foc) !important;
+}
+
+/* ── readerSavedAt: timestamp — ink-3 ghost (not cold text-gray-400) ── */
+#readerSection #readerSavedAt {
+  color:   var(--color-ink-3) !important;
+  opacity: 0.9;
+}

@@ -8,6 +8,7 @@
   <!-- ① 加入 Tesseract.js（建議放在 head 或 body 結尾） -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <link rel="stylesheet" href="theme-ocean.css">
+  <link rel="stylesheet" href="theme-perfume-day.css">
   <link rel="stylesheet" href="theme-perfume-wc.css">
 
 
@@ -883,7 +884,7 @@
           <div id="wordListHeader" class="flex items-center justify-between mb-3">
             <h2 class="text-xl sidebar-title whitespace-nowrap flex-shrink-0 mr-6">單字清單</h2>
             <div id="tabGroup" class="inline-flex rounded-md overflow-hidden border">
-              <button id="tabToday" class="px-4 py-2 text-sm bg-gray-100 whitespace-nowrap">今日新增</button>
+              <button id="tabToday" class="px-4 py-2 text-sm tab--active whitespace-nowrap">今日新增</button>
               <button id="tabDue"   class="px-4 py-2 text-sm whitespace-nowrap">複習</button>
               <button id="tabAll"   class="px-4 py-2 text-sm whitespace-nowrap">全部</button>
             </div>
@@ -1039,6 +1040,7 @@
         <h3 class="text-lg sidebar-title">單字測驗 <span id="quizModeLabel" class="text-sm font-normal" style="color:var(--theme-color)"></span> <span id="quizProgress" class="text-sm font-normal text-gray-400"></span></h3>
         <button id="quizClose" class="text-gray-500 hover:text-gray-700">✕</button>
       </div>
+      <div class="quiz-progress-track"><div id="quizProgressBar" class="quiz-progress-fill" style="width:0%"></div></div>
       <div id="quizPrompt" class="text-gray-700"></div>
       <input id="quizAnswer" class="w-full p-3 border rounded" placeholder="輸入英文單字…"/>
       <div class="flex gap-2">
@@ -1090,6 +1092,7 @@
         </h3>
         <button id="grammarQuizClose" class="text-gray-400 hover:text-gray-600">✕</button>
       </div>
+      <div class="quiz-progress-track"><div id="grammarQuizProgressBar" class="quiz-progress-fill" style="width:0%"></div></div>
 
       <!-- Loading -->
       <div id="grammarQuizLoading" class="text-center py-10 text-gray-500 text-sm">
