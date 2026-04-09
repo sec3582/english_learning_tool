@@ -298,6 +298,26 @@ Maximum **3–4 amber-gold accent points** visible simultaneously per viewport.
 - `border: 1px solid` any color (depth is from SH-1 only)
 - Shadow with `x=0` (symmetric = no light source)
 
+#### 3.2a Shared Wrapper Override
+
+The legacy Tailwind pattern `bg-white rounded-xl shadow p-6` is applied to `#articleInputSection`, `#aiResult`, `#readerSection`, and any unnamed `<section>` with the same classes (常用字, 文法分析, etc.). All instances must be overridden:
+
+| Tailwind class | Override value | Spec ref |
+|---------------|---------------|---------|
+| `bg-white` | `background: var(--color-surface-card)` | CG-6, §2A |
+| `rounded-xl` (12px) | `border-radius: var(--radius-container)` (8px) | §2E |
+| `shadow` (symmetric, cold) | `box-shadow: SH-1` (warm directional) | §2B |
+| `p-6` | `padding: var(--pad-card)` (20px 22px) | §2E |
+
+**Hover contract:** Section containers have **no hover state**. No background change, no shadow change on mouse-over. Child elements (`.section-h`, buttons) have their own interaction specs.
+
+**Title rules:**
+- `.section-h` elements: `color: var(--color-ink-1)`, D1 serif weight 600; `border-bottom: 1px solid var(--color-ledger-section)` below the heading (ledger line, not UI border).
+- `#readerTitle`: does **not** carry the `.section-h` class — must be explicitly targeted with `color: var(--color-ink-1)` and the same D1 serif 600wt treatment.
+
+**Muted copy:**
+- `#readerSavedAt` and any timestamp / status line: `color: var(--color-ink-3)`. Never `text-gray-*` or any cold-grey value.
+
 ---
 
 ### 3.3 Word List Panel (`#wordListCard`)
@@ -522,6 +542,47 @@ Two tab systems exist. Both follow the same CG rules but differ in context.
 
 ---
 
+### 3.9 Pager
+
+**Storyboard:** Scene F — ledger chapter-end page marker.
+**CG rules: CG-9, CG-11 (no amber bg fill), CG-13**
+
+**HTML target:** Prev/Next `<button>` elements + page-count `<span>` at the bottom of each word-list tab (今日 / 複習 / 全部) inside `#wordListCard`.
+
+#### State Machine
+
+| State | Background | Text | Border | Shadow | Outline |
+|-------|-----------|------|--------|--------|---------|
+| **Base** | transparent | `var(--color-ink-2)` | `1px solid var(--color-input-border)` | none | none |
+| **Hover** | transparent | `var(--color-ink-1)` | `1px solid var(--color-input-border-foc)` | none | none |
+| **Active (press)** | transparent | `var(--color-ink-1)` | hover border | `inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -1px 0 rgba(42,35,22,0.18)` | none |
+| **`:focus`** | — | — | — | — | `none` (remove browser default) |
+| **`:focus-visible`** | — | — | — | — | `2px solid var(--color-accent-focus)` + `outline-offset: 2px` |
+| **Disabled** | transparent | `var(--color-ink-3)` | 45% opacity | none | none |
+
+**Disabled isolation:** `opacity: 0.45` on the disabled button + `pointer-events: none` as defensive layer. Project JS uses native `btn.disabled = true/false` — native `disabled` removes the element from tab order automatically. No `aria-disabled` attribute needed.
+
+#### Visual Contract
+
+- **Hover must not fill background.** `hover:bg-gray-*` is prohibited in pager scope. Only text and border deepen on hover.
+- **Active is an inset press-mark, not a fill.** Upper inset highlight + lower inset shadow = physical press against paper.
+- **`:focus` and `:focus-visible` are split.** Mouse click clears to `outline: none`. Keyboard navigation shows amber ring via `:focus-visible` only.
+- **Disabled is visually distinct from base.** `opacity: 0.45` + `ink-3` text — faded old ink, not the same grey as an inactive button.
+
+#### Page Count Span
+
+- Color: `var(--color-ink-2)` — muted warm brown. Never `text-gray-500`.
+- Font: D4 numeric rules (`font-variant-numeric: tabular-nums; font-feature-settings: "tnum"`).
+
+#### Prohibited
+
+- `bg-gray-100`, `hover:bg-gray-200`, `text-gray-500` — all cold-grey classes cleared
+- Amber (`var(--color-accent)`) as background on any pager element — page number can use accent as **text color** only, never background
+- `:focus` and `:focus-visible` sharing the same outline declaration — they must be in separate rule blocks
+- `aria-disabled` attribute — not used; native `disabled` only
+
+---
+
 ## 4. Acceptance Checklist
 
 All items are visually verifiable without code inspection.
@@ -655,3 +716,20 @@ input:focus {
 .wc-card[data-row-mod="2"]:not(:last-child) { border-bottom-color: var(--color-ledger-lo); }
 /* data-row-mod = index % 3 — set once on render/sort, not on every paint */
 ```
+
+---
+
+## 5. Spec Deviation Notes
+
+### 5.1 border vs SH-1 Conflict
+
+**Background:** The section card spec (§3.2) requires depth from shadow only — `border: none`, depth established by SH-1. This conflicts with any legacy or future version of the component that applies `border: 1px solid` as a structural edge.
+
+**Current implementation decision:** `border: none` — depth is built from `--shadow-sh1` (SH-1 drop shadow + rim inset) alone. Acceptance Checklist item 15 is the verification test: set `box-shadow: none` on a section card; the card boundary must become unclear or invisible. If the card edge remains clearly visible, a `border` property is present and must be removed.
+
+**If a groove border is introduced in future:** Before adding any `border` to section cards, update **both** of the following in sync:
+
+1. **§3.2 Section Cards** — change the `Border` column from `none` to the new groove border token, and add a sentence classifying the border as a groove-edge (CG-13 special rule, same semantic as input borders) rather than a UI border.
+2. **CG-2 in `storyboard.md`** — update the "唯一例外" rule to include the new border type, and re-run the "remove box-shadow" verification to confirm the card still passes.
+
+Keeping both documents in sync prevents the spec from drifting into contradiction between the storyboard constraint and the compiled implementation.

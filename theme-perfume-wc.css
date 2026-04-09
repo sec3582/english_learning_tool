@@ -875,37 +875,90 @@
 }
 
 
-/* ── 5. Pager Buttons (上一頁 / 下一頁) ──────────────────────────────── */
+/* ── 5. Pager Buttons — compiled-spec.md §3.9 (authority layer) ─────── */
+/* Day-mode rules. Dark-mode variants below. */
+/* Selectors: word-list tabs (today/due/all) + library section             */
 
+/* ── Base: ghost-warm, groove border, ink-2 text ── */
 #todayPrev, #todayNext,
 #duePrev,   #dueNext,
-#allPrev,   #allNext {
-  background: rgba(200, 149, 42, 0.10) !important;
-  color: var(--wc-muted) !important;
-  border: 1px solid rgba(200, 149, 42, 0.22) !important;
-  border-radius: 6px !important;
-  transition: background 0.15s ease, color 0.15s ease !important;
+#allPrev,   #allNext,
+#libraryPrev, #libraryNext {
+  background:    transparent !important;
+  color:         var(--color-ink-2) !important;
+  border:        1px solid var(--color-input-border) !important;
+  border-radius: var(--radius-btn) !important;
+  transition:    color 150ms ease-out, border-color 150ms ease-out !important;
 }
 
+/* ── Hover: text + border deepen; background stays transparent ── */
 #todayPrev:hover, #todayNext:hover,
 #duePrev:hover,   #dueNext:hover,
-#allPrev:hover,   #allNext:hover {
-  background: rgba(200, 149, 42, 0.20) !important;
-  color: var(--wc-word-color) !important;
+#allPrev:hover,   #allNext:hover,
+#libraryPrev:hover, #libraryNext:hover {
+  background:   transparent !important;
+  color:        var(--color-ink-1) !important;
+  border-color: var(--color-input-border-foc) !important;
 }
 
-/* Pager info text */
+/* ── Active/press: inset press-mark; no background flood ── */
+#todayPrev:active, #todayNext:active,
+#duePrev:active,   #dueNext:active,
+#allPrev:active,   #allNext:active,
+#libraryPrev:active, #libraryNext:active {
+  background: transparent !important;
+  box-shadow:
+    inset 0  1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -1px 0 rgba(42,  35,  22,  0.18) !important;
+}
+
+/* ── :focus — suppress blue ring on mouse click ── */
+#todayPrev:focus, #todayNext:focus,
+#duePrev:focus,   #dueNext:focus,
+#allPrev:focus,   #allNext:focus,
+#libraryPrev:focus, #libraryNext:focus {
+  outline: none !important;
+}
+
+/* ── :focus-visible — amber ring for keyboard nav only ── */
+#todayPrev:focus-visible, #todayNext:focus-visible,
+#duePrev:focus-visible,   #dueNext:focus-visible,
+#allPrev:focus-visible,   #allNext:focus-visible,
+#libraryPrev:focus-visible, #libraryNext:focus-visible {
+  outline:        2px solid var(--color-accent-focus) !important;
+  outline-offset: 2px !important;
+  border-color:   var(--color-input-border-foc) !important;
+}
+
+/* ── Disabled: faded ink; no interaction ── */
+#todayPrev:disabled, #todayNext:disabled,
+#duePrev:disabled,   #dueNext:disabled,
+#allPrev:disabled,   #allNext:disabled,
+#libraryPrev:disabled, #libraryNext:disabled {
+  color:          var(--color-ink-3) !important;
+  border-color:   var(--color-input-border) !important;
+  opacity:        0.45;
+  cursor:         not-allowed;
+  pointer-events: none !important;
+  outline:        none !important;
+}
+
+/* ── Page-info spans: ink-2, D4 tabular numerics ── */
 #todayPageInfo,
 #duePageInfo,
-#allPageInfo {
-  color: var(--wc-muted) !important;
+#allPageInfo,
+#libraryPageInfo {
+  color:                 var(--color-ink-2) !important;
+  font-variant-numeric:  tabular-nums;
+  font-feature-settings: "tnum";
 }
 
+/* ── Dark-mode pager overrides (Night Mode scope) ── */
 [data-theme="dark"] #todayPrev, [data-theme="dark"] #todayNext,
 [data-theme="dark"] #duePrev,   [data-theme="dark"] #dueNext,
 [data-theme="dark"] #allPrev,   [data-theme="dark"] #allNext {
-  background: rgba(200, 120, 42, 0.09) !important;
-  color: var(--wc-muted) !important;
+  background:   rgba(200, 120, 42, 0.09) !important;
+  color:        var(--wc-muted) !important;
   border-color: rgba(200, 120, 42, 0.18) !important;
 }
 
@@ -913,7 +966,7 @@
 [data-theme="dark"] #duePrev:hover,   [data-theme="dark"] #dueNext:hover,
 [data-theme="dark"] #allPrev:hover,   [data-theme="dark"] #allNext:hover {
   background: rgba(200, 120, 42, 0.18) !important;
-  color: var(--wc-word-color) !important;
+  color:      var(--wc-word-color) !important;
 }
 
 [data-theme="dark"] #todayPageInfo,
@@ -1698,4 +1751,181 @@
   #grammarQuizAnswer {
     transition: none !important;
   }
+}
+
+
+/* Phase 4 cleanup: Cold-gray purge + focus ring normalization
+   Source: P1–P7 checklist (HTML has Tailwind gray utilities)
+   Policy: override layer only (no HTML/JS changes)
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* ── P1. Article-section inputs ─────────────────────────────────────────── */
+/* Targets: #articleInput (textarea), #urlInput, #librarySearch             */
+/* Replaces: border-gray-200, placeholder-gray-300, text-gray-800,          */
+/*           focus:ring-[#A3B18A]/20, focus:border-[#A3B18A]               */
+
+#articleInput,
+#urlInput,
+#librarySearch {
+  background:    var(--color-surface-recessed) !important;
+  border:        1px solid var(--color-input-border) !important;
+  border-radius: var(--radius-input) !important;
+  color:         var(--color-ink-1) !important;
+  box-shadow:    var(--shadow-sh-groove) !important;
+}
+
+#articleInput::placeholder,
+#urlInput::placeholder,
+#librarySearch::placeholder {
+  color:   var(--color-ink-3) !important;
+  opacity: 1 !important;
+}
+
+#articleInput:focus,
+#urlInput:focus,
+#librarySearch:focus {
+  outline:            none !important;
+  border-color:       var(--color-input-border) !important;
+  border-left-color:  var(--color-input-border-foc) !important;
+  border-left-width:  3px !important;
+  box-shadow:
+    var(--shadow-sh-groove),
+    0 0 0 3px var(--color-accent-focus) !important;
+}
+
+/* ── P2. Word-creation section inputs ──────────────────────────────────── */
+/* Targets: custom word query input + all cw_* form fields                  */
+/* Replaces: border-gray-200, focus:border-[#7C96AB], focus:ring-[#7C96AB] */
+
+#customWordInput,
+#cw_word, #cw_pos, #cw_level, #cw_def,
+#cw_example_en, #cw_example_ai, #cw_example_zh {
+  background:    var(--color-surface-recessed) !important;
+  border:        1px solid var(--color-input-border) !important;
+  border-radius: var(--radius-input) !important;
+  color:         var(--color-ink-1) !important;
+  box-shadow:    var(--shadow-sh-groove) !important;
+}
+
+#customWordInput::placeholder,
+#cw_word::placeholder, #cw_pos::placeholder,
+#cw_level::placeholder, #cw_def::placeholder {
+  color:   var(--color-ink-3) !important;
+  opacity: 1 !important;
+}
+
+#customWordInput:focus,
+#cw_word:focus, #cw_pos:focus, #cw_level:focus, #cw_def:focus,
+#cw_example_en:focus, #cw_example_ai:focus, #cw_example_zh:focus {
+  outline:            none !important;
+  border-color:       var(--color-input-border) !important;
+  border-left-color:  var(--color-input-border-foc) !important;
+  border-left-width:  3px !important;
+  box-shadow:
+    var(--shadow-sh-groove),
+    0 0 0 3px var(--color-accent-focus) !important;
+}
+
+/* Word-creation section labels: text-gray-500 → ink-2 */
+section.bg-white.rounded-xl.shadow label {
+  color: var(--color-ink-2) !important;
+}
+
+/* ── P3. Floating text — article section ──────────────────────────────── */
+/* #ocrStatus, #loading: ghost ink, not cold gray-400                      */
+#ocrStatus,
+#loading {
+  color: var(--color-ink-3) !important;
+}
+
+/* URL tab description + other inline text-gray-400 in article section */
+#articleInputSection .text-gray-400 {
+  color: var(--color-ink-3) !important;
+}
+
+/* Tab group bottom border: border-gray-100 → warm ledger line */
+#articleInputSection .border-b {
+  border-bottom-color: var(--color-ledger-lo) !important;
+}
+
+/* #libraryPager container: text-gray-400 on the wrapper div */
+#libraryPager {
+  color: var(--color-ink-2) !important;
+}
+
+/* ── P4. PixelPet card ──────────────────────────────────────────────────── */
+#pixelPetCard .text-gray-400,
+#pixelPetCard .text-gray-500 {
+  color: var(--color-ink-3) !important;
+}
+
+/* ── P5. Backup card ────────────────────────────────────────────────────── */
+#backupCard .text-gray-600,
+#backupCard .text-gray-700 {
+  color: var(--color-ink-2) !important;
+}
+
+/* Backup card buttons: bg-gray-100/50/white + hover:bg-gray-200 + border-gray-300 */
+#backupCard .bg-gray-100,
+#backupCard .bg-gray-50,
+#backupCard .bg-white {
+  background: var(--color-surface-recessed) !important;
+  color:      var(--color-ink-2) !important;
+}
+
+#backupCard .hover\:bg-gray-200:hover,
+#backupCard .hover\:bg-gray-100:hover,
+#backupCard .hover\:bg-gray-50:hover {
+  background: var(--color-surface-panel) !important;
+}
+
+#backupCard .border-gray-300 {
+  border-color: var(--color-input-border) !important;
+}
+
+/* ── P6. Usage modal ────────────────────────────────────────────────────── */
+#usageModal .text-gray-400,
+#usageModal .text-gray-500 { color: var(--color-ink-3) !important; }
+
+#usageModal .text-gray-600,
+#usageModal .text-gray-700 { color: var(--color-ink-2) !important; }
+
+#usageModal .text-gray-900   { color: var(--color-ink-1) !important; }
+
+#usageClose             { color: var(--color-ink-3) !important; }
+#usageClose:hover       { color: var(--color-ink-1) !important; }
+
+#usageReset {
+  border-color: var(--color-input-border) !important;
+  color:        var(--color-ink-3) !important;
+  background:   transparent !important;
+}
+#usageReset:hover {
+  border-color: var(--color-input-border-foc) !important;
+  color:        var(--color-ink-2) !important;
+}
+
+#usageBudgetInput {
+  background:    var(--color-surface-recessed) !important;
+  border:        1px solid var(--color-input-border) !important;
+  color:         var(--color-ink-1) !important;
+  box-shadow:    var(--shadow-sh-groove) !important;
+}
+#usageBudgetInput:focus {
+  outline:           none !important;
+  border-left-color: var(--color-input-border-foc) !important;
+  border-left-width: 3px !important;
+  box-shadow:
+    var(--shadow-sh-groove),
+    0 0 0 3px var(--color-accent-focus) !important;
+}
+
+/* ── P7. Sync modal ─────────────────────────────────────────────────────── */
+/* #syncClose: bg-gray-200 → warm surface */
+#syncClose {
+  background: var(--color-surface-recessed) !important;
+  color:      var(--color-ink-2) !important;
+}
+#syncClose:hover {
+  background: var(--color-surface-panel) !important;
 }

@@ -320,81 +320,7 @@ main {
   border-top-color: var(--color-ledger-lo);    /* 0.12 */
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   Component Overrides — Pager (compiled-spec.md §3.3, pager area)
-   Targets: #todayPager, #duePager, #allPager — buttons + page-info span
-   Override Tailwind: bg-gray-100 hover:bg-gray-200 text-gray-500
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-/* Pager buttons — base state */
-/* Ghost-warm: transparent bg, input-border groove edge, ink-2 text */
-#todayPager button,
-#duePager   button,
-#allPager   button {
-  background: transparent !important;
-  color: var(--color-ink-2) !important;
-  border: 1px solid var(--color-input-border) !important;  /* warm groove edge */
-  border-radius: var(--radius-btn) !important;
-  transition: color 150ms ease-out, border-color 150ms ease-out !important;
-}
-
-/* Hover: text deepens + edge slightly warmer; no background flood */
-#todayPager button:hover,
-#duePager   button:hover,
-#allPager   button:hover {
-  background: transparent !important;
-  color: var(--color-ink-1) !important;
-  border-color: var(--color-input-border-foc) !important;
-}
-
-/* Pressed (:active): paper-pressure groove — inset top highlight + bottom shadow */
-/* No background change; tactile depth via inset shadows only */
-#todayPager button:active,
-#duePager   button:active,
-#allPager   button:active {
-  background: transparent !important;
-  box-shadow:
-    inset 0  1px 0 rgba(255, 255, 255, 0.35),
-    inset 0 -1px 0 rgba(42,  35,  22,  0.18) !important;
-}
-
-/* Focus: suppress browser native outline (blue ring) on mouse click */
-#todayPager button:focus,
-#duePager   button:focus,
-#allPager   button:focus {
-  outline: none !important;
-}
-
-/* Focus-visible: amber ring — keyboard nav only */
-#todayPager button:focus-visible,
-#duePager   button:focus-visible,
-#allPager   button:focus-visible {
-  outline: 2px solid var(--color-accent-focus) !important;
-  outline-offset: 2px !important;
-  border-color: var(--color-input-border-foc) !important;
-}
-
-/* Disabled: recede to faded ink; block hover/focus states entirely */
-#todayPager button:disabled,
-#duePager   button:disabled,
-#allPager   button:disabled,
-#todayPager button[aria-disabled="true"],
-#duePager   button[aria-disabled="true"],
-#allPager   button[aria-disabled="true"] {
-  color: var(--color-ink-3) !important;
-  border-color: var(--color-input-border) !important;
-  opacity: 0.45;
-  cursor: not-allowed;
-  pointer-events: none;  /* prevent hover/active from polluting disabled state */
-  outline: none !important;
-}
-
-/* Page-info span — ink-2, not cold text-gray-500 */
-#todayPageInfo,
-#duePageInfo,
-#allPageInfo {
-  color: var(--color-ink-2) !important;
-}
+/* ── Pager styles live in theme-perfume-wc.css (override layer). Keep day.css token-only. ── */
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Step 3 — Section Cards (compiled-spec.md §3.2)
@@ -416,11 +342,21 @@ section.bg-white.rounded-xl.shadow {
 }
 
 /* Section containers are passive — no hover state per spec §3.2 */
-/* (Hover on child elements is handled per-component) */
+/* Explicit reset: no background/shadow change on hover (CG-9) */
+section.bg-white.rounded-xl.shadow:hover {
+  background: var(--color-surface-card) !important;
+  box-shadow:
+    2px 4px 16px rgba(80, 50, 15, 0.10),
+    inset 0 1px 0 var(--color-rim-card) !important;
+}
 
-/* ── .section-h: D1 heading, dry ink, warm icon ── */
+/* ── .section-h: D1 heading, dry ink, ledger divider below, warm icon ── */
 .section-h {
-  color: var(--color-ink-1) !important;
+  color:         var(--color-ink-1) !important;
+  font-family:   "EB Garamond", "Lora", "Crimson Pro", Georgia, serif !important;
+  font-weight:   600 !important;
+  border-bottom: 1px solid var(--color-ledger-section) !important;  /* ledger line, not UI border */
+  padding-bottom: 0.5em;
 }
 
 .section-h svg {
@@ -428,9 +364,11 @@ section.bg-white.rounded-xl.shadow {
   fill: none;                             /* preserve stroke-based icons (not filled) */
 }
 
-/* ── readerSection: title has no .section-h class ── */
+/* ── readerSection: title has no .section-h class — explicit D1 treatment ── */
 #readerSection #readerTitle {
-  color: var(--color-ink-1) !important;
+  color:       var(--color-ink-1) !important;
+  font-family: "EB Garamond", "Lora", "Crimson Pro", Georgia, serif !important;
+  font-weight: 600 !important;
 }
 
 /* ── readerSection: back button — ghost-warm, same state machine as pager ── */
