@@ -1,0 +1,449 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   PERFUME WC — Word Card Cinematic Redesign
+   Director: Tom Tykwer | Film: Perfume: The Story of a Murderer (2006)
+   DP: Frank Griebe
+   Day  → Grasse: parchment + prismatic amber light
+   Night → Paris cellar: near-black stone + single candleflame
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── 1. Token Layer ─────────────────────────────────────────────────── */
+
+:root {
+  --wc-surface:    #F5EDDA;
+  --wc-ai-bg:      #EAD9BC;
+  --wc-word-color: #1C1208;
+  --wc-muted:      #7A6045;
+  --wc-accent:     #C8952A;
+  --wc-rule:       rgba(200, 149, 42, 0.25);
+  --wc-shadow-a:   rgba(180, 140, 80, 0.22);
+  --wc-shadow-b:   rgba(100,  70, 20, 0.10);
+  --wc-shadow-c:   rgba(100,  70, 20, 0.05);
+  --wc-chip-bg:    rgba(200, 149, 42, 0.10);
+  --wc-chip-bdr:   rgba(200, 149, 42, 0.22);
+  --wc-chip-ant-bg:  rgba(200,  80, 42, 0.09);
+  --wc-chip-ant-bdr: rgba(200,  80, 42, 0.20);
+}
+
+[data-theme="dark"] {
+  --wc-surface:    #18100A;
+  --wc-ai-bg:      #0E0906;
+  --wc-word-color: #EFE1C0;
+  --wc-muted:      #956F42;
+  --wc-accent:     #C8782A;
+  --wc-rule:       rgba(200, 120, 42, 0.14);
+  --wc-shadow-a:   rgba(200, 120, 42, 0.09);
+  --wc-shadow-b:   rgba(  0,   0,  0, 0.60);
+  --wc-shadow-c:   rgba(  0,   0,  0, 0.40);
+  --wc-chip-bg:    rgba(200, 120, 42, 0.12);
+  --wc-chip-bdr:   rgba(200, 120, 42, 0.25);
+  --wc-chip-ant-bg:  rgba(200,  70, 42, 0.12);
+  --wc-chip-ant-bdr: rgba(200,  70, 42, 0.24);
+}
+
+
+/* ── 2. Card Container ───────────────────────────────────────────────── */
+
+.wc-card {
+  position: relative;
+  isolation: isolate;                  /* stacking context for noise layer */
+  background: var(--wc-surface);
+  border: none;                        /* shadow-as-border replaces hard edge */
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px var(--wc-shadow-a),      /* warm amber edge */
+    0 2px 8px var(--wc-shadow-b),      /* warm mid shadow */
+    0 8px 24px var(--wc-shadow-c);     /* ambient glow */
+  transition: box-shadow 0.22s ease;
+}
+
+/* Noise texture — parchment / vellum surface
+   Source: Texture #1 (film grain fine, fractalNoise, textures.md)
+   Opacity 0.03 keeps it below reading threshold; overlay blend mode
+   brightens highlights and darkens darks subtly on any background.    */
+.wc-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: -1;
+  /* SVG feTurbulence noise — no external file needed */
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='pf-noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23pf-noise)'/%3E%3C/svg%3E");
+  opacity: 0.03;
+  mix-blend-mode: overlay;
+}
+
+[data-theme="dark"] .wc-card::before {
+  opacity: 0.025;
+}
+
+/* Night: candle-top inset glow + deep shadow */
+[data-theme="dark"] .wc-card {
+  box-shadow:
+    0 0 0 1px var(--wc-shadow-a),
+    0 4px 16px var(--wc-shadow-b),
+    inset 0 1px 0 rgba(200, 120, 42, 0.08);  /* candle edge on top */
+}
+
+/* Night hover: amber edge brightens, depth increases */
+[data-theme="dark"] .wc-card:hover {
+  background: var(--wc-surface) !important;
+  box-shadow:
+    0 0 0 1px rgba(200, 120, 42, 0.18) !important,
+    0 6px 22px rgba(0, 0, 0, 0.70)     !important,
+    inset 0 1px 0 rgba(200, 120, 42, 0.13) !important;
+}
+
+
+/* ── 3. Header ───────────────────────────────────────────────────────── */
+
+.wc-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 16px 18px 14px;
+  cursor: pointer;
+  user-select: none;
+}
+
+
+/* ── 4. Word Title — Specimen Label ─────────────────────────────────── */
+
+/* The English word: specimen headline.
+   Larger, heavier, with a thin amber ruled line below it.
+   No competing element (icon, badge) at this vertical zone.           */
+.wc-title strong {
+  display: block;
+  color: var(--wc-word-color);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+  padding-bottom: 7px;
+  margin-bottom: 5px;
+  border-bottom: 1px solid var(--wc-rule);   /* amber ruled separator */
+  transition: color 0.2s ease;
+}
+
+/* Word click hover → accent, not green */
+.wc-title .wc-word:hover {
+  color: var(--wc-accent) !important;
+}
+
+/* Definition row — classification subtitle */
+.wc-title .wc-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 4px;
+  margin-top: 0;
+}
+
+.wc-title .wc-pos {
+  color: var(--wc-muted);
+  font-size: 0.8125rem;
+  font-weight: 400;
+  font-style: italic;
+  white-space: nowrap;
+}
+
+.wc-title .wc-def {
+  color: var(--wc-muted);
+  font-size: 0.875rem;
+  font-weight: 400;
+  word-break: keep-all;
+}
+
+/* Arrow — subordinate indicator, not visual anchor */
+.wc-arrow {
+  color: var(--wc-muted) !important;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+  margin-top: 6px;
+  opacity: 0.55;
+  transition: opacity 0.15s ease;
+}
+
+.wc-header:hover .wc-arrow {
+  opacity: 0.9;
+}
+
+
+/* ── 5. Body — Scroll Reveal ─────────────────────────────────────────── */
+/* Source: Interaction #24 (Accordion unfold) — adapted as "unrolling scroll"
+   Uses max-height transition instead of grid-rows for broader compatibility.
+   Critically: overrides Tailwind .hidden (display:none !important) with
+   !important declarations so JS arrow-toggle still works without code changes. */
+
+.wc-card .wc-body {
+  display: flex !important;    /* beats Tailwind .hidden specificity */
+  flex-direction: column;
+  gap: 10px;
+  padding: 6px 18px 18px;
+  max-height: 1500px;
+  overflow: hidden;
+  opacity: 1;
+  transition:
+    max-height 0.28s ease-out,
+    opacity    0.18s ease-out,
+    padding    0.26s ease-out;
+}
+
+.wc-body.hidden {
+  max-height:     0 !important;
+  opacity:        0 !important;
+  padding-top:    0 !important;
+  padding-bottom: 0 !important;
+}
+
+
+/* ── 6. Article Example ──────────────────────────────────────────────── */
+
+.wc-article {
+  color: var(--wc-word-color);
+  font-size: 0.9375rem;
+  font-weight: 400;
+  line-height: 1.72;
+  font-style: italic;
+  margin: 0;
+  opacity: 0.8;
+}
+
+
+/* ── 7. AI Analysis Block — Recessed Panel ──────────────────────────── */
+/* Physically lower than the card surface: darker background + inset shadow
+   simulates the cellar recess or the shadow inside a desk drawer.         */
+
+.wc-ai {
+  background: var(--wc-ai-bg);
+  border-radius: 8px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.07);
+}
+
+[data-theme="dark"] .wc-ai {
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.45);
+}
+
+.wc-ai-text {
+  margin: 0;
+  color: var(--wc-word-color);
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  font-weight: 400;
+}
+
+.wc-ai-zh {
+  margin: 0;
+  margin-top: 3px;
+  color: var(--wc-muted);
+  font-size: 0.875rem;
+  line-height: 1.62;
+  font-weight: 400;
+}
+
+
+/* ── 8. Relation Chips ───────────────────────────────────────────────── */
+
+.wc-rel-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--wc-accent) !important;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  min-width: 2.5rem;
+}
+
+.wc-rel-chip {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  color: var(--wc-word-color) !important;
+  background: var(--wc-chip-bg) !important;
+  border: 1px solid var(--wc-chip-bdr) !important;
+}
+
+.wc-rel-chip--ant {
+  color: var(--wc-word-color) !important;
+  background: var(--wc-chip-ant-bg) !important;
+  border-color: var(--wc-chip-ant-bdr) !important;
+}
+
+
+/* ── 9. Footer — Ledger Signature Line ──────────────────────────────── */
+
+.wc-footer {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding-top: 10px;
+  margin-top: 2px;
+  border-top: 1px solid var(--wc-rule);
+}
+
+/* Save button: marginalia, not a CTA */
+.wc-btn-save {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  color: var(--wc-muted) !important;
+  background: none !important;
+  border: none !important;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.wc-btn-save:hover {
+  color: var(--wc-accent) !important;
+  background: rgba(200, 149, 42, 0.09) !important;
+}
+
+[data-theme="dark"] .wc-btn-save:hover {
+  color: var(--wc-accent) !important;
+  background: rgba(200, 120, 42, 0.12) !important;
+}
+
+
+/* ── 10. AI Help Button ──────────────────────────────────────────────── */
+
+.wc-ai-help {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--wc-accent) !important;
+  background: var(--wc-chip-bg) !important;
+  border: 1px solid var(--wc-chip-bdr) !important;
+  cursor: pointer;
+  align-self: flex-end;
+  padding: 5px 12px;
+  border-radius: 8px;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.wc-ai-help:hover {
+  background: rgba(200, 149, 42, 0.18) !important;
+  border-color: rgba(200, 149, 42, 0.35) !important;
+}
+
+[data-theme="dark"] .wc-ai-help {
+  background: rgba(200, 120, 42, 0.12) !important;
+  border-color: rgba(200, 120, 42, 0.22) !important;
+}
+
+[data-theme="dark"] .wc-ai-help:hover {
+  background: rgba(200, 120, 42, 0.22) !important;
+  border-color: rgba(200, 120, 42, 0.38) !important;
+}
+
+
+/* ── 11. Delete Corner ───────────────────────────────────────────────── */
+
+.wc-del-corner {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  color: var(--wc-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 3px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+}
+
+.wc-card:hover .wc-del-corner { opacity: 1; }
+
+.wc-del-corner:hover {
+  color: #C0392B !important;
+}
+
+
+/* ── 12. Dark Mode Word Hover Override ───────────────────────────────── */
+/* Overrides the existing #9bf6ff color set in theme-ocean.css         */
+
+[data-theme="dark"] .wc-card:hover .wc-title strong {
+  color: var(--wc-word-color) !important;
+}
+
+[data-theme="dark"] .wc-title .wc-word:hover {
+  color: var(--wc-accent) !important;
+}
+
+
+/* ── 13. List Item Entrance ──────────────────────────────────────────── */
+/* Subtle: pages placed on a desk, not launched into orbit.
+   Only triggers on initial mount via CSS animation (no JS needed).
+   fadeUp used once per component — within the 2× limit for the page.  */
+
+@keyframes wc-enter {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+#sidebarTodayList li,
+#sidebarDueList   li,
+#sidebarAllList   li {
+  animation: wc-enter 0.22s ease-out both;
+}
+
+/* Stagger — first 5 cards feel sequential; 6+ arrive together */
+#sidebarTodayList li:nth-child(1),
+#sidebarDueList   li:nth-child(1),
+#sidebarAllList   li:nth-child(1) { animation-delay:   0ms; }
+
+#sidebarTodayList li:nth-child(2),
+#sidebarDueList   li:nth-child(2),
+#sidebarAllList   li:nth-child(2) { animation-delay:  40ms; }
+
+#sidebarTodayList li:nth-child(3),
+#sidebarDueList   li:nth-child(3),
+#sidebarAllList   li:nth-child(3) { animation-delay:  80ms; }
+
+#sidebarTodayList li:nth-child(4),
+#sidebarDueList   li:nth-child(4),
+#sidebarAllList   li:nth-child(4) { animation-delay: 120ms; }
+
+#sidebarTodayList li:nth-child(5),
+#sidebarDueList   li:nth-child(5),
+#sidebarAllList   li:nth-child(5) { animation-delay: 160ms; }
+
+#sidebarTodayList li:nth-child(n+6),
+#sidebarDueList   li:nth-child(n+6),
+#sidebarAllList   li:nth-child(n+6) { animation-delay: 200ms; }
+
+
+/* ── 14. Reduced Motion ──────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .wc-card::before {
+    display: none;                   /* remove noise texture animation */
+  }
+  .wc-body {
+    transition: opacity 0.12s ease-out !important;
+  }
+  #sidebarTodayList li,
+  #sidebarDueList   li,
+  #sidebarAllList   li {
+    animation: none;
+    opacity: 1;
+  }
+}
