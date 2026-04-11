@@ -323,6 +323,51 @@ main {
 /* ── Pager styles live in theme-perfume-wc.css (override layer). Keep day.css token-only. ── */
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   Step 4 — Word List Panel Container (compiled-spec.md §3.3)
+   Target: #wordListCard  — "Hero Scene: the open ledger"
+   CG rules: CG-1, CG-2, CG-3, CG-5, CG-6, CG-12
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Panel base: surface-panel + SH-2 + rim-panel ── */
+/* Deliberately heavier than section cards: darker bg, larger shadow, stronger rim */
+#wordListCard {
+  background:    var(--color-surface-panel) !important;  /* #E8DCCA — 3–5% darker than card */
+  border:        none !important;                        /* CG-2: depth from shadow only */
+  border-radius: var(--radius-container) !important;     /* 8px */
+  padding:       var(--pad-panel) !important;            /* 18px 20px */
+  box-shadow:
+    3px 6px 20px rgba(80, 50, 15, 0.14),                 /* SH-2: heavier than SH-1 */
+    inset 0 1px 0 var(--color-rim-panel) !important;     /* rim: 0.38 — stronger than card's 0.30 */
+  isolation: isolate;                                    /* contain M-2 soft-light (CG-3) */
+  position: relative;
+}
+
+/* ── M-2: Parchment texture on panel surface (CG-3) ── */
+/* Short fiber, slight directional randomness; seed locked (CG-8)           */
+/* z-index: -1 → above panel background, below all child content            */
+#wordListCard::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  z-index: -1;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='turbulence' baseFrequency='0.45 0.35' numOctaves='3' seed='17' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 200px 200px;
+  opacity: 0.035;
+  mix-blend-mode: soft-light;
+}
+
+/* ── Panel title (h2.sidebar-title) — D1 serif heading ── */
+#wordListCard .sidebar-title {
+  color:       var(--color-ink-1) !important;
+  font-family: "EB Garamond", "Lora", "Crimson Pro", Georgia, serif !important;
+  font-weight: 600 !important;
+  font-size:   1.0625rem !important;   /* 17px — section heading scale (§2D) */
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    Step 3 — Section Cards (compiled-spec.md §3.2)
    Targets: <section> elements only (not divs — modals/wordListCard/pet safe)
    CG rules: CG-1, CG-2, CG-3, CG-5, CG-6, CG-9, CG-12
@@ -404,4 +449,847 @@ section.bg-white.rounded-xl.shadow:hover {
 #readerSection #readerSavedAt {
   color:   var(--color-ink-3) !important;
   opacity: 0.9;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Step 5 — Inputs / Textarea / Select (compiled-spec.md §3.6)
+   CG rules: CG-9, CG-13 (groove edge special rule), CG-14
+   Overrides: Tailwind focus:border-[#7C96AB], focus:ring-gray-300, focus:outline-none
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Shared selector alias (radio / checkbox / file / range keep native rendering) ── */
+
+/* ── Base: recessed groove, warm border, amber placeholder ── */
+input:not([type="radio"]):not([type="checkbox"]):not([type="file"]):not([type="range"]),
+textarea,
+select {
+  background:    var(--color-surface-recessed) !important;  /* #DFD0B8 — deepest surface */
+  color:         var(--color-ink-1) !important;
+  border:        1px solid var(--color-input-border) !important;   /* rgba(120,85,30,0.22) */
+  border-radius: var(--radius-input) !important;                   /* 6px */
+  box-shadow:    var(--shadow-sh-groove) !important;               /* inset 0 1px 3px warm */
+  outline:       none !important;                                  /* kill cold browser ring */
+  transition:
+    border-color var(--motion-hover),
+    box-shadow   var(--motion-hover) !important;
+}
+
+/* ── Placeholder: ink-3 (lightest warm brown, never cold grey) ── */
+input:not([type="radio"]):not([type="checkbox"]):not([type="file"]):not([type="range"])::placeholder,
+textarea::placeholder {
+  color:   var(--color-ink-3) !important;  /* #A08568 */
+  opacity: 1 !important;                  /* Firefox default is 0.54 — force full */
+}
+
+/* ── Hover: border deepens slightly (not on already-focused fields) ── */
+input:not([type="radio"]):not([type="checkbox"]):not([type="file"]):not([type="range"]):hover:not(:focus),
+textarea:hover:not(:focus),
+select:hover:not(:focus) {
+  border-color: rgba(120, 85, 30, 0.32) !important;
+}
+
+/* ── Focus: left indicator 3px + outer amber ring ── */
+/* Right / top / bottom stay at base border.                               */
+/* Left border widens to 3px and deepens to --color-input-border-foc.     */
+/* box-shadow: SH-groove retained + 0 0 0 3px amber ring layered on top.  */
+input:not([type="radio"]):not([type="checkbox"]):not([type="file"]):not([type="range"]):focus,
+textarea:focus,
+select:focus {
+  outline:           none !important;
+  border-color:      var(--color-input-border) !important;      /* 3 sides: unchanged */
+  border-left-color: var(--color-input-border-foc) !important;  /* rgba(160,100,30,0.55) */
+  border-left-width: 3px !important;
+  box-shadow:
+    inset 0 1px 3px rgba(80, 50, 15, 0.12),                     /* SH-groove: retained */
+    0 0 0 3px var(--color-accent-focus) !important;             /* rgba(200,149,42,0.25) */
+}
+
+/* ── Disabled: faded ink, no groove ── */
+input:not([type="radio"]):not([type="checkbox"]):not([type="file"]):not([type="range"]):disabled,
+textarea:disabled,
+select:disabled {
+  opacity:        0.4 !important;
+  pointer-events: none !important;
+  box-shadow:     none !important;
+}
+
+/* ── Textarea: vertical resize only (§3.6) ── */
+textarea {
+  resize: vertical !important;
+}
+
+/* ── Select: remove system arrow; replace with ink-2 warm chevron ── */
+select {
+  appearance:         none !important;
+  -webkit-appearance: none !important;
+  background-color:   var(--color-surface-recessed) !important;
+  background-image:   url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237A6045' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+  background-position: right 10px center !important;
+  background-repeat:  no-repeat !important;
+  background-size:    12px 8px !important;
+  padding-right:      32px !important;    /* room for chevron */
+  cursor:             pointer !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Step 6 — Modals (compiled-spec.md §3.4)
+   Targets: #quizModal, #quizSettings, #grammarQuizModal
+   CG rules: CG-1, CG-2, CG-3, CG-5, CG-9, CG-10, CG-13
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Overlay: warm brown air (replaces Tailwind bg-black/50) ── */
+/* Alpha 0.55 preserves parchment texture visibility behind veil (§3.4 air check) */
+#quizModal,
+#quizSettings,
+#grammarQuizModal {
+  background: var(--color-overlay) !important;  /* rgba(40,25,8,0.55) warm brown */
+}
+
+/* ── Modal container: paper held up — surface-modal + SH-3 + rim top/left ── */
+#quizModal > div,
+#quizSettings > div,
+#grammarQuizModal > div {
+  background:    var(--color-surface-modal) !important;  /* #F3ECDF — 2-3% lighter than card */
+  border:        none !important;                        /* CG-2: depth from shadow, not border */
+  border-radius: var(--radius-modal) !important;         /* 8px — not 16px (CG-10) */
+  padding:       var(--pad-modal) !important;            /* 22px 24px */
+  box-shadow:
+    var(--shadow-sh3),                                   /* 3px 8px 28px rgba(80,50,15,0.22) */
+    inset 0 1px 0 var(--color-rim-modal-top),            /* rim top:  rgba(255,220,140,0.35) */
+    inset 1px 0 0 var(--color-rim-modal-left) !important;/* rim left: rgba(255,220,140,0.20) */
+}
+
+/* ── Appear animation: drop from above + fade in (§3.4) ── */
+@keyframes modal-in {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0);     }
+}
+
+#quizModal:not(.hidden) > div,
+#quizSettings:not(.hidden) > div,
+#grammarQuizModal:not(.hidden) > div {
+  animation: modal-in var(--motion-modal-in);  /* 230ms ease-out */
+}
+
+/* ── Modal title row: D1 serif + ledger divider below ── */
+#quizModal h3.sidebar-title,
+#quizSettings h3.sidebar-title,
+#grammarQuizModal h3.sidebar-title {
+  color:         var(--color-ink-1) !important;
+  font-family:   "EB Garamond", "Lora", "Crimson Pro", Georgia, serif !important;
+  font-weight:   600 !important;
+  border-bottom: 1px solid var(--color-ledger-section) !important;
+  padding-bottom: 0.5em;
+}
+
+/* ── Close buttons: ink-2 base → ink-1 hover, no chrome ── */
+#quizClose,
+#grammarQuizClose {
+  background:    none !important;
+  border:        none !important;
+  color:         var(--color-ink-2) !important;
+  transition:    color var(--motion-hover) !important;  /* 150ms ease-out */
+}
+
+#quizClose:hover,
+#grammarQuizClose:hover {
+  color: var(--color-ink-1) !important;
+}
+
+/* ── Night-mode guard: revert overlay + container to dark variables ── */
+[data-theme="dark"] #quizModal,
+[data-theme="dark"] #quizSettings,
+[data-theme="dark"] #grammarQuizModal {
+  background: rgba(0, 0, 0, 0.65) !important;
+}
+
+[data-theme="dark"] #quizModal > div,
+[data-theme="dark"] #quizSettings > div,
+[data-theme="dark"] #grammarQuizModal > div {
+  background: var(--wc-card, #1e2433) !important;
+  box-shadow: 3px 8px 28px rgba(0, 0, 0, 0.40) !important;
+}
+
+/* ── Night-mode guard: revert to dark-theme variables ── */
+[data-theme="dark"] input:not([type="radio"]):not([type="checkbox"]):not([type="file"]):not([type="range"]),
+[data-theme="dark"] textarea,
+[data-theme="dark"] select {
+  background:   var(--wc-card, #1e2433) !important;
+  color:        var(--wc-word-color, #e8e0d0) !important;
+  border-color: rgba(200, 120, 42, 0.20) !important;
+  box-shadow:   none !important;
+}
+
+[data-theme="dark"] input:not([type="radio"]):not([type="checkbox"]):not([type="file"]):not([type="range"])::placeholder,
+[data-theme="dark"] textarea::placeholder {
+  color: var(--wc-muted, rgba(200, 180, 140, 0.45)) !important;
+}
+
+[data-theme="dark"] input:not([type="radio"]):not([type="checkbox"]):not([type="file"]):not([type="range"]):hover:not(:focus),
+[data-theme="dark"] textarea:hover:not(:focus),
+[data-theme="dark"] select:hover:not(:focus) {
+  border-color: rgba(200, 120, 42, 0.35) !important;
+}
+
+[data-theme="dark"] input:not([type="radio"]):not([type="checkbox"]):not([type="file"]):not([type="range"]):focus,
+[data-theme="dark"] textarea:focus,
+[data-theme="dark"] select:focus {
+  border-color:      rgba(200, 120, 42, 0.20) !important;
+  border-left-color: var(--wc-accent, #C8782A) !important;
+  border-left-width: 3px !important;
+  box-shadow:
+    inset 0 1px 3px rgba(0, 0, 0, 0.18),
+    0 0 0 3px rgba(200, 120, 42, 0.20) !important;
+}
+
+[data-theme="dark"] select {
+  background-color:   var(--wc-card, #1e2433) !important;
+  background-image:   url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23C8782A' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Step 7 — Buttons (compiled-spec.md §3.5)
+   Targets: .btn-primary-m, .quiz-btn-primary, .btn-outline-m, .btn-ghost-m
+   CG rules: CG-9, CG-11 (no full accent fill), CG-13 (btn border = groove edge)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── ID-specific overrides: theme-ocean.css:84 uses ID + !important (beats class)  ── */
+/* ── Same IDs here in day.css (loaded later) win via source order.                 ── */
+/* ── #urlFetchBtn not in ocean list but added here for uniformity.                 ── */
+
+/* ── BASE: belt-and-suspenders — literal hex first, then var() for colour-mix     ── */
+#analyzeBtn,
+#saveBtn,
+#customAnalyzeBtn,
+#customAddBtn,
+#urlFetchBtn,
+#qsStart,
+#startQuizBtn,
+#usageSaveBudget {
+  background-color: #1C1208 !important;  /* (A) explicit hex — no var() resolution gap */
+  background:       #1C1208 !important;
+  color:            #F0E8D4 !important;  /* parchment cream on dark ink */
+  border:           none !important;
+  border-radius:    var(--radius-btn) !important;
+  box-shadow:
+    1px 2px 6px rgba(80, 50, 15, 0.18),
+    inset 0 1px 0 rgba(255, 220, 140, 0.28) !important;
+  opacity:          1 !important;        /* reset any inherited opacity */
+  cursor:           pointer !important;
+  transition:
+    background var(--motion-hover),
+    box-shadow  var(--motion-hover) !important;
+}
+
+/* Force all child nodes (text spans, icons) to inherit parchment color */
+#analyzeBtn *,
+#saveBtn *,
+#customAnalyzeBtn *,
+#customAddBtn *,
+#urlFetchBtn *,
+#qsStart *,
+#startQuizBtn *,
+#usageSaveBudget * {
+  color: inherit !important;
+}
+
+/* SVG icons: stroke follows currentColor; no fill */
+#analyzeBtn svg,
+#saveBtn svg,
+#customAnalyzeBtn svg,
+#customAddBtn svg,
+#urlFetchBtn svg,
+#qsStart svg,
+#startQuizBtn svg,
+#usageSaveBudget svg {
+  stroke: currentColor !important;
+  fill:   none !important;
+}
+
+#analyzeBtn svg path,
+#saveBtn svg path,
+#customAnalyzeBtn svg path,
+#customAddBtn svg path,
+#urlFetchBtn svg path,
+#qsStart svg path,
+#startQuizBtn svg path,
+#usageSaveBudget svg path {
+  stroke: currentColor !important;
+}
+
+/* ── HOVER: 8% lighter, stays warm dark — NOT transparent-to-coloured ── */
+#analyzeBtn:hover:not(:disabled),
+#saveBtn:hover:not(:disabled),
+#customAnalyzeBtn:hover:not(:disabled),
+#customAddBtn:hover:not(:disabled),
+#urlFetchBtn:hover:not(:disabled),
+#qsStart:hover:not(:disabled),
+#startQuizBtn:hover:not(:disabled),
+#usageSaveBudget:hover:not(:disabled) {
+  background-color: #2E251C !important;
+  background: color-mix(in srgb, #1C1208 92%, #fff 8%) !important;
+  color:      #F0E8D4 !important;
+  box-shadow:
+    1px 3px 8px rgba(80, 50, 15, 0.24),
+    inset 0 1px 0 rgba(255, 220, 140, 0.38) !important;
+}
+
+/* ── ACTIVE: inset press groove ── */
+#analyzeBtn:active:not(:disabled),
+#saveBtn:active:not(:disabled),
+#customAnalyzeBtn:active:not(:disabled),
+#customAddBtn:active:not(:disabled),
+#urlFetchBtn:active:not(:disabled),
+#qsStart:active:not(:disabled),
+#startQuizBtn:active:not(:disabled),
+#usageSaveBudget:active:not(:disabled) {
+  background-color: #150E06 !important;
+  background: color-mix(in srgb, #1C1208 95%, black 5%) !important;
+  color:      #F0E8D4 !important;
+  box-shadow:
+    inset 0 1px 3px rgba(80, 50, 15, 0.22),
+    inset 0 1px 0 rgba(255, 220, 140, 0.10) !important;
+}
+
+/* ── DISABLED: native btn.disabled = true → :disabled pseudo-class ── */
+/* (C) JS uses btn.disabled = true throughout main.js / ui.js           */
+#analyzeBtn:disabled,
+#saveBtn:disabled,
+#customAnalyzeBtn:disabled,
+#customAddBtn:disabled,
+#urlFetchBtn:disabled,
+#qsStart:disabled,
+#startQuizBtn:disabled,
+#usageSaveBudget:disabled {
+  background-color: #1C1208 !important;  /* keep dark base, opacity does the fade */
+  background:       #1C1208 !important;
+  color:            #F0E8D4 !important;
+  opacity:          0.4 !important;      /* 40% → clearly faded, still readable */
+  box-shadow:       none !important;
+  pointer-events:   none !important;
+  cursor:           not-allowed !important;
+}
+
+/* ── FOCUS ── */
+#analyzeBtn:focus-visible,
+#saveBtn:focus-visible,
+#customAnalyzeBtn:focus-visible,
+#customAddBtn:focus-visible,
+#urlFetchBtn:focus-visible,
+#qsStart:focus-visible,
+#startQuizBtn:focus-visible,
+#usageSaveBudget:focus-visible {
+  outline: none !important;
+  box-shadow:
+    1px 2px 6px rgba(80, 50, 15, 0.18),
+    inset 0 1px 0 rgba(255, 220, 140, 0.28),
+    0 0 0 3px rgba(200, 149, 42, 0.25) !important;
+}
+
+/* Night-mode guard for ID-specific overrides */
+[data-theme="dark"] #analyzeBtn,
+[data-theme="dark"] #saveBtn,
+[data-theme="dark"] #customAnalyzeBtn,
+[data-theme="dark"] #customAddBtn,
+[data-theme="dark"] #urlFetchBtn,
+[data-theme="dark"] #qsStart,
+[data-theme="dark"] #startQuizBtn,
+[data-theme="dark"] #usageSaveBudget {
+  background-color: var(--wc-accent, #C8782A) !important;
+  background:       var(--wc-accent, #C8782A) !important;
+  color:            var(--wc-card, #1e2433) !important;
+  box-shadow:       none !important;
+  opacity:          1 !important;
+}
+
+[data-theme="dark"] #analyzeBtn:hover,
+[data-theme="dark"] #saveBtn:hover,
+[data-theme="dark"] #customAnalyzeBtn:hover,
+[data-theme="dark"] #customAddBtn:hover,
+[data-theme="dark"] #urlFetchBtn:hover,
+[data-theme="dark"] #qsStart:hover,
+[data-theme="dark"] #startQuizBtn:hover,
+[data-theme="dark"] #usageSaveBudget:hover {
+  background: color-mix(in srgb, var(--wc-accent, #C8782A) 88%, white 12%) !important;
+}
+
+[data-theme="dark"] #analyzeBtn:disabled,
+[data-theme="dark"] #saveBtn:disabled,
+[data-theme="dark"] #customAnalyzeBtn:disabled,
+[data-theme="dark"] #customAddBtn:disabled,
+[data-theme="dark"] #urlFetchBtn:disabled,
+[data-theme="dark"] #qsStart:disabled,
+[data-theme="dark"] #startQuizBtn:disabled,
+[data-theme="dark"] #usageSaveBudget:disabled {
+  opacity: 0.4 !important;
+}
+
+/* ── Primary: dark ink body + top rim — NEVER amber fill (CG-11) ── */
+.btn-primary-m,
+.quiz-btn-primary {
+  background:    var(--color-ink-1) !important;             /* #1C1208 — dried brown-black ink */
+  color:         var(--color-surface-card) !important;      /* cream text on dark body */
+  border:        none !important;
+  border-radius: var(--radius-btn) !important;              /* 6px — not 16px */
+  box-shadow:
+    var(--shadow-sh-btn),                                   /* 1px 2px 6px rgba(80,50,15,0.18) */
+    inset 0 1px 0 var(--color-rim-btn) !important;          /* top rim: rgba(255,220,140,0.28) */
+  transition:
+    background var(--motion-hover),
+    box-shadow  var(--motion-hover) !important;
+}
+
+/* Hover: 8% lighter, stays warm dark; rim brightens slightly */
+.btn-primary-m:hover:not(:disabled),
+.quiz-btn-primary:hover:not(:disabled) {
+  background: #2E251C !important;  /* fallback: color-mix(ink-1 92%, white 8%) pre-computed */
+  background: color-mix(in srgb, var(--color-ink-1) 92%, #fff 8%) !important;
+  box-shadow:
+    1px 3px 8px rgba(80, 50, 15, 0.24),                     /* SH-btn + 1px deeper */
+    inset 0 1px 0 var(--color-rim-hover) !important;        /* rim brightens: 0.38 */
+}
+
+/* Active/Press: 5% darker + inset groove (tactile press feel); rim dims */
+.btn-primary-m:active:not(:disabled),
+.quiz-btn-primary:active:not(:disabled) {
+  background: #150E06 !important;  /* fallback: color-mix(ink-1 95%, black 5%) pre-computed */
+  background: color-mix(in srgb, var(--color-ink-1) 95%, black 5%) !important;
+  box-shadow:
+    inset 0 1px 3px rgba(80, 50, 15, 0.22),                 /* SH-groove replaces SH-btn */
+    inset 0 1px 0 rgba(255, 220, 140, 0.10) !important;     /* rim dims on press */
+}
+
+/* Focus: base state + 3px amber focus ring */
+.btn-primary-m:focus-visible,
+.quiz-btn-primary:focus-visible {
+  outline: none !important;
+  box-shadow:
+    var(--shadow-sh-btn),
+    inset 0 1px 0 var(--color-rim-btn),
+    0 0 0 3px var(--color-accent-focus) !important;         /* rgba(200,149,42,0.25) */
+}
+
+/* Disabled: 40% opacity, no shadow */
+.btn-primary-m:disabled,
+.quiz-btn-primary:disabled {
+  opacity:        0.4 !important;
+  pointer-events: none !important;
+  box-shadow:     none !important;
+}
+
+/* ── Outline: transparent + warm groove border ── */
+.btn-outline-m {
+  background:    transparent !important;
+  color:         var(--color-ink-2) !important;             /* #7A6045 faded brown ink */
+  border:        1px solid var(--color-ledger-section) !important;  /* rgba(120,85,30,0.22) */
+  border-radius: var(--radius-btn) !important;
+  box-shadow:    none !important;
+  transition:
+    color        var(--motion-hover),
+    border-color var(--motion-hover) !important;
+}
+
+/* Hover: text deepens, border deepens */
+.btn-outline-m:hover:not(:disabled) {
+  background:   transparent !important;
+  color:        var(--color-ink-1) !important;
+  border-color: rgba(120, 85, 30, 0.45) !important;
+}
+
+/* Active: faint warm tint wash */
+.btn-outline-m:active:not(:disabled) {
+  background:   rgba(120, 85, 30, 0.06) !important;
+  color:        var(--color-ink-1) !important;
+  border-color: rgba(120, 85, 30, 0.45) !important;
+}
+
+/* Focus */
+.btn-outline-m:focus-visible {
+  outline:      none !important;
+  color:        var(--color-ink-1) !important;
+  border-color: rgba(120, 85, 30, 0.45) !important;
+  box-shadow:   0 0 0 3px var(--color-accent-focus) !important;
+}
+
+/* Disabled */
+.btn-outline-m:disabled {
+  opacity:        0.4 !important;
+  pointer-events: none !important;
+}
+
+/* ── Ghost: borderless, ink-2 base — minimal chrome ── */
+.btn-ghost-m {
+  background:    transparent !important;
+  color:         var(--color-ink-2) !important;
+  border:        none !important;
+  box-shadow:    none !important;
+  transition:
+    color       var(--motion-hover),
+    background  var(--motion-hover) !important;
+}
+
+/* Hover: barely-there warm tint */
+.btn-ghost-m:hover:not(:disabled) {
+  background: rgba(120, 85, 30, 0.06) !important;
+  color:      var(--color-ink-1) !important;
+}
+
+/* Active: slightly deeper tint */
+.btn-ghost-m:active:not(:disabled) {
+  background: rgba(120, 85, 30, 0.10) !important;
+  color:      var(--color-ink-1) !important;
+}
+
+/* Disabled */
+.btn-ghost-m:disabled {
+  opacity:        0.4 !important;
+  pointer-events: none !important;
+}
+
+/* ── Night-mode guard: revert all button types to dark variables ── */
+[data-theme="dark"] .btn-primary-m,
+[data-theme="dark"] .quiz-btn-primary {
+  background: var(--wc-accent, #C8782A) !important;
+  color:      var(--wc-card, #1e2433) !important;
+  box-shadow: none !important;
+}
+
+[data-theme="dark"] .btn-primary-m:hover:not(:disabled),
+[data-theme="dark"] .quiz-btn-primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--wc-accent, #C8782A) 88%, white 12%) !important;
+}
+
+[data-theme="dark"] .btn-outline-m {
+  color:        var(--wc-muted, rgba(200,180,140,0.7)) !important;
+  border-color: rgba(200, 120, 42, 0.25) !important;
+}
+
+[data-theme="dark"] .btn-outline-m:hover:not(:disabled) {
+  color:        var(--wc-word-color, #e8e0d0) !important;
+  border-color: rgba(200, 120, 42, 0.50) !important;
+}
+
+[data-theme="dark"] .btn-ghost-m {
+  color: var(--wc-muted, rgba(200,180,140,0.7)) !important;
+}
+
+[data-theme="dark"] .btn-ghost-m:hover:not(:disabled) {
+  background: rgba(200, 120, 42, 0.10) !important;
+  color:      var(--wc-word-color, #e8e0d0) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   FINAL COLOR LOCK — #analyzeBtn · #urlFetchBtn  (day mode only)
+   Placed last in file: same ID specificity wins by source order.
+   Diagnosis: base color invisible in browser despite earlier ID rules —
+   root rule cannot be confirmed without DevTools; this block is the
+   definitive override regardless of what is winning above.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Base: dark ink background + parchment text, fully opaque */
+#analyzeBtn,
+#urlFetchBtn {
+  background-color: #1C1208 !important;
+  background:       #1C1208 !important;
+  color:            #F0E8D4 !important;
+  opacity:          1 !important;
+}
+
+/* Direct text/icon children: inherit cream color, no opacity collapse */
+#analyzeBtn span,
+#urlFetchBtn span {
+  color:   inherit !important;
+  opacity: 1 !important;
+}
+
+/* SVG and its children: stroke follows currentColor (= #F0E8D4) */
+#analyzeBtn svg,
+#urlFetchBtn svg {
+  color:   inherit !important;
+  stroke:  currentColor !important;
+  fill:    none !important;
+  opacity: 1 !important;
+}
+
+#analyzeBtn svg path,
+#urlFetchBtn svg path {
+  stroke:  currentColor !important;
+  opacity: 1 !important;
+}
+
+/* Hover: slightly lighter dark bg, same cream text — NOT transparent→colour */
+#analyzeBtn:hover:not(:disabled),
+#urlFetchBtn:hover:not(:disabled) {
+  background-color: #2E251C !important;
+  background:       #2E251C !important;
+  color:            #F0E8D4 !important;
+}
+
+/* ── SPECIFICITY LIFT: beat theme-perfume-wc.css:1088                     ── */
+/* Culprit: #articleInputSection button { color: var(--wc-word-color) !important; }  */
+/* Specificity: (0,1,0,1) ID+element — beats bare #analyzeBtn (0,1,0,0).            */
+/* Fix: add .btn-primary-m class → (0,1,1,0) ID+class > (0,1,0,1) ID+element.       */
+
+#analyzeBtn.btn-primary-m,
+#urlFetchBtn.btn-primary-m {
+  color: #F0E8D4 !important;  /* (0,1,1,0) beats wc.css (0,1,0,1) */
+}
+
+/* All child elements (svg, path, spans) inherit cream — same lift */
+#analyzeBtn.btn-primary-m *,
+#urlFetchBtn.btn-primary-m * {
+  color:   inherit !important;
+  opacity: 1 !important;
+}
+
+/* Hover / active / disabled: same specificity bump */
+#analyzeBtn.btn-primary-m:hover:not(:disabled),
+#urlFetchBtn.btn-primary-m:hover:not(:disabled) {
+  color: #F0E8D4 !important;
+}
+
+#analyzeBtn.btn-primary-m:active:not(:disabled),
+#urlFetchBtn.btn-primary-m:active:not(:disabled) {
+  color: #F0E8D4 !important;
+}
+
+#analyzeBtn.btn-primary-m:disabled,
+#urlFetchBtn.btn-primary-m:disabled {
+  color: #F0E8D4 !important;
+}
+
+/* Night-mode guard: don't apply dark-ink override in dark theme */
+[data-theme="dark"] #analyzeBtn,
+[data-theme="dark"] #urlFetchBtn {
+  background-color: var(--wc-accent, #C8782A) !important;
+  background:       var(--wc-accent, #C8782A) !important;
+  color:            var(--wc-card, #1e2433) !important;
+}
+
+[data-theme="dark"] #analyzeBtn *,
+[data-theme="dark"] #urlFetchBtn * {
+  color: inherit !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   §3.8  Badges / Chips / Tags — 墨水標記 / 蠟封印記
+   Rules:  border-radius ≤ 4px  (never pill / 9999px)
+           colours: warm brown / parchment only — no cold blue / grey / green
+           font:    D2 humanist sans (Jost → DM Sans → Source Sans 3)
+           numbers: D4 tabular-nums
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── §3.8-A  Shared baseline: font + radius + letter-spacing ───────────── */
+.chip,
+.enrich-badge,
+.reader-enrich-tag,
+.wc-rel-chip,
+.mnemonic-chip,
+grammar-tag {
+  font-family:          "Jost", "DM Sans", "Source Sans 3", system-ui, sans-serif !important;
+  font-variant-numeric: tabular-nums !important;   /* D4: numbers stay equal-width */
+  border-radius:        var(--radius-badge, 3px) !important;  /* ≤ 4px; never 9999px */
+  letter-spacing:       .03em !important;
+}
+
+/* ── §3.8-B  .chip — navbar counter badges (Mastered / Due count) ───────── */
+.chip {
+  display:       inline-block !important;
+  padding:       .2rem .65rem !important;
+  background:    var(--color-chip-navbar, rgba(200,180,140,0.35)) !important;
+  color:         #F0E8D4 !important;    /* cream text on dark header */
+  font-size:     .8125rem !important;
+  font-weight:   700 !important;
+  line-height:   1.4 !important;
+  letter-spacing: .05em !important;
+  /* border-radius already set by baseline above */
+}
+
+/* ── §3.8-C  .enrich-badge — TR / GR tags in library list ──────────────── */
+.enrich-badge {
+  font-size:     .6875rem !important;
+  font-weight:   600 !important;
+  letter-spacing: .04em !important;
+}
+
+.enrich-badge--tr {
+  background: var(--color-badge-enrich-bg, #E4D5BA) !important;  /* warm tan */
+  color:      var(--color-badge-enrich-fg, #5C3D1A) !important;  /* dark brown */
+  border:     1px solid #C8AE8A !important;
+}
+
+.enrich-badge--gr {
+  background: #DDD0B8 !important;    /* slightly deeper warm tan — GR distinction */
+  color:      #4A3014 !important;
+  border:     1px solid #B89E7A !important;
+}
+
+/* ── §3.8-D  .reader-enrich-tag — reader toolbar TR / GR ───────────────── */
+.reader-enrich-tag {
+  font-size:     .8rem !important;
+  padding:       3px 8px !important;
+  letter-spacing: .03em !important;
+  /* border-radius: already set to 3px by baseline — overrides inline 6px */
+}
+
+.reader-enrich-tag--tr {
+  background: var(--color-badge-enrich-bg, #E4D5BA) !important;
+  color:      var(--color-badge-enrich-fg, #5C3D1A) !important;
+  border:     1px solid #C8AE8A !important;
+}
+
+.reader-enrich-tag--gr {
+  background: #DDD0B8 !important;
+  color:      #4A3014 !important;
+  border:     1px solid #B89E7A !important;
+}
+
+/* ── §3.8-E  .wc-rel-chip — related-word chips ─────────────────────────── */
+.wc-rel-chip {
+  background: #EDE3D0 !important;    /* warm parchment — replaces cold #eef1ea */
+  color:      #5C3D1A !important;    /* dark warm brown — replaces cold #4a5940 */
+  border:     1px solid #C8B08A !important;
+}
+
+.wc-rel-chip--ant {
+  background: #EAD8C8 !important;    /* rosier warm tint for antonyms */
+  color:      #5C2E1A !important;
+  border-color: #C4907A !important;
+}
+
+/* ── §3.8-F  .mnemonic-chip — mnemonic association chips ───────────────── */
+.mnemonic-chip {
+  background: #EDE3D0 !important;    /* same warm parchment as wc-rel-chip */
+  color:      #5C3D1A !important;
+  border:     1px solid #C8B08A !important;
+}
+
+.mnemonic-chip--ant {
+  background:  #EAD8C8 !important;
+  color:       #5C2E1A !important;
+  border-color: #C4907A !important;
+}
+
+/* ── §3.8-H  Dark mode toggle — hidden ─────────────────────────────────── */
+#darkModeToggle {
+  display: none !important;
+}
+
+/* ── §3.8-G  grammar-tag — reader inline grammar highlight ─────────────── */
+grammar-tag {
+  background:    #E8D9C2 !important;  /* warm parchment — replaces cold #dbeafe */
+  color:         #4A3014 !important;  /* dark warm brown — replaces cold #1d4ed8 */
+  /* border-radius: 3px from baseline (original was 4px — both within ≤4px spec) */
+}
+
+grammar-tag:hover {
+  background: #DECEB4 !important;     /* slightly deeper warm — replaces cold #bfdbfe */
+}
+
+grammar-tag.active {
+  background: #C8A87A !important;     /* amber-tan active — replaces cold #93c5fd */
+  color:      #2E1C08 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Step 9 — Tailwind Gray Interception (anti-SaaS cold-color guard)
+   Problem: Inline Tailwind utility classes (bg-gray-*, text-gray-*, etc.)
+   in HTML and JS-generated DOM bypass all element/ID selectors above.
+   These rules neutralise cold grays in Day Mode without touching HTML/JS.
+   Guard: :root:not([data-theme="dark"]) prevents any bleed into night mode.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Text grays → warm ink tokens ── */
+:root:not([data-theme="dark"]) .text-gray-400,
+:root:not([data-theme="dark"]) .text-gray-500,
+:root:not([data-theme="dark"]) .text-gray-600 {
+  color: var(--color-ink-3) !important;   /* #A08568 — muted warm brown */
+}
+
+:root:not([data-theme="dark"]) .text-gray-700,
+:root:not([data-theme="dark"]) .text-gray-800,
+:root:not([data-theme="dark"]) .text-gray-900 {
+  color: var(--color-ink-1) !important;   /* #1C1208 — primary dried ink */
+}
+
+/* ── Surface grays → warm parchment/recessed tokens ── */
+:root:not([data-theme="dark"]) .bg-gray-50,
+:root:not([data-theme="dark"]) .bg-gray-100 {
+  background: var(--color-surface-card) !important;     /* #F0E8D4 — fresh parchment */
+}
+
+:root:not([data-theme="dark"]) .bg-gray-200 {
+  background: var(--color-surface-recessed) !important; /* #DFD0B8 — recessed surface */
+}
+
+/* ── Border grays → warm groove edge token ── */
+:root:not([data-theme="dark"]) .border-gray-200,
+:root:not([data-theme="dark"]) .border-gray-300 {
+  border-color: var(--color-input-border) !important;   /* rgba(120,85,30,0.22) */
+}
+
+/* ── Tailwind focus:ring-gray-300 → amber focus ring ── */
+/* Targets the Tailwind ring colour variable before box-shadow is composed */
+:root:not([data-theme="dark"]) .focus\:ring-gray-300:focus {
+  --tw-ring-color: rgba(200, 149, 42, 0.25) !important; /* matches --color-accent-focus */
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Step 10 — #syncSave button (§3.5 primary pattern)
+   HTML class: bg-blue-600 text-white — hardcoded SaaS blue.
+   Override via ID selector (same specificity strategy as Step 7).
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+#syncSave {
+  background-color: #1C1208 !important;
+  background:       #1C1208 !important;
+  color:            #F0E8D4 !important;
+  border:           none !important;
+  border-radius:    var(--radius-btn) !important;
+  box-shadow:
+    1px 2px 6px rgba(80, 50, 15, 0.18),
+    inset 0 1px 0 rgba(255, 220, 140, 0.28) !important;
+  opacity:          1 !important;
+  cursor:           pointer !important;
+  transition:
+    background var(--motion-hover),
+    box-shadow  var(--motion-hover) !important;
+}
+
+#syncSave:hover:not(:disabled) {
+  background-color: #2E251C !important;
+  background: color-mix(in srgb, #1C1208 92%, #fff 8%) !important;
+  color:      #F0E8D4 !important;
+  box-shadow:
+    1px 3px 8px rgba(80, 50, 15, 0.24),
+    inset 0 1px 0 rgba(255, 220, 140, 0.38) !important;
+}
+
+#syncSave:active:not(:disabled) {
+  background-color: #150E06 !important;
+  background: color-mix(in srgb, #1C1208 95%, black 5%) !important;
+  box-shadow:
+    inset 0 1px 3px rgba(80, 50, 15, 0.22),
+    inset 0 1px 0 rgba(255, 220, 140, 0.10) !important;
+}
+
+#syncSave:focus-visible {
+  outline: none !important;
+  box-shadow:
+    1px 2px 6px rgba(80, 50, 15, 0.18),
+    inset 0 1px 0 rgba(255, 220, 140, 0.28),
+    0 0 0 3px rgba(200, 149, 42, 0.25) !important;
+}
+
+/* Night-mode guard — let night theme own this button */
+[data-theme="dark"] #syncSave {
+  background-color: var(--wc-accent, #C8782A) !important;
+  background:       var(--wc-accent, #C8782A) !important;
+  color:            var(--wc-card, #1e2433) !important;
+  box-shadow:       none !important;
+  opacity:          1 !important;
+}
+
+[data-theme="dark"] #syncSave:hover {
+  background: color-mix(in srgb, var(--wc-accent, #C8782A) 88%, white 12%) !important;
 }
