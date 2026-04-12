@@ -10,6 +10,8 @@
   <link rel="stylesheet" href="theme-ocean.css">
   <link rel="stylesheet" href="theme-perfume-day.css">
   <link rel="stylesheet" href="theme-perfume-wc.css">
+  <!-- GSAP for cinematic opening animation -->
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
 
 
   <style>
@@ -56,6 +58,20 @@
     white-space:nowrap;
   }
   .btn-outline-m:hover{ color: var(--text); border-color: var(--primary); }
+
+  /* ─── Phase 6: 探照燈微塵 Dust Motes ─── */
+  #dust-container {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9997;
+    overflow: hidden;
+  }
+  .dust-mote {
+    position: absolute;
+    background-color: rgba(255, 230, 180, 0.85);
+    will-change: transform, opacity;
+  }
 
   /* Tertiary：Ghost 按鈕，極淺背景 */
   .btn-ghost-m{
@@ -636,6 +652,19 @@
 </head>
 <body class="bg-gray-100 text-gray-800">
 
+  <!-- ═══ Phase 4.5: 電影黑幕 ═══ -->
+  <div id="cinema-curtain" style="position:fixed;inset:0;background-color:var(--color-ink-1);z-index:9999;pointer-events:none;"></div>
+
+  <!-- ═══ Phase 4.5: SVG 墨水濾鏡 ═══ -->
+  <svg style="display:none;">
+    <defs>
+      <filter id="ink-bleed">
+        <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="3" result="noise" />
+        <feDisplacementMap in="SourceGraphic" in2="noise" scale="0" xChannelSelector="R" yChannelSelector="G" id="displacement-map" />
+      </filter>
+    </defs>
+  </svg>
+
   <!-- Header -->
   <header class="header-gradient p-4">
     <div class="max-w-6xl mx-auto flex items-center justify-between">
@@ -819,7 +848,7 @@
             AI 建議單字
           </h2>
           <div id="wordForm" class="space-y-3"></div>
-          <button id="saveBtn" type="button" class="btn-primary-m">
+          <button id="saveBtn" type="button" class="btn-primary-m" style="position:relative;z-index:50;">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             加入選取清單
           </button>
@@ -1020,12 +1049,6 @@
 
     </div>
   </main>
-
-  <!-- Floating bar -->
-  <div id="fabBar" class="fixed bottom-4 left-1/2 -translate-x-1/2 text-white rounded-full shadow-lg px-4 py-2 flex items-center gap-3 hidden" style="background:#A3B18A;">
-    <span id="fabCount" class="font-medium">0</span>
-    <button id="fabAddBtn" class="rounded-full px-3 py-1 text-sm font-semibold" style="background:#fff;color:#7a9068;">加入清單</button>
-  </div>
 
   <!-- Undo toast -->
   <div id="undoToast" class="fixed bottom-20 left-1/2 -translate-x-1/2 text-white rounded-xl shadow px-4 py-2 flex items-center gap-3 hidden" style="background:#4a5940;">
@@ -1294,8 +1317,173 @@
   <!-- 原本主程式照常 -->
   <script type="module" src="js/main.js"></script>
 
+  <!-- ═══ Phase 4.5: 電影級開場 The Director ═══ -->
+  <script>
+  document.addEventListener('DOMContentLoaded', function () {
+    // Guard: if GSAP didn't load, skip gracefully
+    if (typeof gsap === 'undefined') return;
+
+    const curtain   = document.getElementById('cinema-curtain');
+    const dispMap   = document.getElementById('displacement-map');
+    const mainCards = [
+      document.getElementById('articleInputSection'),
+      document.getElementById('wordListCard'),
+      document.getElementById('pixelPetCard'),
+      document.getElementById('backupCard'),
+    ].filter(Boolean);
+
+    // Stamp ink-bleed filter on word titles before they appear
+    const inkTargets = document.querySelectorAll('#wordListCard .wc-title strong');
+    inkTargets.forEach(function (el) {
+      el.style.filter = 'url(#ink-bleed)';
+    });
+
+    // Prime the displacement to maximum blur immediately
+    if (dispMap) dispMap.setAttribute('scale', '15');
+
+    // Set starting state: cards hidden below their natural position
+    gsap.set(mainCards, { opacity: 0, y: 15 });
+
+    var tl = gsap.timeline();
+
+    // ── Act 1: 電影院亮燈 — curtain fades out over 1.5s ──
+    tl.to(curtain, {
+      opacity: 0,
+      duration: 1.5,
+      ease: 'power2.inOut',
+      onComplete: function () { curtain.style.display = 'none'; }
+    });
+
+    // ── Act 2: 主容器從下方浮現 ──
+    tl.to(mainCards, {
+      opacity: 1,
+      y: 0,
+      duration: 1.8,
+      ease: 'power2.out',
+      stagger: 0.2
+    }, '-=0.6'); // overlap slightly with Act 1 ending
+
+    // ── Act 3: 墨水乾燥 — displacement scale 15→0 ──
+    // Animate the SVG feDisplacementMap scale attribute via a proxy object
+    if (dispMap && inkTargets.length > 0) {
+      var proxy = { scale: 15 };
+      tl.to(proxy, {
+        scale: 0,
+        duration: 1.2,
+        ease: 'power1.inOut',
+        onUpdate: function () {
+          dispMap.setAttribute('scale', proxy.scale);
+        },
+        onComplete: function () {
+          // Remove filter once dry — no performance cost left
+          inkTargets.forEach(function (el) { el.style.filter = 'none'; });
+        }
+      }, '-=1.4'); // runs during Act 2 card rise
+    }
+
+    // ── Phase 4.6: 全站熄燈探照燈 Global Darkroom Spotlight ──
+    // #global-dark-room 覆蓋全螢幕；CSS mask-image 在游標位置挖出光圈
+    // mousemove → 更新 --mouse-x / --mouse-y，保持極暗 (0.95)
+    // mouseleave（滑鼠離開視窗）→ 稍微調亮 (0.6)，讓輪廓可見
+    var darkRoom = document.getElementById('global-dark-room');
+
+    if (darkRoom) {
+      var rafId = null;
+
+      document.body.addEventListener('mousemove', function (e) {
+        if (rafId) return; // throttle to one rAF per frame
+        rafId = requestAnimationFrame(function () {
+          darkRoom.style.setProperty('--mouse-x', e.clientX + 'px');
+          darkRoom.style.setProperty('--mouse-y', e.clientY + 'px');
+          darkRoom.style.backgroundColor = 'rgba(18, 12, 8, 0.95)';
+          rafId = null;
+        });
+      });
+
+      document.body.addEventListener('mouseleave', function () {
+        darkRoom.style.backgroundColor = 'rgba(18, 12, 8, 0.6)';
+      });
+    }
+
+    // ── Phase 6 (v2): 煉金作坊微塵 — 景深 × 纖維 × 熱氣上升 ──
+    function initDustMotes() {
+      var container = document.getElementById('dust-container');
+      if (!container || typeof gsap === 'undefined') return;
+
+      var COUNT = 135; // 120 ~ 150 顆
+      var fragment = document.createDocumentFragment();
+
+      for (var i = 0; i < COUNT; i++) {
+        var mote = document.createElement('div');
+        mote.className = 'dust-mote';
+
+        var tier = Math.random();
+        var w, h, blur, opacity;
+
+        if (tier > 0.9) {
+          // 10% 巨型模糊微塵：離鏡頭極近，大且透光
+          w       = gsap.utils.random(5, 12);
+          h       = gsap.utils.random(5, 12);
+          blur    = gsap.utils.random(2, 4);
+          opacity = gsap.utils.random(0.1, 0.3);
+        } else if (tier > 0.6) {
+          // 30% 長條形毛屑纖維：有明顯長寬比
+          w       = gsap.utils.random(1, 2);
+          h       = gsap.utils.random(4, 10);
+          blur    = gsap.utils.random(0.5, 1);
+          opacity = gsap.utils.random(0.5, 0.9);
+        } else {
+          // 60% 遠方細小粉塵：無模糊，銳利小點
+          w       = gsap.utils.random(1, 3);
+          h       = gsap.utils.random(1, 3);
+          blur    = 0;
+          opacity = gsap.utils.random(0.4, 0.8);
+        }
+
+        mote.style.width   = w + 'px';
+        mote.style.height  = h + 'px';
+        mote.style.filter  = blur > 0 ? 'blur(' + blur + 'px)' : 'none';
+        mote.style.opacity = opacity;
+        mote.style.left    = (Math.random() * 100) + '%';
+        // 讓初始 top 偏向畫面中下方，熱氣才有空間往上漂
+        mote.style.top     = (30 + Math.random() * 70) + '%';
+        mote.style.transform = 'rotate(' + gsap.utils.random(0, 360) + 'deg)';
+
+        fragment.appendChild(mote);
+      }
+      container.appendChild(fragment);
+
+      // GSAP 熱氣上升動畫：向上偏移 + 水平游離 + 纖維翻滾
+      var motes = container.querySelectorAll('.dust-mote');
+      motes.forEach(function (mote) {
+        gsap.to(mote, {
+          x:        '+=' + gsap.utils.random(-80, 80),  // 水平隨機游離
+          y:        '-=' + gsap.utils.random(40, 120),  // 負 Y → 往上漂（熱氣）
+          rotation: '+=' + gsap.utils.random(-90, 90),  // 纖維在空中緩慢翻滾
+          opacity:  'random(0.1, 0.9)',                  // 忽明忽暗，光線折射
+          duration: gsap.utils.random(12, 25),
+          ease:     'sine.inOut',
+          repeat:   -1,
+          yoyo:     true,
+          delay:    gsap.utils.random(-20, 0)            // 負 delay → 進場時就在不同動畫進度
+        });
+      });
+    }
+    initDustMotes();
+  });
+  </script>
 
 <div id="petPenalty" style="display:none"></div>
+
+  <!-- ═══ Phase 6: 探照燈微塵容器 Dust Motes Container ═══ -->
+  <!-- z-index: 9997 → 在 #global-dark-room 正下方；自然被探照燈 mask 遮罩 -->
+  <div id="dust-container"></div>
+
+  <!-- ═══ Phase 4.6: 全站熄燈探照燈 Global Darkroom Spotlight ═══ -->
+  <!-- z-index: 9998 → 蓋住所有內容，低於 #cinema-curtain (若存在)            -->
+  <!-- background-color 由 JS 依游標是否在視窗內動態切換                        -->
+  <div id="global-dark-room" style="position: fixed; inset: 0; z-index: 9998; pointer-events: none; background-color: rgba(18, 12, 8, 0.95); transition: background-color 0.8s ease;"></div>
+
 </body>
 </html>
 

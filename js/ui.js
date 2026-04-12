@@ -218,14 +218,17 @@ export function renderWordSelection(words, articleText = "") {
     const row = document.createElement("div");
     row.className = "p-3 border rounded bg-white shadow";
 
-    // 勾選框
+    // 勾選框（隱藏原生；stamp-box 接管視覺）
     const cb = document.createElement("input");
     cb.type = "checkbox";
     cb.name = "word";
     cb.value = w.word;
     cb.detail = w;          // 這裡的 w 已經帶有修正後的 example1
-    cb.className = "mt-1";
     cb.addEventListener("change", updateFabBar);
+
+    // 印章視覺替代元素（label 本身已能觸發 checkbox；span 只需阻擋冒泡即可）
+    const stampBox = document.createElement("span");
+    stampBox.className = "stamp-box";
 
     // 第一行：左文字（flex-1）+ 右側「發音」按鈕（flex-shrink-0，不換行不重疊）
     const head = document.createElement("div");
@@ -234,7 +237,7 @@ export function renderWordSelection(words, articleText = "") {
     const headLeft = document.createElement("div");
     headLeft.className = "flex-1 min-w-0";
     headLeft.innerHTML = `
-      <strong>${escapeHTML(w.word)}</strong>
+      <strong class="stamp-word">${escapeHTML(w.word)}</strong>
       <span class="text-gray-700">(${escapeHTML(posAbbr(w.pos))})</span>
       <span style="word-break:keep-all;">— ${escapeHTML(w.definition)}</span>
     `;
@@ -261,10 +264,11 @@ export function renderWordSelection(words, articleText = "") {
       ${w.example2_zh  ? `<div><em>翻譯：</em>${escapeHTML(w.example2_zh)}</div>` : ""}
     `;
 
-    // 佈局：勾選 + 內容
+    // 佈局：stamp-label（含隱藏 checkbox + stamp-box） + 內容
     const label = document.createElement("label");
-    label.className = "flex items-start space-x-2";
+    label.className = "stamp-label flex items-start space-x-2";
     label.appendChild(cb);
+    label.appendChild(stampBox);
 
     const content = document.createElement("div");
     content.className = "flex-1 min-w-0";
@@ -279,6 +283,19 @@ export function renderWordSelection(words, articleText = "") {
   });
 
   document.getElementById("aiResult").classList.remove("hidden");
+
+  // ── Phase 5.2 萃取落盤進場動畫（Condensation）──────────────────────────
+  if (typeof gsap !== "undefined") {
+    const rows = container.querySelectorAll(":scope > div");
+    gsap.from(rows, {
+      y: 10,
+      opacity: 0,
+      duration: 0.4,
+      ease: "power2.out",
+      stagger: 0.08,
+      clearProps: "transform,opacity"
+    });
+  }
   updateFabBar();
 }
 
@@ -367,28 +384,49 @@ export function handleSaveSelected(){
   const exists = new Set(current.map(w => (w.word||"").toLowerCase()));
   let anyAdded = false;
 
-  cbs.forEach(cb => {
-    const { word, pos, definition, example1, example2, example2_zh, level } = cb.detail;
-    const k = (word||"").toLowerCase();
-    if (exists.has(k)) { markRowAsAdded(cb, true); return; }
+  // ── Phase 5.3 轉移入冊離場動畫（Bottling）──────────────────────────────
+  const checkedCards = cbs
+    .map(cb => cb.closest(".p-3, .ai-card, .word-row") || cb.closest("div[class]"))
+    .filter(Boolean);
 
-    const { added } = addWord({
-      word, pos, definition,
-      example1: example1 || "",
-      example2: example2 || "",
-      example2_zh: example2_zh || "",
-      level: level || ""
+  const doSave = () => {
+    cbs.forEach(cb => {
+      const { word, pos, definition, example1, example2, example2_zh, level } = cb.detail;
+      const k = (word||"").toLowerCase();
+      if (exists.has(k)) { markRowAsAdded(cb, true); return; }
+
+      const { added } = addWord({
+        word, pos, definition,
+        example1: example1 || "",
+        example2: example2 || "",
+        example2_zh: example2_zh || "",
+        level: level || ""
+      });
+
+      if (added) { markRowAsAdded(cb, false); anyAdded = true; _fetchAndStoreRelations(word); } else { markRowAsAdded(cb, true); }
+      exists.add(k);
     });
 
-    if (added) { markRowAsAdded(cb, false); anyAdded = true; _fetchAndStoreRelations(word); } else { markRowAsAdded(cb, true); }
-    exists.add(k);
-  });
+    // 國考工具模式：新增不自動同步；請用「雲端同步」按鈕
 
-  // 國考工具模式：新增不自動同步；請用「雲端同步」按鈕
+    renderSidebarLists();
+    hideFabBar();
+    if (anyAdded) onWordAdded();
+  };
 
-  renderSidebarLists();
-  hideFabBar();
-  if (anyAdded) onWordAdded();
+  if (typeof gsap !== "undefined" && checkedCards.length > 0) {
+    gsap.to(checkedCards, {
+      y: -10,
+      scale: 0.95,
+      opacity: 0,
+      duration: 0.28,
+      ease: "power2.in",
+      stagger: 0.05,
+      onComplete: doSave
+    });
+  } else {
+    doSave();
+  }
 }
 
 /* ===== 右側列表 + 分頁 ===== */
@@ -809,8 +847,34 @@ function makeListItem(w, opts = {}) {
   // 點標題行切換展開
   header.addEventListener("click", (e) => {
     if (e.target.closest("button, input")) return;
+    const isExpanding = details.classList.contains("hidden");
     details.classList.toggle("hidden");
     arrow.textContent = details.classList.contains("hidden") ? "▸" : "▾";
+
+    // 展開時：GSAP 交錯落下動畫（紙卷攤開效果）
+    if (isExpanding && typeof gsap !== "undefined") {
+      // 深層抓取每一行獨立元素，確保 stagger 打在每一塊文字上
+      const targets = Array.from(
+        details.querySelectorAll("p, .wc-rel-row, .wc-ai-help, .wc-footer, .wc-ai > p")
+      );
+      // 若深層選取失敗（空）則退回直接子元素
+      const items = targets.length >= 2 ? targets : Array.from(details.children);
+      if (items.length) {
+        gsap.fromTo(
+          items,
+          { y: 15, opacity: 0 },
+          {
+            y: 0,
+            opacity: 1,
+            duration: 0.55,
+            stagger: 0.12,
+            ease: "power3.out",
+            delay: 0.05,
+            clearProps: "all"
+          }
+        );
+      }
+    }
   });
 
   details.querySelector("[data-act='review']")?.addEventListener("click", () => {
@@ -851,8 +915,8 @@ function showUndoToast(text){ const toast = document.getElementById("undoToast")
 export function undoLastDelete(){ const toast = document.getElementById("undoToast"); if (!lastDeleted) return toast.classList.add("hidden"); const all = getAllWords(); all.push(lastDeleted); saveAllWords(all); const cb = findCbByWord(lastDeleted.word); if (cb) markRowAsAdded(cb, true); lastDeleted = null; toast.classList.add("hidden"); renderSidebarLists(); }
 
 /* ===== FAB ===== */
-function updateFabBar(){ const count = document.querySelectorAll("input[name='word']:checked").length; const bar = document.getElementById("fabBar"); document.getElementById("fabCount").textContent = String(count); bar.classList.toggle("hidden", count === 0); }
-function hideFabBar(){ document.getElementById("fabBar").classList.add("hidden"); }
+function updateFabBar(){ /* fabBar 已移除；保留空函式避免既有呼叫點拋錯 */ }
+function hideFabBar(){ /* fabBar 已移除 */ }
 
 /* ===== AI 卡片標示/復原 ===== */
 export function markRowAsAdded(cb, already) {

@@ -1853,6 +1853,12 @@ section.bg-white.rounded-xl.shadow label {
   color: var(--color-ink-2) !important;
 }
 
+/* ── CG-4 fix: kill bg-white on sidebar cards ──────────────────────────── */
+#pixelPetCard,
+#backupCard {
+  background: var(--color-surface-panel) !important;  /* #E8DCCA — no more dead-white */
+}
+
 /* ── P4. PixelPet card ──────────────────────────────────────────────────── */
 #pixelPetCard .text-gray-400,
 #pixelPetCard .text-gray-500 {
@@ -1928,4 +1934,85 @@ section.bg-white.rounded-xl.shadow label {
 }
 #syncClose:hover {
   background: var(--color-surface-panel) !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   DAY-MODE PHYSICAL DEPTH FIXES — appended last, highest source-order.
+   Compiled-spec.md §2B, §3.1, §3.2, §3.3a, §3.5 + CG-2, CG-4, CG-11.
+   All rules scoped with html:not([data-theme="dark"]) so night mode is
+   never affected. wc.css loads last → same !important + source order wins.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Fix 1: Primary Button — dark ink body, NEVER amber fill (CG-11) ── */
+/*
+ * wc.css line ~779: #startQuizBtn { background: var(--wc-accent) } has no
+ * day/night guard → overrides theme-perfume-day.css dark-ink rule.
+ * This block wins by source order (same file, later position).
+ */
+html:not([data-theme="dark"]) #startQuizBtn {
+  background-color: var(--color-ink-1) !important;  /* #1C1208 dried brown-black ink */
+  background:       var(--color-ink-1) !important;
+  color:            var(--color-surface-card) !important;  /* #F0E8D4 cream on dark */
+  border:           none !important;
+  box-shadow:
+    1px 2px 6px rgba(80, 50, 15, 0.18),              /* SH-btn: warm directional */
+    inset 0 1px 0 var(--color-rim-btn) !important;   /* amber rim-light on top edge */
+}
+html:not([data-theme="dark"]) #startQuizBtn:hover:not(:disabled) {
+  background-color: #2E251C !important;
+  background: color-mix(in srgb, var(--color-ink-1) 92%, #fff 8%) !important;
+  color:      var(--color-surface-card) !important;
+  box-shadow:
+    1px 3px 8px rgba(80, 50, 15, 0.24),
+    inset 0 1px 0 var(--color-rim-hover) !important;
+}
+html:not([data-theme="dark"]) #startQuizBtn:active:not(:disabled) {
+  background-color: #150E06 !important;
+  background: color-mix(in srgb, var(--color-ink-1) 95%, black 5%) !important;
+  box-shadow:
+    inset 0 1px 3px rgba(80, 50, 15, 0.22),
+    inset 0 1px 0 rgba(255, 220, 140, 0.10) !important;
+}
+html:not([data-theme="dark"]) #startQuizBtn * {
+  color: inherit !important;
+}
+html:not([data-theme="dark"]) #startQuizBtn svg {
+  stroke: currentColor !important;
+  fill:   none !important;
+}
+
+/* ── Fix 2: #articleInputSection — directional SH-1 only, no ring (CG-2) ── */
+/*
+ * wc.css line ~561: box-shadow contains "0 0 0 1px rgba(150,110,60,0.20)"
+ * which spreads a full-perimeter ring → reads as a flat SaaS card border.
+ * Spec §2B SH-1: 2px 4px 16px (right-down offset) + inset rim on top only.
+ */
+html:not([data-theme="dark"]) #articleInputSection {
+  box-shadow:
+    2px 4px 16px rgba(80, 50, 15, 0.10),             /* SH-1: warm directional */
+    inset 0 1px 0 var(--color-rim-card) !important;  /* rim light: candlelight on top edge */
+}
+
+/* ── Fix 4: Word list .wc-card — ledger entries, not SaaS cards (§3.3a) ── */
+/*
+ * .wc-card has border-radius: 10px and box-shadow ring (0 0 0 1px warm-edge)
+ * making each word row look like an individual elevated card.
+ * For day mode inside the ledger panel, strip all card chrome — depth comes
+ * from the panel's own SH-2 + bottom ledger lines on <li> (from day.css §3.3a).
+ */
+
+/* Today / Due lists: flat, same surface as panel (no floating card look) */
+html:not([data-theme="dark"]) #sidebarTodayList .wc-card,
+html:not([data-theme="dark"]) #sidebarDueList .wc-card {
+  background:    var(--color-surface-panel) !important;  /* match panel; ledger on same sheet */
+  border-radius: 0 !important;
+  box-shadow:    none !important;
+}
+
+/* All list: flat card chrome off; keep alternating bg from day.css (§3.3a Scheme B) */
+html:not([data-theme="dark"]) #sidebarAllList .wc-card {
+  border-radius: 0 !important;
+  box-shadow:    none !important;
+  /* background intentionally NOT overridden — Scheme B alternating rules in day.css win */
 }

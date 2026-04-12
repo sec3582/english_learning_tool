@@ -144,13 +144,15 @@ body::before {
 }
 
 /* ── Vignette: corners darker than center (CG-4) ── */
+/* Inner transparent zone: 40% (was 55%) — closer crop so mid-zone already fades */
+/* Edge alpha: 0.25 (was 0.12) — corners visibly darker than center              */
 body::after {
   content: "";
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 1;
-  background: radial-gradient(ellipse at center, transparent 55%, rgba(40, 25, 8, 0.12) 100%);
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(40, 25, 8, 0.25) 100%);
 }
 
 /* ── Content layer: above texture + vignette ── */
@@ -345,7 +347,7 @@ main {
 /* ── M-2: Parchment texture on panel surface (CG-3) ── */
 /* Short fiber, slight directional randomness; seed locked (CG-8)           */
 /* z-index: -1 → above panel background, below all child content            */
-#wordListCard::after {
+#wordListCard::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -358,6 +360,7 @@ main {
   opacity: 0.035;
   mix-blend-mode: soft-light;
 }
+
 
 /* ── Panel title (h2.sidebar-title) — D1 serif heading ── */
 #wordListCard .sidebar-title {
@@ -1292,4 +1295,150 @@ grammar-tag.active {
 
 [data-theme="dark"] #syncSave:hover {
   background: color-mix(in srgb, var(--wc-accent, #C8782A) 88%, white 12%) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Step 6-B — Remaining Modals (usageModal, syncModal, grammarModal,
+              translateModal, mnemonicModal) — no dead white allowed
+   All containers: surface-modal + SH-3 + rim top/left (same spec as §3.4)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Overlay ── */
+#usageModal,
+#syncModal,
+#grammarModal,
+#translateModal {
+  background: var(--color-overlay) !important;  /* rgba(40,25,8,0.55) warm brown */
+}
+
+/* ── Container: paper held up ── */
+#usageModal > div,
+#syncModal > div,
+#grammarModal > div,
+#translateModal > div {
+  background:    var(--color-surface-modal) !important;  /* #F3ECDF */
+  border:        none !important;
+  border-radius: var(--radius-modal) !important;          /* 8px */
+  padding:       var(--pad-modal) !important;             /* 22px 24px */
+  box-shadow:
+    var(--shadow-sh3),                                    /* 3px 8px 28px rgba(80,50,15,0.22) */
+    inset 0 1px 0 var(--color-rim-modal-top),             /* rim top */
+    inset 1px 0 0 var(--color-rim-modal-left) !important; /* rim left */
+}
+
+/* ── Mnemonic overlay + window ── */
+.mnemonic-overlay {
+  background: var(--color-overlay) !important;
+}
+
+.mnemonic-window {
+  background:    var(--color-surface-modal) !important;
+  border:        none !important;
+  border-radius: var(--radius-modal) !important;
+  box-shadow:
+    var(--shadow-sh3),
+    inset 0 1px 0 var(--color-rim-modal-top),
+    inset 1px 0 0 var(--color-rim-modal-left) !important;
+}
+
+/* ── Appear animation (same as §3.4) ── */
+#usageModal:not(.hidden) > div,
+#syncModal:not(.hidden) > div,
+#grammarModal:not(.hidden) > div,
+#translateModal:not(.hidden) > div {
+  animation: modal-in var(--motion-modal-in);
+}
+
+/* ── Night-mode guards ── */
+[data-theme="dark"] #usageModal,
+[data-theme="dark"] #syncModal,
+[data-theme="dark"] #grammarModal,
+[data-theme="dark"] #translateModal {
+  background: rgba(0, 0, 0, 0.65) !important;
+}
+
+[data-theme="dark"] #usageModal > div,
+[data-theme="dark"] #syncModal > div,
+[data-theme="dark"] #grammarModal > div,
+[data-theme="dark"] #translateModal > div,
+[data-theme="dark"] .mnemonic-window {
+  background: var(--wc-card, #1e2433) !important;
+  box-shadow: 3px 8px 28px rgba(0, 0, 0, 0.40) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Phase 4.6 — Global Darkroom Spotlight (全站熄燈探照燈)
+   #global-dark-room 覆蓋全螢幕；mask-image 在游標位置挖出 350px 光圈
+   JS 透過 --mouse-x / --mouse-y 即時更新座標
+   ═══════════════════════════════════════════════════════════════════════════ */
+#global-dark-room {
+  mask-image: radial-gradient(
+    circle 350px at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    transparent 0%,
+    black 100%
+  );
+  -webkit-mask-image: radial-gradient(
+    circle 350px at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    transparent 0%,
+    black 100%
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Phase 5 — Ink Stamp Checkbox (物理感印章勾選框)
+   隱藏原生 checkbox；以 .stamp-box 偽造蓋印手感
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* 1. 隱藏原生 checkbox（仍保留在 DOM 中讓 JS 能讀取 :checked / .detail） */
+.stamp-label input[name="word"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+/* 2. 印章外框（未蓋印狀態）：內凹壓痕感 */
+.stamp-box {
+  flex-shrink: 0;
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  margin-top: 3px;
+  border-radius: 4px;
+  background: var(--color-surface-recessed, #DFD0B8);
+  box-shadow:
+    inset 0 1px 3px rgba(0, 0, 0, 0.22),
+    inset 0 0 0 1px rgba(120, 85, 30, 0.28);
+  cursor: pointer;
+  transition: box-shadow 0.15s ease;
+}
+
+/* 3. hover 預覽：輕微加深壓痕 */
+.stamp-label:hover .stamp-box {
+  box-shadow:
+    inset 0 2px 5px rgba(0, 0, 0, 0.30),
+    inset 0 0 0 1px rgba(120, 85, 30, 0.45);
+}
+
+/* 4. 勾選狀態：墨色填滿 + 蓋印動畫 */
+.stamp-label input[name="word"]:checked ~ .stamp-box {
+  background: var(--color-ink-1, #1C1208);
+  box-shadow:
+    inset 0 0 0 1px rgba(120, 85, 30, 0.15),
+    0 1px 3px rgba(0, 0, 0, 0.35);
+  animation: inkStamp 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes inkStamp {
+  0%   { transform: scale(0.78);  filter: blur(1.2px); }
+  60%  { transform: scale(1.06);  filter: blur(0.2px); }
+  100% { transform: scale(1);     filter: blur(0);     }
+}
+
+/* 5. 文字鎖定連動：勾選時單字 strong 變深加粗 */
+.stamp-label:has(input[name="word"]:checked) .stamp-word {
+  font-weight: 800;
+  color: var(--color-ink-1, #1C1208);
+  letter-spacing: 0.01em;
 }

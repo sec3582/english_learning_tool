@@ -560,9 +560,6 @@ function bindEvents() {
   document.getElementById("dueNext")?.addEventListener("click", UI.gotoDueNext);
 
 
-  // 浮動加入列
-  on("fabAddBtn", "click", UI.handleSaveSelected);
-
   // 刪除復原
   on("undoBtn", "click", UI.undoLastDelete);
 
