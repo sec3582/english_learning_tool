@@ -743,13 +743,46 @@ function makeListItem(w, opts = {}) {
     `<strong class="wc-word">${escapeHTML(w.word)}</strong>` +
     `<div class="wc-meta">` +
       `<span class="wc-pos">${escapeHTML(posAbbr(w.pos) || "")}</span>` +
-      `<span class="wc-def">— ${escapeHTML(w.definition || "")}</span>` +
+      `<span class="wc-def" title="點擊編輯中文解釋">— ${escapeHTML(w.definition || "")}</span>` +
     `</div>`;
 
   // 單字文字點擊：播放發音；stopPropagation 防止觸發父層收闔
   titleArea.querySelector(".wc-word").addEventListener("click", (e) => {
     e.stopPropagation();
     speak(w.word);
+  });
+
+  // 中文解釋點擊：內嵌編輯
+  titleArea.querySelector(".wc-def").addEventListener("click", (e) => {
+    e.stopPropagation();
+    const defSpan = e.currentTarget;
+    if (defSpan.querySelector("input")) return; // 已在編輯中
+    const currentDef = w.definition || "";
+    const input = document.createElement("input");
+    input.type = "text";
+    input.value = currentDef;
+    input.style.cssText = `
+      font-size:.875rem; color:var(--text); background:var(--bg);
+      border:none; border-bottom:1.5px solid var(--primary,#7C96AB);
+      outline:none; padding:0 2px; width:100%; min-width:80px; max-width:220px;
+      font-family:inherit;
+    `;
+    defSpan.textContent = "— ";
+    defSpan.appendChild(input);
+    input.focus();
+    input.select();
+
+    function saveDef() {
+      const newDef = input.value.trim();
+      updateWord(w.word, { definition: newDef });
+      w.definition = newDef;
+      defSpan.textContent = `— ${newDef}`;
+    }
+    input.addEventListener("keydown", (ev) => {
+      if (ev.key === "Enter") { ev.preventDefault(); saveDef(); }
+      if (ev.key === "Escape") { defSpan.textContent = `— ${currentDef}`; }
+    });
+    input.addEventListener("blur", saveDef);
   });
 
   // 展開箭頭

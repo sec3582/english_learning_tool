@@ -1366,23 +1366,6 @@ grammar-tag.active {
   box-shadow: 3px 8px 28px rgba(0, 0, 0, 0.40) !important;
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   Phase 4.6 — Global Darkroom Spotlight (全站熄燈探照燈)
-   #global-dark-room 覆蓋全螢幕；mask-image 在游標位置挖出 350px 光圈
-   JS 透過 --mouse-x / --mouse-y 即時更新座標
-   ═══════════════════════════════════════════════════════════════════════════ */
-#global-dark-room {
-  mask-image: radial-gradient(
-    circle 350px at var(--mouse-x, 50%) var(--mouse-y, 50%),
-    transparent 0%,
-    black 100%
-  );
-  -webkit-mask-image: radial-gradient(
-    circle 350px at var(--mouse-x, 50%) var(--mouse-y, 50%),
-    transparent 0%,
-    black 100%
-  );
-}
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Phase 5 — Ink Stamp Checkbox (物理感印章勾選框)

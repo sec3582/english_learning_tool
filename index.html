@@ -638,13 +638,13 @@
   #translateContent .cht-text,
   #readerContent .cht-text {
     /* 使用 !important 避免被舊文章資料庫裡殘留的 inline-style 蓋掉 */
-    color: var(--muted) !important;
+    color: var(--text) !important;
     font-size: 0.9rem;
     line-height: 1.6;
     margin-bottom: 20px !important;
     border-left: 3px solid #A3B18A;
     padding-left: 12px;
-    font-weight: 300; /* 讓中文筆畫稍微輕一點，與英文主體產生區隔 */
+    font-weight: 400;
   }
   </style>
 
@@ -740,7 +740,6 @@
             <div class="flex flex-wrap items-center gap-3">
               <!-- Primary Action -->
               <button id="analyzeBtn" class="btn-primary-m">
-                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
                 讓 AI 挑單字
               </button>
               <!-- Secondary Action (暫時隱藏，功能移至圖書館 reader 模式) -->
@@ -1381,29 +1380,6 @@
       }, '-=1.4'); // runs during Act 2 card rise
     }
 
-    // ── Phase 4.6: 全站熄燈探照燈 Global Darkroom Spotlight ──
-    // #global-dark-room 覆蓋全螢幕；CSS mask-image 在游標位置挖出光圈
-    // mousemove → 更新 --mouse-x / --mouse-y，保持極暗 (0.95)
-    // mouseleave（滑鼠離開視窗）→ 稍微調亮 (0.6)，讓輪廓可見
-    var darkRoom = document.getElementById('global-dark-room');
-
-    if (darkRoom) {
-      var rafId = null;
-
-      document.body.addEventListener('mousemove', function (e) {
-        if (rafId) return; // throttle to one rAF per frame
-        rafId = requestAnimationFrame(function () {
-          darkRoom.style.setProperty('--mouse-x', e.clientX + 'px');
-          darkRoom.style.setProperty('--mouse-y', e.clientY + 'px');
-          darkRoom.style.backgroundColor = 'rgba(18, 12, 8, 0.95)';
-          rafId = null;
-        });
-      });
-
-      document.body.addEventListener('mouseleave', function () {
-        darkRoom.style.backgroundColor = 'rgba(18, 12, 8, 0.6)';
-      });
-    }
 
     // ── Phase 6 (v2): 煉金作坊微塵 — 景深 × 纖維 × 熱氣上升 ──
     function initDustMotes() {
@@ -1475,14 +1451,8 @@
 
 <div id="petPenalty" style="display:none"></div>
 
-  <!-- ═══ Phase 6: 探照燈微塵容器 Dust Motes Container ═══ -->
-  <!-- z-index: 9997 → 在 #global-dark-room 正下方；自然被探照燈 mask 遮罩 -->
+  <!-- ═══ Phase 6: 微塵容器 Dust Motes Container ═══ -->
   <div id="dust-container"></div>
-
-  <!-- ═══ Phase 4.6: 全站熄燈探照燈 Global Darkroom Spotlight ═══ -->
-  <!-- z-index: 9998 → 蓋住所有內容，低於 #cinema-curtain (若存在)            -->
-  <!-- background-color 由 JS 依游標是否在視窗內動態切換                        -->
-  <div id="global-dark-room" style="position: fixed; inset: 0; z-index: 9998; pointer-events: none; background-color: rgba(18, 12, 8, 0.95); transition: background-color 0.8s ease;"></div>
 
 </body>
 </html>
