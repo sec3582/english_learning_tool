@@ -107,6 +107,10 @@ export async function bootstrapFromSheetsToLocalStorage() {
 
   const wordRows = await getValues(`${SHEET_WORDS}!A2:M`);
 
+  // 讀取已刪除單字黑名單，防止重新匯入
+  let _deletedKeys;
+  try { _deletedKeys = new Set(JSON.parse(localStorage.getItem("deletedWordKeys") || "[]")); } catch { _deletedKeys = new Set(); }
+
   const myWords = wordRows
     .map((r) => {
       if (!hasAll) {
@@ -145,7 +149,10 @@ export async function bootstrapFromSheetsToLocalStorage() {
         antonyms: get("antonyms") ?? "",
       };
     })
-    .filter((x) => String(x.word || "").trim());
+    .filter((x) => {
+      const k = String(x.word || "").trim().toLowerCase();
+      return k && !_deletedKeys.has(k);
+    });
 
   // --- Logs ---
   const addedRows = await getValues(`${SHEET_ADDED}!A2:B`);

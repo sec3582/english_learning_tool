@@ -77,6 +77,22 @@ export function addWord(wordObj = {}) {
   return { added: true, obj };
 }
 
+// ── 已刪除單字黑名單（防止 bootstrap 重新匯入）
+function _getDeletedKeys() {
+  try { return new Set(JSON.parse(localStorage.getItem("deletedWordKeys") || "[]")); } catch { return new Set(); }
+}
+function _saveDeletedKeys(set) {
+  localStorage.setItem("deletedWordKeys", JSON.stringify([...set]));
+}
+export function removeFromDeletedKeys(word) {
+  const set = _getDeletedKeys();
+  set.delete((word || "").toLowerCase());
+  _saveDeletedKeys(set);
+}
+export function isWordDeleted(word) {
+  return _getDeletedKeys().has((word || "").toLowerCase());
+}
+
 export function deleteWord(word) {
   const key = (word || "").toLowerCase();
   const all = getAllWords();
@@ -84,6 +100,11 @@ export function deleteWord(word) {
   if (idx === -1) return null;
   const [deleted] = all.splice(idx, 1);
   saveAllWords(all);
+
+  // 加入黑名單，避免 Google Sheets bootstrap 重新匯入
+  const set = _getDeletedKeys();
+  set.add(key);
+  _saveDeletedKeys(set);
 
   markDirty(1);
 

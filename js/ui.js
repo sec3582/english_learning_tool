@@ -1,7 +1,7 @@
 // js/ui.js（頂端 imports）
 import { analyzeArticle, extractJSON, getUsageSummary, getUsageBudget, setUsageBudget, resetUsageMonth, analyzeCustomWordAPI, generateGrammarQuiz, gradeGrammarAnswer } from "./api.js";
 import { getGrammarPracticePoints, addGrammarPoint, removeGrammarPoint, recordGrammarPractice } from "./grammarStorage.js";
-import { addWord, getAllWords, deleteWord, updateWord, getTodayWords, getDueWords, getDueCount, saveAllWords, scheduleNext, ensureDueForAll, getMasteredCount, getSyncMeta, clearDirtyAndSetLastSync } from "./storage.js";
+import { addWord, getAllWords, deleteWord, updateWord, getTodayWords, getDueWords, getDueCount, saveAllWords, scheduleNext, ensureDueForAll, getMasteredCount, getSyncMeta, clearDirtyAndSetLastSync, removeFromDeletedKeys } from "./storage.js";
 import { getMatchedRelations } from "./wordRelations.js";
 import { speak, speakEn, speakSequence } from "./speech.js";
 import { buildTypingQuestion, makeChoiceQuestion, makeDictationQuestion, grade, afterAnswerSpeech, pickExamplePair } from "./quiz.js";
@@ -945,7 +945,7 @@ function makeListItem(w, opts = {}) {
 }
 
 function showUndoToast(text){ const toast = document.getElementById("undoToast"); document.getElementById("undoText").textContent = text; toast.classList.remove("hidden"); clearTimeout(showUndoToast._tid); showUndoToast._tid = setTimeout(()=> toast.classList.add("hidden"), 4000); }
-export function undoLastDelete(){ const toast = document.getElementById("undoToast"); if (!lastDeleted) return toast.classList.add("hidden"); const all = getAllWords(); all.push(lastDeleted); saveAllWords(all); const cb = findCbByWord(lastDeleted.word); if (cb) markRowAsAdded(cb, true); lastDeleted = null; toast.classList.add("hidden"); renderSidebarLists(); }
+export function undoLastDelete(){ const toast = document.getElementById("undoToast"); if (!lastDeleted) return toast.classList.add("hidden"); removeFromDeletedKeys(lastDeleted.word); const all = getAllWords(); all.push(lastDeleted); saveAllWords(all); const cb = findCbByWord(lastDeleted.word); if (cb) markRowAsAdded(cb, true); lastDeleted = null; toast.classList.add("hidden"); renderSidebarLists(); }
 
 /* ===== FAB ===== */
 function updateFabBar(){ /* fabBar 已移除；保留空函式避免既有呼叫點拋錯 */ }
