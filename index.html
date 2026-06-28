@@ -728,7 +728,6 @@
           <div class="flex border-b border-gray-100 mb-5">
             <button id="inputTabManual"  class="input-tab input-tab--active">手動輸入</button>
             <button id="inputTabUrl"     class="input-tab">網址</button>
-            <button id="inputTabLibrary" class="input-tab">我的圖書館</button>
           </div>
 
           <!-- Panel①：手動輸入 -->
@@ -755,8 +754,8 @@
               -->
               <!-- Tertiary Action -->
               <button id="saveArticleBtn" class="btn-ghost-m">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                收藏此文
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                收藏到 Notion
               </button>
               <span id="loading" class="text-sm text-gray-400 hidden">AI 分析中，請稍後…</span>
             </div>
@@ -775,69 +774,6 @@
             <div id="urlStatus" class="hidden text-xs rounded-lg px-3 py-2 leading-relaxed"></div>
           </div>
 
-          <!-- Panel③：我的圖書館 -->
-          <div id="inputPanelLibrary" class="hidden space-y-3">
-            <input id="librarySearch" type="text" placeholder="搜尋標題關鍵字…"
-              class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:border-[#A3B18A] focus:ring-2 focus:ring-[#A3B18A]/20" />
-            <div id="libraryItems" class="space-y-2">
-              <!-- Empty State（未載入時顯示） -->
-              <div id="libraryEmptyState" class="flex flex-col items-center justify-center py-10 gap-3">
-                <svg xmlns="http://www.w3.org/2000/svg" width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
-                </svg>
-                <p class="text-sm text-center max-w-[240px]" style="color:#9CA3AF; line-height:1.6;">
-                  尚無文章記錄<br>如需同步，請使用右側<br>「資料管理」區塊的「雲端載入」
-                </p>
-              </div>
-            </div>
-            <div id="libraryPager" class="hidden flex items-center justify-between text-sm text-gray-400 pt-1">
-              <button id="libraryPrev" class="px-3 py-1 rounded border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-default">← 上一頁</button>
-              <span id="libraryPageInfo"></span>
-              <button id="libraryNext" class="px-3 py-1 rounded border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-default">下一頁 →</button>
-            </div>
-          </div>
-
-        </section>
-
-        <!-- 閱讀模式 Reader Mode（點擊圖書館文章後出現） -->
-        <section id="readerSection" class="hidden bg-white rounded-xl shadow p-6 space-y-4">
-          <div class="flex items-center justify-between">
-            <h2 class="text-xl font-semibold flex-1 min-w-0 pr-4 truncate" id="readerTitle">文章標題</h2>
-            <button id="readerBackBtn"
-              class="flex-shrink-0 flex items-center gap-1 px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-sm font-medium text-gray-700">
-              ← 返回編輯
-            </button>
-          </div>
-          <p class="text-xs text-gray-400" id="readerSavedAt"></p>
-          <!-- Reader 工具列：顯示已有的增益資料 + 可執行翻譯/文法分析 -->
-          <div class="reader-toolbar">
-            <div id="readerEnrichStatus" class="reader-enrich-status">
-              <!-- 動態插入：已有翻譯/文法的標籤 -->
-            </div>
-            <button id="readerTranslateBtn" class="btn-sm-m hidden">
-              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
-              翻譯此文
-            </button>
-            <button id="readerGrammarBtn" class="btn-sm-m hidden">
-              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-              文法分析
-            </button>
-            <button id="readerSpeakBtn" class="btn-sm-m">
-              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
-              朗讀全文
-            </button>
-          </div>
-          <div id="readerContent" class="reader-body"></div>
-          <!-- Reader 文法解析面板（點擊文法標籤後顯示） -->
-          <div id="readerGrammarPanel" class="hidden rounded-lg p-4 text-sm" style="background:var(--bg); border-left:3px solid var(--primary);">
-            <div id="readerGrammarPanelContent"></div>
-            <div class="mt-3 flex justify-end">
-              <button id="readerAddGrammarPracticeBtn" class="hidden text-xs px-3 py-1 rounded border" style="color:#4F46E5;border-color:#C7D2FE;background:#EEF2FF;">
-                + 加入文法練習
-              </button>
-            </div>
-          </div>
-          <!-- Reader 單字提示卡（動態插入） -->
         </section>
 
         <!-- AI Suggestions -->
@@ -851,6 +787,34 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             加入選取清單
           </button>
+        </section>
+
+        <!-- 中文翻譯（分析後顯示，預設折疊） -->
+        <section id="translationSection" class="hidden bg-white rounded-xl shadow p-6">
+          <button id="translationToggleBtn" type="button" class="w-full flex items-center justify-between text-left">
+            <h2 class="section-h">
+              <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
+              中文翻譯
+            </h2>
+            <span id="translationChevron" style="color:var(--color-ink-3,#A08568); font-size:.85rem; display:inline-block; transition:transform .2s;">▼</span>
+          </button>
+          <div id="translationBody" class="hidden" style="border-top:1px solid var(--color-card-separator,rgba(160,110,30,.35)); margin-top:14px; padding-top:14px;">
+            <div id="translationContent" class="article-viewer text-sm leading-relaxed"></div>
+          </div>
+        </section>
+
+        <!-- 文法重點說明（分析後顯示，預設折疊） -->
+        <section id="grammarSection" class="hidden bg-white rounded-xl shadow p-6">
+          <button id="grammarToggleBtn" type="button" class="w-full flex items-center justify-between text-left">
+            <h2 class="section-h">
+              <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+              文法重點說明
+            </h2>
+            <span id="grammarChevron" style="color:var(--color-ink-3,#A08568); font-size:.85rem; display:inline-block; transition:transform .2s;">▼</span>
+          </button>
+          <div id="grammarBody" class="hidden" style="margin:14px -24px -24px; padding:14px 24px 20px; background:var(--color-surface-recessed,#DFD0B8); border-radius:0 0 8px 8px;">
+            <div id="grammarContent" class="space-y-0"></div>
+          </div>
         </section>
 
         <!-- Custom add -->
@@ -933,15 +897,11 @@
             </div>
           </div>
 
-          <!-- 只保留「本機資料開始測驗」；雲端載入/同步請使用下方四顆按鈕 -->
+          <!-- 開始測驗 -->
           <div class="flex gap-2 mb-3">
             <button id="startQuizBtn" class="flex-1 btn-primary-m justify-center" style="border-radius:8px;">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
               開始測驗
-            </button>
-            <button id="startGrammarQuizBtn" class="flex-1 btn-outline-m justify-center" style="border-radius:8px;">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-              文法測驗
             </button>
           </div>
 
@@ -1118,57 +1078,6 @@
   </div>
 
 
-  <!-- Grammar Quiz Modal -->
-  <div id="grammarQuizModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
-    <div class="bg-white w-full max-w-xl rounded-xl shadow-xl mx-4 p-6 space-y-4">
-      <!-- Header -->
-      <div class="flex justify-between items-center">
-        <h3 class="text-lg sidebar-title">
-          文法測驗
-          <span id="grammarQuizProgress" class="text-sm font-normal text-gray-400 ml-2"></span>
-        </h3>
-        <button id="grammarQuizClose" class="text-gray-400 hover:text-gray-600">✕</button>
-      </div>
-      <div class="quiz-progress-track"><div id="grammarQuizProgressBar" class="quiz-progress-fill" style="width:0%"></div></div>
-
-      <!-- Loading -->
-      <div id="grammarQuizLoading" class="text-center py-10 text-gray-500 text-sm">
-        <svg class="animate-spin inline-block mr-2 mb-1" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg>
-        AI 正在出題中，請稍候…
-      </div>
-
-      <!-- Question area -->
-      <div id="grammarQuizQuestion" class="hidden space-y-3">
-        <div id="grammarQuizPointName" class="text-xs font-medium px-2 py-1 rounded inline-block" style="background:#EEF2FF; color:#4F46E5;"></div>
-        <div id="grammarQuizInstruction" class="font-medium text-gray-800 leading-relaxed"></div>
-        <div class="rounded-lg p-3 text-sm" style="background:var(--bg); border-left:3px solid var(--primary); color:var(--text);">
-          <div class="text-xs text-gray-400 mb-1">原句</div>
-          <div id="grammarQuizOriginal" class="leading-relaxed"></div>
-        </div>
-        <div id="grammarQuizHint" class="text-xs text-gray-400 italic hidden"></div>
-        <textarea id="grammarQuizAnswer" class="w-full p-3 border rounded resize-none text-sm" rows="3" placeholder="請在此輸入改寫後的英文句子…"></textarea>
-        <div class="flex gap-2">
-          <button id="grammarQuizSubmit" class="px-4 py-2 quiz-btn-primary rounded text-sm">提交</button>
-          <button id="grammarQuizShowHint" class="px-4 py-2 bg-gray-100 rounded text-sm text-gray-600">提示</button>
-          <button id="grammarQuizNext" class="px-4 py-2 quiz-btn-next rounded text-sm hidden">下一題</button>
-        </div>
-        <div id="grammarQuizFeedback" class="hidden rounded-lg p-4 space-y-2 text-sm" style="background:#F0FDF4; border:1px solid #86EFAC;">
-          <div class="flex items-center gap-2 font-semibold" id="grammarQuizFeedbackScore"></div>
-          <div id="grammarQuizFeedbackRef" class="text-gray-700"></div>
-          <div id="grammarQuizFeedbackText" class="text-gray-600 leading-relaxed"></div>
-          <div id="grammarQuizFeedbackNote" class="text-xs pt-1" style="color:#A3B18A; border-top:1px solid #BBF7D0;padding-top:6px;"></div>
-        </div>
-      </div>
-
-      <!-- Summary -->
-      <div id="grammarQuizSummary" class="hidden text-center py-4 space-y-3">
-        <div class="text-4xl font-bold" id="grammarQuizSummaryScore" style="color:#A3B18A;"></div>
-        <div class="text-gray-600 text-sm" id="grammarQuizSummaryText"></div>
-        <button id="grammarQuizDone" class="px-5 py-2 btn-primary-m rounded justify-center">完成</button>
-      </div>
-    </div>
-  </div>
-
   <!-- Usage modal -->
   <div id="usageModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
     <div class="bg-white w-full max-w-lg rounded-xl shadow-lg p-6 space-y-5">
@@ -1258,39 +1167,6 @@
         <button class="mnemonic-close" id="mnemonicClose" aria-label="關閉">×</button>
       </div>
       <div id="mnemonicBody"></div>
-    </div>
-  </div>
-
-  <!-- 文法重點分析 Modal -->
-  <div id="grammarModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
-    <div class="w-full max-w-3xl rounded-xl shadow-xl flex flex-col mx-4" style="background:var(--card); max-height:82vh;">
-      <!-- Header -->
-      <div class="flex justify-between items-center px-6 py-4 border-b flex-shrink-0" style="border-color:var(--border);">
-        <h3 class="text-base font-semibold" style="color:var(--text);">文法重點分析</h3>
-        <button id="grammarModalClose" class="transition-colors" style="color:var(--muted);" aria-label="關閉">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
-      </div>
-      <!-- Article Viewer（可捲動） -->
-      <div class="article-viewer overflow-y-auto px-6 py-5 flex-1 min-h-0" id="grammarArticleViewer" style="min-height:clamp(80px, 18vh, 180px);"></div>
-      <!-- Explanation Panel（固定高度） -->
-      <div class="px-6 py-4 border-t flex-shrink-0" id="grammarExplanationPanel"
-           style="background:var(--bg); border-color:var(--border); min-height:clamp(80px, 14vh, 130px); max-height:clamp(140px, 28vh, 300px); overflow-y:auto;">
-        <p class="text-sm text-center" style="color:var(--muted); padding-top:1.75rem;">點擊文章中的藍色標籤，查看文法解析</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- 全文翻譯 Modal -->
-  <div id="translateModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
-    <div class="w-full max-w-2xl rounded-xl shadow-xl flex flex-col mx-4" style="background:var(--card); max-height:85vh;">
-      <div class="flex justify-between items-center px-6 py-4 border-b flex-shrink-0" style="border-color:var(--border);">
-        <h3 class="text-base font-semibold" style="color:var(--text);">全文中英對照翻譯</h3>
-        <button id="translateModalClose" class="transition-colors" style="color:var(--muted);" aria-label="關閉">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
-      </div>
-      <div id="translateContent" class="overflow-y-auto px-6 py-5 flex-1 min-h-0 text-sm leading-relaxed" style="line-height:1.9;"></div>
     </div>
   </div>
 

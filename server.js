@@ -205,7 +205,8 @@ Return ONLY a valid JSON object with this exact structure:
       "sentenceId": "s1",
       "word": "exact word or multi-word phrase copied verbatim from the sentence",
       "name": "文法或片語名稱（繁體中文，例如：現在完成式、動詞片語 give up、介系詞片語）",
-      "explanation": "清楚說明此文法規則或片語用法，用繁體中文，2至3句話",
+      "explanation": "清楚說明此文法規則或片語用法，用繁體中文，1至2句話",
+      "exampleSentence": "The complete, verbatim sentence from the article that contains word — must be identical to the text of the sentence with id=sentenceId",
       "context": "結合本句語境的解析，說明為何此處使用這個文法或片語，用繁體中文"
     }
   ]
@@ -214,9 +215,10 @@ Return ONLY a valid JSON object with this exact structure:
 STRICT RULES:
 1. "sentences" must contain ALL sentences from the article, preserving the original text exactly.
 2. "word" must be a substring that appears verbatim (exact same characters and case) in the referenced sentence. For phrasal verbs or multi-word phrases, include the complete phrase as it appears.
-3. Aim for roughly half grammar points and half phrase/collocation points.
-4. All Chinese fields ("name", "explanation", "context") MUST be in Traditional Chinese (繁體中文).
-5. Return ONLY a valid JSON object — no markdown, no code fences, no extra text.
+3. "exampleSentence" must be the complete verbatim sentence from the article containing "word" — identical to the text of the sentence referenced by sentenceId.
+4. Aim for roughly half grammar points and half phrase/collocation points.
+5. All Chinese fields ("name", "explanation", "context") MUST be in Traditional Chinese (繁體中文).
+6. Return ONLY a valid JSON object — no markdown, no code fences, no extra text.
 
 Article:
 ${truncateArticleToParagraphs(text)}`;
@@ -452,6 +454,140 @@ app.post("/api", async (req, res) => {
   } catch (err) {
     console.error("[Gemini API 錯誤]", err);
     res.status(500).json({ ok: false, error: err.message || "Gemini API 呼叫失敗" });
+  }
+});
+
+// ====== Notion 收藏文章 ======
+app.post("/notion-save", async (req, res) => {
+  const { NOTION_TOKEN, NOTION_PAGE_ID } = process.env;
+  if (!NOTION_TOKEN || !NOTION_PAGE_ID) {
+    return res.status(500).json({ ok: false, error: "伺服器未設定 NOTION_TOKEN 或 NOTION_PAGE_ID" });
+  }
+
+  const { title, articleText, translationHtml, grammarPoints, grammarSentences, words } = req.body || {};
+  if (!articleText) return res.status(400).json({ ok: false, error: "缺少 articleText" });
+
+  // Notion rich_text 單次上限 2000 字元，超過需拆分
+  function richText(content) {
+    const MAX = 1990;
+    const str = String(content || "");
+    const chunks = [];
+    for (let i = 0; i < str.length; i += MAX) {
+      chunks.push({ type: "text", text: { content: str.slice(i, i + MAX) } });
+    }
+    return chunks.length ? chunks : [{ type: "text", text: { content: "" } }];
+  }
+
+  const block = {
+    paragraph: (text) => ({ object: "block", type: "paragraph", paragraph: { rich_text: richText(text) } }),
+    heading:   (text) => ({ object: "block", type: "heading_2", heading_2: { rich_text: [{ type: "text", text: { content: text } }] } }),
+    bullet:    (text) => ({ object: "block", type: "bulleted_list_item", bulleted_list_item: { rich_text: richText(text) } }),
+    divider:   ()     => ({ object: "block", type: "divider", divider: {} }),
+  };
+
+  function stripTags(s) {
+    return String(s || "")
+      .replace(/<[^>]+>/g, "")
+      .replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+      .trim();
+  }
+
+  // 從翻譯 HTML 只提取中文段落（整篇不夾英文，最多 20 段）
+  function translationBlocks(html) {
+    if (!html) return [block.paragraph("（未提供翻譯）")];
+    const chtRe = /<p[^>]*class="[^"]*cht-text[^"]*"[^>]*>([\s\S]*?)<\/p>/gi;
+    const chts = [];
+    let m;
+    while ((m = chtRe.exec(html)) !== null) {
+      const t = stripTags(m[1]);
+      if (t) chts.push(t);
+    }
+    return chts.length
+      ? chts.slice(0, 20).map(t => block.paragraph(t))
+      : [block.paragraph("（翻譯內容為空）")];
+  }
+
+  // 文章原文切段落（最多 10 段）
+  function articleBlocks(text) {
+    return (text || "").split(/\n\n+/).map(p => p.trim()).filter(Boolean).slice(0, 10).map(block.paragraph);
+  }
+
+  const blocks = [
+    block.heading("📄 文章原文"),
+    ...articleBlocks(articleText),
+    block.divider(),
+    block.heading("🌐 中文翻譯"),
+    ...translationBlocks(translationHtml),
+    block.divider(),
+    block.heading("📝 文法重點"),
+  ];
+
+  if (Array.isArray(grammarPoints) && grammarPoints.length) {
+    // sentenceMap 作為備援，主要取 p.exampleSentence（由 Gemini 直接附在每個 point）
+    const sentenceMap = Object.fromEntries(
+      (Array.isArray(grammarSentences) ? grammarSentences : []).map(s => [s.id, s.text])
+    );
+    for (const p of grammarPoints) {
+      const word = p.word ? `「${p.word}」` : "";
+      blocks.push(block.bullet(`${p.name || "文法點"}${word ? " " + word : ""} — ${p.explanation || ""}`));
+      const exSentence = (p.exampleSentence || sentenceMap[p.sentenceId] || "").trim();
+      if (exSentence) blocks.push(block.paragraph(`　例句：${exSentence}`));
+    }
+  } else {
+    blocks.push(block.paragraph("（未提供文法重點）"));
+  }
+
+  blocks.push(block.divider());
+  blocks.push(block.heading("📚 單字清單"));
+
+  if (Array.isArray(words) && words.length) {
+    for (const w of words) {
+      // 第一行：word（詞性，級別）— 中文意思
+      blocks.push(block.bullet(`${w.word}（${w.pos || ""}，${w.level || ""}）— ${w.definition || ""}`));
+      // 第二行：包含該單字的最短完整例句
+      const ex = (w.example1 || w.example2 || "").trim();
+      if (ex) blocks.push(block.paragraph(`　例句：${ex}`));
+    }
+  } else {
+    blocks.push(block.paragraph("（未提供單字）"));
+  }
+
+  // Notion Create Page 上限 100 blocks
+  const safeBlocks = blocks.slice(0, 100);
+  const pageTitle = String(title || articleText).slice(0, 60).replace(/\n/g, " ").trim();
+
+  try {
+    const notionRes = await fetch("https://api.notion.com/v1/pages", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${NOTION_TOKEN}`,
+        "Content-Type": "application/json",
+        "Notion-Version": "2022-06-28",
+      },
+      body: JSON.stringify({
+        parent: { page_id: NOTION_PAGE_ID },
+        properties: {
+          title: { title: [{ type: "text", text: { content: pageTitle } }] },
+        },
+        children: safeBlocks,
+      }),
+      signal: AbortSignal.timeout(20000),
+    });
+
+    const notionData = await notionRes.json();
+    if (!notionRes.ok) {
+      const errMsg = notionData?.message || notionData?.code || "Notion API 錯誤";
+      console.error("[Notion]", notionRes.status, errMsg);
+      return res.status(500).json({ ok: false, error: errMsg });
+    }
+
+    const pageUrl = notionData.url || `https://notion.so/${(notionData.id || "").replace(/-/g, "")}`;
+    console.log(`[Notion] 已建立頁面：${pageUrl}`);
+    return res.json({ ok: true, pageUrl, pageId: notionData.id });
+  } catch (err) {
+    console.error("[Notion 同步錯誤]", err);
+    return res.status(500).json({ ok: false, error: err.message || "Notion 同步失敗" });
   }
 });
 

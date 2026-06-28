@@ -189,6 +189,7 @@ const ICON_SPEAK = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="1
 export function renderWordSelection(words, articleText = "") {
   const container = document.getElementById("wordForm");
   container.innerHTML = "";
+  container.className = "grid grid-cols-1 sm:grid-cols-2 gap-3";
   const existing = new Set(getAllWords().map(w => (w.word||"").toLowerCase()));
 
   // 先把文章切成一句一句
@@ -216,7 +217,7 @@ export function renderWordSelection(words, articleText = "") {
 
     // 外框
     const row = document.createElement("div");
-    row.className = "p-3 border rounded bg-white shadow";
+    row.className = "word-suggestion-card";
 
     // 勾選框（隱藏原生；stamp-box 接管視覺）
     const cb = document.createElement("input");
@@ -238,31 +239,25 @@ export function renderWordSelection(words, articleText = "") {
     headLeft.className = "flex-1 min-w-0";
     headLeft.innerHTML = `
       <strong class="stamp-word">${escapeHTML(w.word)}</strong>
-      <span class="text-gray-700">(${escapeHTML(posAbbr(w.pos))})</span>
-      <span style="word-break:keep-all;">— ${escapeHTML(w.definition)}</span>
+      <span class="word-card-meta">${escapeHTML(posAbbr(w.pos))}${w.level ? `<span class="word-level-badge">${escapeHTML(w.level)}</span>` : ""}</span>
+      <span class="word-card-def">— ${escapeHTML(w.definition)}</span>
     `;
 
     const headRight = document.createElement("button");
     headRight.type = "button";
     headRight.title = "播放發音";
     headRight.innerHTML = `${ICON_SPEAK} <span>發音</span>`;
-    headRight.className = "flex-shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 text-sm font-medium rounded-lg transition whitespace-nowrap mt-0.5";
-    headRight.style.cssText = "color:#7C96AB; background:transparent;";
-    headRight.addEventListener("mouseenter", () => { headRight.style.background = "#F3F4F1"; headRight.style.color = "#4A4A4A"; });
-    headRight.addEventListener("mouseleave", () => { headRight.style.background = "transparent"; headRight.style.color = "#7C96AB"; });
+    headRight.className = "speak-btn-warm flex-shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 text-sm font-medium rounded-lg whitespace-nowrap mt-0.5";
     headRight.addEventListener("click", () => speak(w.word));
 
     head.appendChild(headLeft);
     head.appendChild(headRight);
 
-    // 內文
+    // 內文（只顯示文章例句，降低密度）
     const body = document.createElement("div");
-    body.className = "text-sm text-gray-700 space-y-1 mt-1";
-    body.innerHTML = `
-      ${exampleFromArticle ? `<div><em>文章例句：</em>「${escapeHTML(exampleFromArticle)}」</div>` : ""}
-      ${w.example2     ? `<div><em>造句：</em>「${escapeHTML(w.example2)}」</div>` : ""}
-      ${w.example2_zh  ? `<div><em>翻譯：</em>${escapeHTML(w.example2_zh)}</div>` : ""}
-    `;
+    body.innerHTML = exampleFromArticle
+      ? `<span class="word-card-example">「${escapeHTML(exampleFromArticle)}」</span>`
+      : "";
 
     // 佈局：stamp-label（含隱藏 checkbox + stamp-box） + 內容
     const label = document.createElement("label");

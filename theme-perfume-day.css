@@ -1425,3 +1425,119 @@ grammar-tag.active {
   color: var(--color-ink-1, #1C1208);
   letter-spacing: 0.01em;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Phase 6 — AI 單字建議卡片
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* 卡片容器：羊皮紙底色 + 暖棕陰影 + 左上 rim light，移除白底與描邊 */
+.word-suggestion-card {
+  background: var(--color-surface-card, #F0E8D4);
+  border: none;
+  border-radius: var(--radius-container, 8px);
+  box-shadow:
+    2px 4px 16px rgba(80, 50, 15, 0.10),
+    inset 0 1px 0 var(--color-rim-card, rgba(255, 220, 140, 0.30));
+  padding: 12px 14px;
+  transition: box-shadow 150ms ease-out;
+}
+
+/* 單字標題：D1 Serif，主墨色 */
+.word-suggestion-card .stamp-word {
+  font-family: "EB Garamond", "Lora", "Crimson Pro", Georgia, serif;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--color-ink-1, #1C1208);
+  letter-spacing: -0.01em;
+}
+
+/* 詞性 · 級別：輕量 muted 標籤行 */
+.word-card-meta {
+  font-size: 0.6875rem;
+  color: var(--color-ink-2, #7A6045);
+  letter-spacing: 0.02em;
+}
+
+/* 級別 badge：enrich 配色 */
+.word-card-meta .word-level-badge {
+  display: inline-block;
+  margin-left: 5px;
+  padding: 0 5px;
+  border-radius: var(--radius-badge, 3px);
+  background: var(--color-badge-enrich-bg, #E4D5BA);
+  color: var(--color-badge-enrich-fg, #5C3D1A);
+  font-weight: 600;
+  font-size: 0.625rem;
+  letter-spacing: 0.04em;
+  vertical-align: middle;
+  line-height: 1.6;
+}
+
+/* 中文意思：D3 中文字型，次墨色 */
+.word-card-def {
+  display: block;
+  font-family: "Noto Sans TC", system-ui, sans-serif;
+  font-size: 0.875rem;
+  color: var(--color-ink-2, #7A6045);
+  margin-top: 2px;
+  word-break: keep-all;
+}
+
+/* 例句：更淡，斜體，行高足夠 */
+.word-card-example {
+  display: block;
+  font-size: 0.8125rem;
+  color: var(--color-ink-3, #A08568);
+  line-height: 1.65;
+  margin-top: 6px;
+  font-style: italic;
+}
+
+/* 發音按鈕：改用暖色調，移除冷灰 */
+.word-suggestion-card .speak-btn-warm {
+  color: var(--color-ink-3, #A08568);
+  background: transparent;
+  transition: background 150ms ease-out, color 150ms ease-out;
+}
+.word-suggestion-card .speak-btn-warm:hover {
+  background: rgba(160, 110, 30, 0.08);
+  color: var(--color-ink-2, #7A6045);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Phase 6 — 文法重點折疊互動
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* summary hover：暖棕微亮，取代瀏覽器預設系統藍 */
+#grammarContent details summary {
+  padding: 2px 6px;
+  margin: 0 -6px;
+  border-radius: var(--radius-badge, 3px);
+  transition: background 150ms ease-out;
+}
+#grammarContent details summary:hover {
+  background: rgba(160, 110, 30, 0.07);
+}
+#grammarContent details summary::-webkit-details-marker { display: none; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Phase 6 — 中文翻譯文字排版
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* 翻譯容器：套用 D3 中文字型 */
+.article-viewer {
+  font-family: "Noto Sans TC", system-ui, sans-serif;
+}
+
+/* 中文段落：呼吸間距 + 主墨色 */
+.article-viewer .cht-text,
+.article-viewer p {
+  font-size: 0.9375rem;
+  color: var(--color-ink-1, #1C1208);
+  line-height: 1.9;
+  margin-bottom: 0.9em;
+}
+.article-viewer .cht-text:last-child,
+.article-viewer p:last-child {
+  margin-bottom: 0;
+}
