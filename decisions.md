@@ -7,7 +7,7 @@
 
 ## 1. The Brief（一句話）
 
-每一個畫面都是 18 世紀格拉斯香料作坊的工作桌——羊皮紙泛黃、墨水已乾、陽光斜射進木格窗，整間屋子聞起來像乾燥花材和舊蠟，而不是矽谷軟體介面。
+每一個畫面都是 18 世紀格拉斯香料作坊的工作桌——羊皮紙泛黃、墨水已乾、陽光斜射進木格窗，而不是矽谷軟體介面。
 
 > Translation for engineering: Every surface in this UI should read as aged, tactile, and warm — not clean, corporate, or digital.
 
@@ -217,7 +217,7 @@
 | 2 | **主要 Section 卡片** | `#articleInputSection`、`#aiResult`、`#readerSection`（`bg-white rounded-xl shadow`） | 純白底、無材質、通用 SaaS 卡片外觀 |
 | 3 | **右側單字清單面板** | `#wordListCard`（`bg-white rounded-xl shadow`）| 和主內容區外觀無差異，無場景感 |
 
-> **Word List 是 Day Mode 的主鏡頭（hero scene）。** 使用者停留最久、最常反覆掃視這個面板。它的場景定義是「香料作坊帳冊攤開在桌上」——每一列單字都是帳冊裡的一個條目，不是 SaaS list item。視覺重量、紋理深度、row 分隔方式都應是全頁面中最考究的，而非與左側卡片等同對待。
+> **Word List 是 Day Mode 的主鏡頭（hero scene）。** 使用者停留最久、最常反覆掃視這個面板。它的場景定義是「香料作坊帳冊攤開在桌上」——每一列單字都是帳冊裡的一個條目，不是 SaaS list item。視覺重量、紋理深度、row 分隔方式的規格在全頁面中最高，不應與左側卡片等同對待。
 | 4 | **Modal 容器** | `#quizModal .modal`、`#quizSettings .modal`、`#grammarQuizModal .modal` | `.modal` 目前是 `var(--card)` 底 + `box-shadow:0 24px 60px rgba(2,6,23,.35)`，冷黑陰影，無 rim light |
 | 5 | **Primary Button** | `.btn-primary-m`、`.quiz-btn-primary` | `var(--primary)` 鼠尾草綠底色，需整體替換為琥珀金 / 深墨色方向 |
 | 6 | **Input 欄位、Textarea、Select** | `input`、`textarea`、`select` 全域規則 + `#articleInput`、`#urlInput`、`#librarySearch`、`#grammarQuizAnswer` | 純白底 + 冷藍 focus ring，完全背離羊皮紙世界 |
