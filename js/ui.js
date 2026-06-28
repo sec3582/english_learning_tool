@@ -2648,6 +2648,8 @@ function _gqShowQuestion() {
 
   _gqCurrentPoint = q;
   _gqEl("grammarQuizProgress").textContent = `${_gqIndex + 1} / ${_gqQuestions.length}`;
+  const _gqBar = _gqEl("grammarQuizProgressBar");
+  if (_gqBar) _gqBar.style.width = Math.round((_gqIndex / _gqQuestions.length) * 100) + "%";
   _gqEl("grammarQuizPointName").textContent  = q.grammarPointName || "";
   _gqEl("grammarQuizInstruction").textContent = q.instruction || "";
   _gqEl("grammarQuizOriginal").textContent   = q.originalSentence || "";
@@ -2747,6 +2749,8 @@ function _gqShowSummary() {
     `優秀 ${aCount} 題・大致正確 ${bCount} 題・需改進 ${total - aCount - bCount} 題`;
   _gqEl("grammarQuizSummary").classList.remove("hidden");
   _gqEl("grammarQuizProgress").textContent = "";
+  const _gqBarFinal = _gqEl("grammarQuizProgressBar");
+  if (_gqBarFinal) _gqBarFinal.style.width = "100%";
 }
 
 export function closeGrammarQuiz() {
