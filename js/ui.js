@@ -1,7 +1,7 @@
 // js/ui.js（頂端 imports）
 import { analyzeArticle, extractJSON, getUsageSummary, getUsageBudget, setUsageBudget, resetUsageMonth, analyzeCustomWordAPI, generateGrammarQuiz, gradeGrammarAnswer } from "./api.js";
 import { getGrammarPracticePoints, addGrammarPoint, removeGrammarPoint, recordGrammarPractice } from "./grammarStorage.js";
-import { addWord, getAllWords, deleteWord, updateWord, getTodayWords, getDueWords, getDueCount, saveAllWords, scheduleNext, ensureDueForAll, getMasteredCount, getSyncMeta, clearDirtyAndSetLastSync, removeFromDeletedKeys } from "./storage.js";
+import { addWord, getAllWords, deleteWord, updateWord, getTodayWords, getDueWords, getDueCount, saveAllWords, scheduleNext, ensureDueForAll, getMasteredCount, getDailyStats, getSyncMeta, clearDirtyAndSetLastSync, removeFromDeletedKeys } from "./storage.js";
 import { getMatchedRelations } from "./wordRelations.js";
 import { speak, speakEn, speakSequence } from "./speech.js";
 import { buildTypingQuestion, makeChoiceQuestion, makeDictationQuestion, grade, afterAnswerSpeech, pickExamplePair } from "./quiz.js";
@@ -438,6 +438,7 @@ export function renderSidebarLists(){
   renderListAll();
   refreshMasteredAndChart();
   refreshSyncUI();
+  renderProgressCard();
 }
 function renderDueBadge(){ const n = getDueCount(); const el = document.getElementById("dueCountBadge"); if (el) el.textContent = n; }
 function renderListToday(){
@@ -1412,6 +1413,108 @@ function startRetakeWith(queue){
 function refreshMasteredAndChart(){
   const m = getMasteredCount(4); const badge = document.getElementById("masteredBadge"); if (badge) badge.textContent = m;
   updatePetDisplay();
+}
+
+/* ===== 學習進度卡片 ===== */
+function renderProgressCard() {
+  const statsEl  = document.getElementById("progressStats");
+  const chartEl  = document.getElementById("progressChart");
+  const groupsEl = document.getElementById("progressGroups");
+  if (!statsEl || !chartEl || !groupsEl) return;
+
+  const words = getAllWords();
+
+  // ── Block 1: 熟練度三桶統計 ──
+  const mastered   = words.filter(w => (w.stage || 0) >= 4).length;
+  const learning   = words.filter(w => { const s = w.stage || 0; return s >= 1 && s <= 3; }).length;
+  const notStarted = words.filter(w => (w.stage || 0) === 0).length;
+  const total      = words.length;
+  const pct = n => total ? (n / total * 100).toFixed(1) : 0;
+
+  statsEl.innerHTML = `
+    <div style="display:flex;gap:8px">
+      <div style="flex:1;text-align:center;background:#F5F0E8;border-radius:8px;padding:10px 4px">
+        <div style="font-size:1.4rem;font-weight:700;color:#6B5234">${mastered}</div>
+        <div style="font-size:0.68rem;color:#9A8070;margin-top:2px">已掌握</div>
+      </div>
+      <div style="flex:1;text-align:center;background:#FDF6EC;border-radius:8px;padding:10px 4px">
+        <div style="font-size:1.4rem;font-weight:700;color:#8B6914">${learning}</div>
+        <div style="font-size:0.68rem;color:#9A8070;margin-top:2px">學習中</div>
+      </div>
+      <div style="flex:1;text-align:center;background:#F7F4F0;border-radius:8px;padding:10px 4px">
+        <div style="font-size:1.4rem;font-weight:700;color:#9A8C7A">${notStarted}</div>
+        <div style="font-size:0.68rem;color:#9A8070;margin-top:2px">尚未開始</div>
+      </div>
+    </div>
+    <div style="height:5px;border-radius:3px;background:#EDE5D8;overflow:hidden;margin-top:10px;display:flex">
+      <div style="width:${pct(mastered)}%;background:#9A7250"></div>
+      <div style="width:${pct(learning)}%;background:#C4A050"></div>
+      <div style="width:${pct(notStarted)}%;background:#D4C5B0"></div>
+    </div>`;
+
+  // ── Block 2: 最近 7 天複習折線圖（純 SVG） ──
+  const buckets = getDailyStats(7);
+  const maxVal  = Math.max(5, ...buckets.map(b => b.reviewed));
+  const W = 240, H = 68, pX = 14, pY = 8;
+  const plotW = W - pX * 2, plotH = H - pY * 2;
+  const stepX = buckets.length > 1 ? plotW / (buckets.length - 1) : plotW;
+  const tx = i => (pX + i * stepX).toFixed(1);
+  const ty = v => (pY + plotH - (v / maxVal) * plotH).toFixed(1);
+
+  const pts     = buckets.map((b, i) => `${tx(i)},${ty(b.reviewed)}`).join(" ");
+  const grids   = [0, 0.5, 1].map(r => {
+    const y = (pY + r * plotH).toFixed(1);
+    return `<line x1="${pX}" y1="${y}" x2="${W - pX}" y2="${y}" stroke="#EDE5D8" stroke-width="1"/>`;
+  }).join("");
+  const circles = buckets.map((b, i) =>
+    `<circle cx="${tx(i)}" cy="${ty(b.reviewed)}" r="3" fill="#7A5C38"><title>${b.key}: ${b.reviewed}次</title></circle>`
+  ).join("");
+  const xLabels = buckets.map((b, i) =>
+    `<text x="${tx(i)}" y="${H + 14}" text-anchor="middle" font-size="9" fill="#B0A090">${b.key.slice(5)}</text>`
+  ).join("");
+
+  chartEl.innerHTML = `
+    <div style="font-size:0.68rem;color:#9A8070;font-weight:600;letter-spacing:.04em;margin-bottom:4px">最近 7 天複習次數</div>
+    <svg viewBox="0 0 ${W} ${H + 18}" style="width:100%;overflow:visible;display:block">
+      ${grids}
+      <polyline points="${pts}" fill="none" stroke="#A07850" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      ${circles}
+      ${xLabels}
+    </svg>`;
+
+  // ── Block 3: 依熟悉度分組顯示 ──
+  const groups = [
+    { label: "已掌握（stage 4–5）", words: words.filter(w => (w.stage || 0) >= 4),  color: "#6B5234", bg: "#F5F0E8" },
+    { label: "學習中（stage 1–3）", words: words.filter(w => { const s = w.stage || 0; return s >= 1 && s <= 3; }), color: "#8B6914", bg: "#FDF6EC" },
+    { label: "尚未開始（stage 0）", words: words.filter(w => (w.stage || 0) === 0),  color: "#9A8C7A", bg: "#F7F4F0" },
+  ];
+
+  groupsEl.innerHTML = groups.map(g => `
+    <details style="margin-bottom:6px">
+      <summary style="cursor:pointer;font-size:0.72rem;font-weight:600;color:${g.color};padding:3px 0;list-style:none;display:flex;align-items:center;gap:6px">
+        <span style="background:${g.bg};border-radius:10px;padding:2px 9px">${g.label}</span>
+        <span style="font-weight:400;color:#B0A090">${g.words.length}</span>
+      </summary>
+      <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;padding-left:4px">
+        ${g.words.length === 0
+          ? `<span style="font-size:0.72rem;color:#C0B4A4">（無）</span>`
+          : g.words.map(w =>
+              `<span style="font-size:0.72rem;background:${g.bg};color:${g.color};border-radius:12px;padding:2px 10px" title="${(w.definition || '').replace(/"/g, '&quot;')}">${w.word}</span>`
+            ).join("")}
+      </div>
+    </details>`).join("");
+
+  // ── 展開/收合 toggle（只綁一次） ──
+  const hdr  = document.getElementById("progressCardHeader");
+  const body = document.getElementById("progressCardBody");
+  const chev = document.getElementById("progressCardChevron");
+  if (hdr && body && !hdr.dataset.initDone) {
+    hdr.dataset.initDone = "1";
+    hdr.addEventListener("click", () => {
+      const nowHidden = body.classList.toggle("hidden");
+      chev.style.transform = nowHidden ? "rotate(-90deg)" : "rotate(0deg)";
+    });
+  }
 }
 
 /* ===== Sync 狀態（dirty / lastSync） ===== */

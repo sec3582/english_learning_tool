@@ -908,6 +908,21 @@
 
       <!-- Right: sidebar -->
       <aside class="space-y-4">
+
+      <!-- 學習進度卡片 -->
+      <div id="progressCard" class="bg-white rounded-xl shadow p-6">
+        <div id="progressCardHeader" class="flex items-center justify-between cursor-pointer select-none">
+          <h3 class="sidebar-title">學習進度</h3>
+          <span id="progressCardChevron" style="font-size:0.85rem;color:#B0A090;transform:rotate(-90deg);transition:transform .2s;display:inline-block">▼</span>
+        </div>
+        <div id="progressCardBody" class="hidden">
+          <div style="height:1px;background:#EDE5D8;margin:12px 0 16px"></div>
+          <div id="progressStats"></div>
+          <div id="progressChart" style="margin-top:16px"></div>
+          <div id="progressGroups" style="margin-top:16px"></div>
+        </div>
+      </div>
+
       <div id="wordListCard" class="bg-white rounded-xl shadow p-6">
           <div id="wordListHeader" class="flex items-center justify-between mb-3">
             <h2 class="text-xl sidebar-title whitespace-nowrap flex-shrink-0 mr-6">單字清單</h2>
