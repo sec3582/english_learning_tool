@@ -753,7 +753,7 @@
               </button>
               -->
               <!-- Tertiary Action -->
-              <button id="saveArticleBtn" class="btn-ghost-m">
+              <button id="saveArticleBtn" class="hidden">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                 收藏到 Notion
               </button>
@@ -776,46 +776,49 @@
 
         </section>
 
-        <!-- AI Suggestions -->
-        <section id="aiResult" class="bg-white rounded-xl shadow p-6 space-y-4 hidden">
-          <h2 class="section-h">
-            <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
-            AI 建議單字
-          </h2>
-          <div id="wordForm" class="space-y-3"></div>
-          <button id="saveBtn" type="button" class="btn-primary-m" style="position:relative;z-index:50;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            加入選取清單
-          </button>
-        </section>
+        <!-- 輸入摺疊帶：分析後顯示，分析前隱藏 -->
+        <div id="inputCollapsedStrip" class="hidden bg-white rounded-xl shadow px-4 py-3 flex items-center gap-3">
+          <p id="inputCollapsedPreview" class="flex-1 text-sm truncate" style="color:var(--muted); font-style:italic;"></p>
+          <button id="stripExpandBtn" class="btn-outline-m" style="font-size:.8125rem; padding:.35rem .75rem;">展開</button>
+          <button id="stripReanalyzeBtn" class="btn-ghost-m" style="font-size:.8125rem; padding:.35rem .75rem;">重新分析</button>
+        </div>
 
-        <!-- 中文翻譯（分析後顯示，預設折疊） -->
-        <section id="translationSection" class="hidden bg-white rounded-xl shadow p-6">
-          <button id="translationToggleBtn" type="button" class="w-full flex items-center justify-between text-left">
-            <h2 class="section-h">
-              <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
-              中文翻譯
-            </h2>
-            <span id="translationChevron" style="color:var(--color-ink-3,#A08568); font-size:.85rem; display:inline-block; transition:transform .2s;">▼</span>
-          </button>
-          <div id="translationBody" class="hidden" style="border-top:1px solid var(--color-card-separator,rgba(160,110,30,.35)); margin-top:14px; padding-top:14px;">
-            <div id="translationContent" class="article-viewer text-sm leading-relaxed"></div>
-          </div>
-        </section>
+        <!-- 結果 Tab wrapper（分析後才顯示） -->
+        <div id="resultTabWrapper" class="hidden space-y-0">
 
-        <!-- 文法重點說明（分析後顯示，預設折疊） -->
-        <section id="grammarSection" class="hidden bg-white rounded-xl shadow p-6">
-          <button id="grammarToggleBtn" type="button" class="w-full flex items-center justify-between text-left">
-            <h2 class="section-h">
-              <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-              文法重點說明
-            </h2>
-            <span id="grammarChevron" style="color:var(--color-ink-3,#A08568); font-size:.85rem; display:inline-block; transition:transform .2s;">▼</span>
-          </button>
-          <div id="grammarBody" class="hidden" style="margin:14px -24px -24px; padding:14px 24px 20px; background:var(--color-surface-recessed,#DFD0B8); border-radius:0 0 8px 8px;">
-            <div id="grammarContent" class="space-y-0"></div>
+          <!-- Tab 標籤列 -->
+          <div class="result-tab-bar bg-white rounded-t-xl shadow px-4 pt-4" style="border-bottom:1px solid var(--border);">
+            <button id="rtabWords"   class="result-tab result-tab--active">單字卡 <span id="rtabWordsBadge" class="result-tab-badge"></span></button>
+            <button id="rtabTrans"   class="result-tab">翻譯</button>
+            <button id="rtabGrammar" class="result-tab">文法重點 <span id="rtabGrammarBadge" class="result-tab-badge"></span></button>
           </div>
-        </section>
+
+          <!-- 單字卡面板 -->
+          <div id="rtabPanelWords" class="result-tab-panel bg-white rounded-b-xl shadow">
+            <div class="p-6 space-y-4">
+              <div id="wordForm" class="space-y-3"></div>
+              <button id="saveBtn" type="button" class="btn-primary-m" style="position:relative;z-index:50;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                加入選取清單
+              </button>
+            </div>
+          </div>
+
+          <!-- 翻譯面板 -->
+          <div id="rtabPanelTrans" class="result-tab-panel bg-white rounded-b-xl shadow hidden">
+            <div class="p-6">
+              <div id="translationContent" class="article-viewer text-sm leading-relaxed"></div>
+            </div>
+          </div>
+
+          <!-- 文法重點面板 -->
+          <div id="rtabPanelGrammar" class="result-tab-panel bg-white rounded-b-xl shadow hidden">
+            <div style="padding:14px 24px 20px; background:var(--color-surface-recessed,#DFD0B8); border-radius:0 0 12px 12px;">
+              <div id="grammarContent" class="space-y-0"></div>
+            </div>
+          </div>
+
+        </div>
 
         <!-- Custom add -->
         <section class="bg-white rounded-xl shadow p-6 space-y-4">
@@ -871,7 +874,7 @@
       </div>
 
       <!-- Right: sidebar -->
-      <aside class="space-y-4">
+      <aside class="space-y-4" style="position:sticky; top:1.5rem; max-height:calc(100vh - 3rem); overflow-y:auto;">
 
       <!-- 學習進度卡片 -->
       <div id="progressCard" class="bg-white rounded-xl shadow p-6">
@@ -895,6 +898,14 @@
               <button id="tabDue"   class="px-4 py-2 text-sm whitespace-nowrap">複習</button>
               <button id="tabAll"   class="px-4 py-2 text-sm whitespace-nowrap">全部</button>
             </div>
+          </div>
+
+          <!-- 收藏到 Notion（分析後才顯示） -->
+          <div id="sidebarNotionWrap" class="hidden mb-2">
+            <button id="sidebarNotionBtn" class="w-full btn-outline-m justify-center" style="border-radius:8px; font-size:.8125rem;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+              收藏到 Notion
+            </button>
           </div>
 
           <!-- 開始測驗 -->
@@ -1344,6 +1355,36 @@
 
   <!-- ═══ Phase 6: 微塵容器 Dust Motes Container ═══ -->
   <div id="dust-container"></div>
+
+  <!-- 摺疊帶展開／收合 toggle（在 main.js 模組之後執行，確保事件順序正確） -->
+  <script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var btn   = document.getElementById('stripExpandBtn');
+    var input = document.getElementById('articleInputSection');
+    var strip = document.getElementById('inputCollapsedStrip');
+    if (!btn || !input || !strip) return;
+
+    // 當分析完成重新顯示摺疊帶時，把按鈕文字重置為「展開」
+    new MutationObserver(function (mutations) {
+      mutations.forEach(function (m) {
+        if (!strip.classList.contains('hidden')) btn.textContent = '展開';
+      });
+    }).observe(strip, { attributes: true, attributeFilter: ['class'] });
+
+    // 切換邏輯：main.js 的 listener 先跑（不改按鈕文字），本 listener 後跑
+    btn.addEventListener('click', function () {
+      if (btn.textContent.trim() === '展開') {
+        // main.js 已把輸入區展開，這裡只更新文字
+        btn.textContent = '收合';
+      } else {
+        // 重新收合：把輸入區隱藏，摺疊帶顯示回來
+        input.classList.add('hidden');
+        strip.classList.remove('hidden');
+        btn.textContent = '展開';
+      }
+    });
+  });
+  </script>
 
 </body>
 </html>

@@ -1541,3 +1541,72 @@ grammar-tag.active {
 .article-viewer p:last-child {
   margin-bottom: 0;
 }
+
+/* ─── 結果 Tab 列 ─── */
+.result-tab-bar {
+  display: flex;
+  gap: 0;
+}
+.result-tab {
+  padding: .5rem 1rem;
+  font-size: .875rem;
+  font-weight: 500;
+  color: var(--muted);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color .15s, border-color .15s;
+  background: transparent;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.result-tab:hover { color: var(--text); }
+.result-tab--active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+  font-weight: 600;
+}
+.result-tab-badge {
+  display: inline-block;
+  background: var(--primary);
+  color: #fff;
+  font-size: .6875rem;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 1px 6px;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+.result-tab-badge:empty { display: none; }
+
+/* ─── 結果 Tab 面板：依內容高度，捲動上限為視窗高度 ─── */
+.result-tab-panel {
+  max-height: calc(100vh - 220px);
+  overflow-y: auto;
+}
+
+/* ─── 摺疊帶：消除 Tailwind space-y-6 的錯誤邊距 ───────────────────────────
+   Tailwind 的 space-y-6 選擇器為 > :not([hidden]) ~ :not([hidden])，
+   其中 [hidden] 對應 HTML attribute，而非 CSS class。
+   JS 只加 class="hidden"（非 attribute），故被 Tailwind 視為「非隱藏」的前置
+   sibling，導致 #inputCollapsedStrip 多出 margin-top:1.5rem，與右欄 #progressCard
+   產生垂直偏移。用 !important 清零以對齊右欄頂部。 */
+#inputCollapsedStrip {
+  margin-top: 0 !important;
+}
+
+/* ─── 文法重點：隱藏 <details> 預設三角與自訂箭頭 ─── */
+/* .gr-chev 有 inline style display:inline-block，必須用 !important 覆蓋 */
+#grammarContent .gr-chev {
+  display: none !important;
+}
+/* 瀏覽器原生 <details> 揭示三角（Chrome/WebKit 與 Firefox） */
+#grammarContent details > summary::-webkit-details-marker,
+#grammarContent details > summary::marker {
+  display: none;
+}
+#grammarContent details > summary {
+  list-style: none;
+}
