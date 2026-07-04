@@ -162,7 +162,7 @@ export async function handleAnalyzeClick() {
   const old = btn.textContent;
   btn.textContent = "分析中…";
   document.getElementById("loading").classList.remove("hidden");
-  document.getElementById("aiResult").classList.add("hidden");
+  document.getElementById("aiResult")?.classList.add("hidden");
 
   try {
     const raw = await analyzeArticle(text);
@@ -239,7 +239,7 @@ export function renderWordSelection(words, articleText = "") {
     headLeft.className = "flex-1 min-w-0";
     headLeft.innerHTML = `
       <strong class="stamp-word">${escapeHTML(w.word)}</strong>
-      <span class="word-card-meta">${escapeHTML(posAbbr(w.pos))}${w.level ? `<span class="word-level-badge">${escapeHTML(w.level)}</span>` : ""}</span>
+      <span class="word-card-meta"><span class="word-card-pos">${escapeHTML(posAbbr(w.pos))}</span>${w.level ? `<span class="word-level-badge">${escapeHTML(w.level)}</span>` : ""}</span>
       <span class="word-card-def">— ${escapeHTML(w.definition)}</span>
     `;
 
@@ -256,7 +256,7 @@ export function renderWordSelection(words, articleText = "") {
     // 內文（只顯示文章例句，降低密度）
     const body = document.createElement("div");
     body.innerHTML = exampleFromArticle
-      ? `<span class="word-card-example">「${escapeHTML(exampleFromArticle)}」</span>`
+      ? `<span class="word-card-example">${escapeHTML(exampleFromArticle)}</span>`
       : "";
 
     // 佈局：stamp-label（含隱藏 checkbox + stamp-box） + 內容
@@ -277,7 +277,7 @@ export function renderWordSelection(words, articleText = "") {
     if (existing.has((w.word||"").toLowerCase())) markRowAsAdded(cb, true);
   });
 
-  document.getElementById("aiResult").classList.remove("hidden");
+  document.getElementById("aiResult")?.classList.remove("hidden");
 
   // ── Phase 5.2 萃取落盤進場動畫（Condensation）──────────────────────────
   if (typeof gsap !== "undefined") {

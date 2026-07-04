@@ -1451,15 +1451,21 @@ grammar-tag.active {
   letter-spacing: -0.01em;
 }
 
-/* 詞性 · 級別：輕量 muted 標籤行 */
-.word-card-meta {
+/* 詞性 · 級別：輕量 muted 標籤行（限定在選字卡，防止全域汙染） */
+.word-suggestion-card .word-card-meta {
   font-size: 0.6875rem;
   color: var(--color-ink-2, #7A6045);
   letter-spacing: 0.02em;
 }
 
-/* 級別 badge：enrich 配色 */
-.word-card-meta .word-level-badge {
+/* 詞性文字：斜體 + 正常字重，對齊 Tab 單字卡（格式 A）.wc-pos 樣式，字級維持選字卡緊湊比例 */
+.word-suggestion-card .word-card-meta .word-card-pos {
+  font-style: italic;
+  font-weight: 400;
+}
+
+/* 級別 badge：有值才渲染（JS 層已用 w.level ? ... 控制，CSS 只管樣式） */
+.word-suggestion-card .word-card-meta .word-level-badge {
   display: inline-block;
   margin-left: 5px;
   padding: 0 5px;
@@ -1474,7 +1480,7 @@ grammar-tag.active {
 }
 
 /* 中文意思：D3 中文字型，次墨色 */
-.word-card-def {
+.word-suggestion-card .word-card-def {
   display: block;
   font-family: "Noto Sans TC", system-ui, sans-serif;
   font-size: 0.875rem;
@@ -1483,14 +1489,17 @@ grammar-tag.active {
   word-break: keep-all;
 }
 
-/* 例句：更淡，斜體，行高足夠 */
-.word-card-example {
+/* 例句：斜體直排在卡片內，無框無底色 */
+.word-suggestion-card .word-card-example {
   display: block;
   font-size: 0.8125rem;
   color: var(--color-ink-3, #A08568);
   line-height: 1.65;
   margin-top: 6px;
   font-style: italic;
+  background: none;
+  border: none;
+  padding: 0;
 }
 
 /* 發音按鈕：改用暖色調，移除冷灰 */

@@ -113,27 +113,87 @@ function _renderGrammarInline(points) {
   });
 }
 
+// ─── 結果 Tab 切換（模組頂層）───
+const RESULT_TABS = [
+  { btn: "rtabWords",   panel: "rtabPanelWords"   },
+  { btn: "rtabTrans",   panel: "rtabPanelTrans"   },
+  { btn: "rtabGrammar", panel: "rtabPanelGrammar" },
+];
+
+async function switchResultTab(activeId) {
+  RESULT_TABS.forEach(({ btn, panel }) => {
+    const isActive = btn === activeId;
+    $(btn)?.classList.toggle("result-tab--active", isActive);
+    $(panel)?.classList.toggle("hidden", !isActive);
+  });
+
+  if (activeId === "rtabTrans" && !_translationHtml) {
+    const text = $("articleInput")?.value.trim();
+    if (!text) return;
+    const content = $("translationContent");
+    if (content) content.innerHTML = '<p style="color:var(--muted); font-size:.875rem; padding:12px 0; text-align:center;">翻譯中，請稍後…</p>';
+    try {
+      const res = await fetch("/api", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "translateArticle", text }),
+      });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || "翻譯失敗");
+      _translationHtml = data.content;
+      if (content) content.innerHTML = _translationHtml;
+    } catch (err) {
+      if (content) content.innerHTML = `<p style="color:#C0392B; font-size:.875rem; padding:12px 0;">翻譯失敗：${_esc(err.message)}</p>`;
+    }
+  }
+
+  if (activeId === "rtabGrammar" && !_grammarData) {
+    const text = $("articleInput")?.value.trim();
+    if (!text) return;
+    const content = $("grammarContent");
+    if (content) content.innerHTML = '<p style="color:var(--muted); font-size:.875rem; padding:12px 0; text-align:center;">文法分析中，請稍後…</p>';
+    try {
+      const res = await fetch("/api", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "analyzeGrammar", text }),
+      });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || "文法分析失敗");
+      const raw = data.content.replace(/```(?:json)?\n?/gi, "").replace(/```\n?/g, "").trim();
+      _grammarData = JSON.parse(raw);
+      _renderGrammarInline(_grammarData.points || []);
+      const count = _grammarData.points?.length ?? 0;
+      const badge = $("rtabGrammarBadge");
+      if (badge) badge.textContent = count > 0 ? String(count) : "";
+    } catch (err) {
+      if (content) content.innerHTML = `<p style="color:#C0392B; font-size:.875rem; padding:12px 0;">文法分析失敗：${_esc(err.message)}</p>`;
+    }
+  }
+}
+
 function bindEvents() {
   // —— 左側：AI 分析 & 自訂新增 ——
   on("analyzeBtn", "click", async () => {
-    // 重置摺疊區塊狀態
     _translationHtml = null;
     _grammarData = null;
-    $("translationSection")?.classList.add("hidden");
-    $("grammarSection")?.classList.add("hidden");
-    $("translationBody")?.classList.add("hidden");
-    $("grammarBody")?.classList.add("hidden");
-    const tChev = $("translationChevron");
-    const gChev = $("grammarChevron");
-    if (tChev) tChev.style.transform = "";
-    if (gChev) gChev.style.transform = "";
 
     await UI.handleAnalyzeClick();
 
-    // 分析成功後顯示摺疊區塊
-    if (!$("aiResult")?.classList.contains("hidden")) {
-      $("translationSection")?.classList.remove("hidden");
-      $("grammarSection")?.classList.remove("hidden");
+    const hasResult = ($("wordForm")?.children.length ?? 0) > 0;
+    if (hasResult) {
+      $("resultTabWrapper")?.classList.remove("hidden");
+      switchResultTab("rtabWords");
+      const wordCount = $("wordForm")?.children.length ?? 0;
+      const wordBadge = $("rtabWordsBadge");
+      if (wordBadge) wordBadge.textContent = wordCount > 0 ? String(wordCount) : "";
+      const text = $("articleInput")?.value ?? "";
+      const preview = text.slice(0, 80).replace(/\s+/g, " ").trim();
+      const previewEl = $("inputCollapsedPreview");
+      if (previewEl) previewEl.textContent = preview ? preview + "…" : "(文章已輸入)";
+      $("articleInputSection")?.classList.add("hidden");
+      $("inputCollapsedStrip")?.classList.remove("hidden");
+      $("sidebarNotionWrap")?.classList.remove("hidden");
     }
   });
 
@@ -498,6 +558,32 @@ function bindEvents() {
     if (!sel || sel.isCollapsed || !sel.toString().trim()) {
       if (selFab) selFab.style.display = "none";
     }
+  });
+
+  // ─── 結果 Tab 切換 ───
+  RESULT_TABS.forEach(({ btn }) => {
+    on(btn, "click", () => switchResultTab(btn));
+  });
+
+  // ─── 摺疊帶：展開 ───
+  on("stripExpandBtn", "click", () => {
+    $("inputCollapsedStrip")?.classList.add("hidden");
+    $("articleInputSection")?.classList.remove("hidden");
+  });
+
+  // ─── 摺疊帶：重新分析 ───
+  on("stripReanalyzeBtn", "click", () => {
+    $("inputCollapsedStrip")?.classList.add("hidden");
+    $("articleInputSection")?.classList.remove("hidden");
+    $("resultTabWrapper")?.classList.add("hidden");
+    $("sidebarNotionWrap")?.classList.add("hidden");
+    _translationHtml = null;
+    _grammarData = null;
+  });
+
+  // ─── Sidebar Notion 按鈕 → 觸發原按鈕邏輯 ───
+  on("sidebarNotionBtn", "click", () => {
+    $("saveArticleBtn")?.click();
   });
 }
 
