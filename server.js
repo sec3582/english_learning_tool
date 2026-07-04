@@ -12,6 +12,8 @@ import { GoogleAIFileManager } from "@google/generative-ai/server";
 import { spawn } from "child_process";
 import { readdir, rm, mkdtemp } from "fs/promises";
 import { tmpdir } from "os";
+import multer from "multer";
+import { PDFParse } from "pdf-parse";
 
 // ESM 環境下取得 __dirname（CommonJS 才有內建，ESM 需自行計算）
 const __filename = fileURLToPath(import.meta.url);
@@ -42,6 +44,36 @@ app.use(express.json()); // 解析 application/json 請求
 app.use(express.text({ type: "text/plain" })); // 相容舊版 GAS 格式（text/plain;charset=utf-8）
 app.use(express.static(__dirname)); // 提供靜態檔案（index.html、js/、css/ 等）
 
+// ====== 檔案上傳設定（圖片 OCR / PDF 解析用）======
+// 一律使用記憶體儲存，不寫入磁碟，處理完即釋放，避免 Render 免費方案暫存空間問題
+const uploadImage = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 8 * 1024 * 1024 }, // 8MB
+  fileFilter: (req, file, cb) => {
+    if (["image/jpeg", "image/png"].includes(file.mimetype)) cb(null, true);
+    else cb(new Error("僅支援 JPG / PNG 格式的圖片"));
+  },
+});
+
+const uploadPdf = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 15 * 1024 * 1024 }, // 15MB
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === "application/pdf") cb(null, true);
+    else cb(new Error("僅支援 PDF 格式的檔案"));
+  },
+});
+
+// 包裝 multer middleware，統一以 JSON 格式回傳檔案驗證錯誤（型別、大小超限等）
+function handleUpload(uploadMiddleware) {
+  return (req, res, next) => {
+    uploadMiddleware(req, res, (err) => {
+      if (err) return res.status(400).json({ ok: false, error: err.message || "檔案上傳失敗" });
+      next();
+    });
+  };
+}
+
 
 // ====== Prompt 建構函式 ======
 
@@ -49,11 +81,18 @@ app.use(express.static(__dirname)); // 提供靜態檔案（index.html、js/、c
  * 建構「文章分析」用的 Prompt
  * 目標：從文章中擷取 8~15 個適合學習的詞彙，並回傳 JSON 陣列
  * @param {string} text - 使用者輸入的英文文章
+ * @param {{ academicPriority?: boolean }} options - academicPriority 為 true 時（PDF/圖片上傳來源），提示 AI 優先辨識學術與專業術語
  */
-function buildAnalyzeArticlePrompt(text) {
+function buildAnalyzeArticlePrompt(text, options = {}) {
+  const { academicPriority = false } = options;
+  const academicBlock = academicPriority ? `
+
+PRIORITY RULE: This text was extracted from an uploaded document (PDF or image), likely academic or professional material (textbook, paper, slide, report). Prioritize academic, technical, and professional terminology over common everyday words. Prefer domain-specific vocabulary (science, law, business, technology, medicine, etc.); avoid spending slots on very basic A1/A2 high-frequency words unless nothing more advanced is available.` : "";
+
   return `You are an English vocabulary teaching assistant for Traditional Chinese learners.
 
 Analyze the following English article and extract 8 to 15 vocabulary words or phrases that would be valuable for a language learner to study.
+${academicBlock}
 
 For each word, return a JSON object with these EXACT fields:
 - "word": the word or phrase as it appears (string)
@@ -327,9 +366,9 @@ app.post("/api", async (req, res) => {
   // 根據 action 決定要使用哪個 Prompt
   let prompt;
   if (action === "analyzeArticle") {
-    // 文章分析：傳入文章文字
+    // 文章分析：傳入文章文字（academicPriority 由 PDF/圖片上傳來源的前端流程指定）
     if (!text) return res.status(400).json({ ok: false, error: "缺少 text 欄位" });
-    prompt = buildAnalyzeArticlePrompt(text);
+    prompt = buildAnalyzeArticlePrompt(text, { academicPriority: body.academicPriority === true });
   } else if (action === "analyzeCustomWord") {
     // 自訂單字分析：傳入文章上下文與目標單字
     if (!term) return res.status(400).json({ ok: false, error: "缺少 term 欄位" });
@@ -588,6 +627,57 @@ app.post("/notion-save", async (req, res) => {
   } catch (err) {
     console.error("[Notion 同步錯誤]", err);
     return res.status(500).json({ ok: false, error: err.message || "Notion 同步失敗" });
+  }
+});
+
+// ====== 圖片上傳辨識（OCR）======
+// 接收 JPG/PNG，交由 Gemini 多模態視覺能力辨識圖片中的英文文字
+app.post("/extract-image", handleUpload(uploadImage.single("image")), async (req, res) => {
+  if (!req.file) return res.status(400).json({ ok: false, error: "缺少圖片檔案" });
+
+  try {
+    const base64 = req.file.buffer.toString("base64");
+    const result = await geminiModel.generateContent([
+      { inlineData: { mimeType: req.file.mimetype, data: base64 } },
+      { text: "Extract all English text visible in this image, exactly as it appears (preserve line breaks where meaningful). Return ONLY the raw extracted text, no commentary, no markdown, no code fences. If the image contains no legible English text, respond with exactly this one word and nothing else: NONE" },
+    ]);
+    const text = result.response.text().trim();
+
+    if (!text || text.length < 3 || /^NONE$/i.test(text)) {
+      return res.status(400).json({ ok: false, error: "圖片中未偵測到可辨識的英文文字。" });
+    }
+
+    res.json({ ok: true, text });
+  } catch (err) {
+    console.error("[圖片 OCR 錯誤]", err);
+    res.status(500).json({ ok: false, error: err.message || "圖片辨識失敗" });
+  }
+});
+
+// ====== PDF 上傳解析 ======
+// 接收 PDF，使用 pdf-parse 萃取文字層內容
+app.post("/extract-pdf", handleUpload(uploadPdf.single("pdf")), async (req, res) => {
+  if (!req.file) return res.status(400).json({ ok: false, error: "缺少 PDF 檔案" });
+
+  let parser;
+  try {
+    parser = new PDFParse({ data: req.file.buffer });
+    const result = await parser.getText();
+    const text = (result.text || "").trim();
+
+    if (text.length < 50) {
+      return res.status(400).json({
+        ok: false,
+        error: "此 PDF 沒有可擷取的文字層（可能是掃描檔），請改用圖片上傳功能進行辨識。",
+      });
+    }
+
+    res.json({ ok: true, text: text.slice(0, 20000) });
+  } catch (err) {
+    console.error("[PDF 解析錯誤]", err);
+    res.status(500).json({ ok: false, error: err.message || "PDF 解析失敗" });
+  } finally {
+    if (parser) await parser.destroy().catch(() => {});
   }
 });
 
