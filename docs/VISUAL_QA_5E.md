@@ -287,3 +287,324 @@ body.scene-cold .upload-loading {
 1. 第 0 節提出的「按鈕統一吃 `--cold-accent`」是治本方案，但影響全站所有 `.btn-primary-m`/`.btn-outline-m`/`.quiz-btn-*` 的視覺，範圍比其餘 QA 項目大很多——是否同意在這次一併處理，還是先用逐一覆寫的白名單方式修完這次回報的區塊，治本方案另開任務？
 2. 「自訂新增單字」搬進 sidebar、「網址」頁籤移除——這兩項決策目前只出現在這次委託的口頭描述裡，建議請 `@perfume-game-director` 補一份決策文件存證，或確認由本文件視為既定範圍即可？
 3. 上傳圖片頁籤的 dropzone 是否需要支援真正的拖放（`dragover`/`drop` 事件），或先做「按鈕選檔」的簡化版、拖放留待下一輪？
+
+---
+
+## 6. 修正輪 1 使用者實測後的根因深挖（帶證據稽核）
+
+**背景**：修正輪 1（commit `ca89a5c`）處理完「三套隱藏 token 系統」（`--wc-*`／`--qz-*`／裸 `select` 鎖色）之後，使用者實測回報畫面 1–3 仍有多處沒修到。逐一 grep 後發現：**這次不是漏了 selector，是同一顆按鈕背後同時疊了 2–4 層彼此用 ID／`:not()`／source order 互相「打贏」對方的歷史遺留規則**，我方才加的 `body.scene-cold .btn-primary-m` 這種「class 選擇器」天生打不贏任何 ID 選擇器，無論後面加多少個 class 或 `!important`。
+
+> ⚠️ **重要警示**：使用者回報裡引用了「commit `d2cc98e`」——那是 Phase 5f **之前**的舊 commit，早於本文件第 0 節「按鈕統一」與修正輪 1 的全部工作。如果實測環境真的還停在 `d2cc98e`，畫面 2、3 描述的「完全沒被修到」全部符合預期（因為那些修法根本還沒進去）。但下面 (a)(c) 兩題挖出的問題，**在最新的 `ca89a5c` 之後依然成立、是真的程式碼 bug，不是版本落後**——請先確認實測用的是最新 commit，再依下面的清單排優先序，避免把「還沒重新整理頁面」跟「真的沒修好」混在一起處理。
+
+### 6.1 (a)「讓 AI 挑單字」CTA 為什麼沒被 `body.scene-cold .btn-primary-m` 命中
+
+**實際 selector**：`#analyzeBtn`，class 是 `btn-primary-m`（`index.html:1415`）。
+
+**根因：不是特異性算錯，是壓根有一條 ID-only 規則在半路把 class 規則直接攔截。** `theme-perfume-day.css:664-685` 有一整塊「belt-and-suspenders」規則：
+
+```css
+#analyzeBtn, #saveBtn, #customAnalyzeBtn, #customAddBtn,
+#urlFetchBtn, #qsStart, #startQuizBtn, #usageSaveBudget {
+  background-color: #1C1208 !important;   /* 字面 hex，連 var() 都不用 */
+  background:       #1C1208 !important;
+  color:            #F0E8D4 !important;
+  ...
+}
+```
+
+這條規則的特異性是 `(0 ID組合內每個選擇器各自 1 個 ID, 0 class, 0 type)`——**單純一個 ID selector**。而修正輪 1 寫的 `body.scene-cold .btn-primary-m { background: var(--cold-wash) !important; }` 特異性是 `(0 ID, 2 class, 1 type)`。CSS 特異性比較是「先比 ID 欄位」：只要對方有 1 個 ID、我方是 0 個 ID，**不管我方疊多少個 class 或 type，永遠是對方贏**，`!important` 兩邊都有時也一樣先比特異性。這就是為什麼「新規則的 class 選擇器」在這 8 顆按鈕上全部失效——它們背後都躲著這條 ID 規則。
+
+修正輪 1 只對 `#analyzeBtn` 做了 **文字色** 的 ID 對等覆寫（`body.scene-cold #analyzeBtn.btn-primary-m { color: var(--cold-parchment) !important; }`，`index.html:995-1000`），**沒有對背景色做同等級覆寫**，所以背景維持 `#1C1208`（使用者形容的「深棕色實色底」），且同一顆 ID 清單裡的其餘 7 顆按鈕（`#saveBtn`／`#customAnalyzeBtn`／`#customAddBtn`／`#startQuizBtn`／`#usageSaveBudget`，`#urlFetchBtn` 已隨網址 tab 移除、`#qsStart` 情況見下段）**背景與文字色兩者都完全沒被覆寫過**，全部原樣呈現 Day Mode 焦棕配色。
+
+**連帶發現**：`#startQuizBtn`（sidebar「開始測驗」）背後其實疊了 *三層* 規則互相用 source order / `:not()` 特異性打架（`theme-ocean.css:84`、`theme-perfume-wc.css:779`、`theme-perfume-wc.css:1953` 的 `html:not([data-theme="dark"]) #startQuizBtn`），目前實際勝出的是 `html:not([data-theme="dark"]) #startQuizBtn { background: var(--color-ink-1) !important; }`（`theme-perfume-wc.css:1953-1961`，特異性 `(0 ID, 1 class即:not, 1 type即html)`）——同樣是 ID 等級，同樣的病灶。**使用者還沒測到這顆，但它現在跟 `#analyzeBtn` 一樣壞**。
+
+### 6.2 (b) 「資料管理」4 顆按鈕的實際 class
+
+`index.html:1690-1712`：
+
+| 按鈕 | 實際 class |
+|---|---|
+| 匯出 JSON `#exportJsonBtn` | `px-3 py-2 rounded-lg bg-gray-100 text-gray-700 border border-gray-300 text-sm hover:bg-gray-200` |
+| 匯入 JSON `#importJsonBtn` | 同上 |
+| 雲端載入 `#loadSheetsBtn` | `px-3 py-2 rounded-lg bg-gray-50 text-gray-600 border border-gray-300 text-sm hover:bg-gray-100 hover:border-[#4A6C6F] hover:text-[#4A6C6F] transition` |
+| 同步到 Google `#pushSheetsBtn` | `px-3 py-2 rounded-lg bg-white text-gray-600 border border-gray-300 text-sm hover:bg-gray-50 hover:border-gray-400 transition` |
+
+**確認**：4 顆全部是純 Tailwind gray 家族（`bg-gray-100`/`bg-gray-50`/`bg-white` + `text-gray-700`/`text-gray-600` + `border-gray-300`），**沒有任何 ID 專屬規則**，理論上修正輪 1 新增的「根因五」全站 Tailwind 掃描（`body.scene-cold .bg-white/.bg-gray-50/.bg-gray-100/.text-gray-600/.text-gray-700/.border-gray-300`，`index.html:1122-1143`）應該直接命中並修好這 4 顆——**這是 6.0 節警示的「可能是舊版本」的最佳例證**：這 4 顆按鈕在 `ca89a5c` 之後應該已經正確變冷色，如果實測仍是米白色，優先懷疑是還沒測到最新 commit，其次才懷疑 sweep 規則本身有問題（目前重新檢查過 `index.html:1122-1143`，選擇器與數值都正確，沒有發現邏輯錯誤）。
+
+**唯一例外**：4 顆按鈕的 `hover:` 系列 class（`hover:bg-gray-200`／`hover:bg-gray-100`／`hover:border-[#4A6C6F]`／`hover:text-[#4A6C6F]`／`hover:bg-gray-50`／`hover:border-gray-400`）**完全沒被 sweep 涵蓋**——Tailwind 的 `hover:bg-gray-200` 編譯出來是獨立的 `.hover\:bg-gray-200:hover` 選擇器，跟 `.bg-gray-200`（base 態）是兩個不同的 class，我方 sweep 只寫了 base 態，滑鼠移上去的瞬間會「爆回」Day Mode 的暖色（也是使用者描述「開始測驗顏色」以外，另一個潛在的「滑過去爆色」根因，對應第 11 節 hover 態規劃）。
+
+### 6.3 (c) 測驗視窗「提交」按鈕的 selector 與配色來源
+
+**實際 selector**：`#quizSubmit`，class 是 `quiz-btn-primary`（`index.html:1741`）。
+
+**根因**：`theme-perfume-wc.css:1420-1433`「7a. Primary — amber stamp」區塊：
+
+```css
+.quiz-btn-primary, #quizSubmit, #grammarQuizSubmit, #qsStart {
+  background: var(--qz-accent) !important;   /* 實色填滿 */
+  color:      #FDF6E3 !important;            /* 字面 hex 米白 */
+  border:     1px solid rgba(200, 149, 42, 0.40) !important;
+}
+```
+
+這條規則**也是 ID 等級**（`#quizSubmit` 在選擇器群組裡），比修正輪 1 的 `body.scene-cold .quiz-btn-primary`（class-only）特異性高，直接攔截。但因為修正輪 1「根因三」把 `--qz-accent` 這個 token 本身重新定義成 `var(--cold-accent)`（`index.html:1080-1089`，`body.scene-cold #quizModal { --qz-accent: var(--cold-accent); }`），**這條 ID 規則現在確實吃到了新顏色**——`--qz-accent` 解析出來是 `--cold-accent`（`#5c7686`，中低明度青灰藍）**當成實色滿版底色**，這正是使用者形容的「灰藍色實色底，飽和度過高，偏 Windows XP 藍」。
+
+**這不是版本落後，是修正輪 1 真實存在的設計缺口**：根因三只換了「token 的值」，沒有換「用 token 的方式」——`.quiz-btn-primary` 家族的背景公式是「accent 當實色滿版底」，跟 `.btn-primary-m` 修正輪 1 已經放棄的舊公式是同一種問題（深字/淺字对比姑且不論，滿版 accent 本身就違反「accent 只用在邊緣/rim，不當大面積底色」的美學原則——見 `decisions.md` 的 Accent 用量硬規則）。`.quiz-btn-primary`／`#quizSubmit`／`#grammarQuizSubmit`／`#qsStart` 這 4 個目標，需要比照修正輪 1 給 `.btn-primary-m` 做的同一次「深底+亮字+accent 邊框」改造，而不是只換 token 值。文字色 `#FDF6E3` 也是字面 hex（不是 `var(--qz-ink)`），根因三的 token 重定義同樣沒碰到它——目前實際文字色就是這個字面米白，跟預期的 `--cold-parchment` 恰好數值相近但完全是巧合，不能依賴。
+
+---
+
+## 7. 全站按鈕總表（窮舉，含 hover 態）
+
+**圖例**：「已修好」＝目前 `ca89a5c` 的規則邏輯上會正確命中；「壞—ID 攔截」＝class-only 規則打不贏背後的 ID 規則；「未涵蓋」＝目前完全沒有任何 scene-cold 規則碰過。
+
+| # | 顯示文字 | Selector | 目前實際來源（檔案:行號） | Day 現況 | Night 目標 | hover 態 | 狀態 |
+|---|---|---|---|---|---|---|---|
+| 1 | 讓 AI 挑單字 | `#analyzeBtn.btn-primary-m` | `day.css:664`（ID belt-and-suspenders，background） | `#1C1208` 底／`#F0E8D4` 字 | `--cold-wash` 底／`--cold-parchment` 字／`--cold-accent` 邊框 | `color-mix(--cold-wash 80%, --cold-accent 20%)` | 壞—ID 攔截（背景） |
+| 2 | 加入選取清單 | `#saveBtn.btn-primary-m` | `day.css:664` | 同上 | 同上 | 同上 | 壞—ID 攔截 |
+| 3 | 分析（sidebar 自訂單字） | `#customAnalyzeBtn.btn-outline-m` | 無 ID 攔截，純 class | 透明底／`--color-ink-2` 字 | 透明底／`--cold-parchment` 字／`--glass-cold-border` 邊 | `rgba(92,118,134,.10)` 底 | 已修好 |
+| 4 | 加入我的清單 | `#customAddBtn.btn-primary-m` | `day.css:664` | `#1C1208`／`#F0E8D4` | `--cold-wash`／`--cold-parchment`／`--cold-accent` 邊 | 同 #1 | 壞—ID 攔截 |
+| 5 | 開始測驗（sidebar） | `#startQuizBtn.btn-primary-m` | `wc.css:1953`（`html:not([data-theme=dark])`，比 day.css:664 更高特異性且更晚載入，實際勝出者） | `#1C1208`／`#F0E8D4` | 同上 | 同上 | 壞—ID 攔截（三層規則打架，見 6.1） |
+| 6 | 開始測驗（quizSettings 內） | `#qsStart.quiz-btn-primary` | `wc.css:1426`（qz-accent 實色滿版，見 6.3） | `--qz-accent` 實色底／`#FDF6E3` 字 | `--cold-wash` 底／`--cold-parchment` 字／`--cold-accent` 邊 | `color-mix(--cold-wash 80%, --cold-accent 20%)` | 壞—ID 攔截+設計公式需重做 |
+| 7 | 取消（quizSettings） | `#qsCancel` | `index.html:1201`（body.scene-cold ID 覆寫，已比 wc.css:1444 特異性更高） | `bg-gray-100` | `transparent`／`--glass-cold-border` 邊／`--cold-parchment` 字 | 建議補 `rgba(92,118,134,.08)` | 已修好 |
+| 8 | 提交（quizModal） | `#quizSubmit.quiz-btn-primary` | `wc.css:1424`（qz-accent 實色滿版） | 同 #6 | 同 #6 | 同 #6 | 壞—ID 攔截+設計公式需重做 |
+| 9 | 不會（quizModal） | `#quizIDK` | `wc.css:1444`（rgba(61,43,31,.08) 底＋`--qz-ink`／`--qz-line`，根因三已讓 ink/line 轉冷） | 半透明暖底／`--qz-ink` 字／`--qz-line` 邊 | 背景改 `rgba(92,118,134,.08)`（目前殘留的暖色只在極低透明度的 rgba(61,43,31,...) 裡，肉眼幾乎看不出，但邊框/字已修好） | `rgba(200,149,42,.12)`→改 `rgba(92,118,134,.14)` | 大致已修好，僅背景 rgba 色相殘留暖褐（低優先） |
+| 10 | 下一題（Enter） | `#quizNext.quiz-btn-next` | 無 ID 攔截 | `--navy` 底／白字 | `--cold-wash`／`--cold-parchment`／`--cold-accent` 邊 | 同 #1 | 已修好 |
+| 11 | 只重測錯題 | `#quizRetakeWrong.quiz-btn-next`（動態注入，`ui.js:1331`） | 無 ID 攔截 | 同 #10 | 同 #10 | 同 #1 | 已修好 |
+| 12 | 全部重測 | `#quizRetakeAll.quiz-btn-primary`（動態注入，`ui.js:1332`） | 無 ID 攔截 | 同 #6 | `--cold-wash`／`--cold-parchment`／`--cold-accent` 邊（走 `.quiz-btn-primary` 治本方案後這顆會自動跟上，不需要額外處理） | 同 #1 | 已修好（前提是 #6/#8 的治本方案落地） |
+| 13 | 匯出 JSON | `#exportJsonBtn` | 純 Tailwind：`bg-gray-100 text-gray-700 border-gray-300` | 米白底／深棕字 | `--glass-cold-fill`／`--cold-dim`／`--glass-cold-border` | `hover:bg-gray-200` 未涵蓋→需補 | 已修好（base），hover 未涵蓋 |
+| 14 | 匯入 JSON | `#importJsonBtn` | 同上 | 同上 | 同上 | 同上 | 同上 |
+| 15 | 雲端載入 | `#loadSheetsBtn` | `bg-gray-50 text-gray-600 border-gray-300` + `hover:border-[#4A6C6F] hover:text-[#4A6C6F]` | 米白底／中棕字 | 同上 | `hover:bg-gray-100` 未涵蓋，`hover:border-[#4A6C6F]`／`hover:text-[#4A6C6F]` 是 Tailwind 任意值 class，需個別加 scene-cold hover 覆寫 | 已修好（base），hover 未涵蓋 |
+| 16 | 同步到 Google | `#pushSheetsBtn` | `bg-white text-gray-600 border-gray-300` + `hover:border-gray-400` | 同上 | 同上 | `hover:bg-gray-50` 未涵蓋 | 已修好（base），hover 未涵蓋 |
+| 17 | 重置本月估算 | `#usageReset` | `border-gray-200 text-gray-500` + `hover:border-gray-300 hover:text-gray-700` | 透明底／灰字 | `--glass-cold-border`／`--cold-dim` | hover 未涵蓋 | 已修好（base），hover 未涵蓋 |
+| 18 | 儲存預算 | `#usageSaveBudget` | `day.css:664` ID 攔截 **+** inline `style="background:#A3B18A"` 與 `onmouseover/onmouseout` JS 直接改 `style.background`（`index.html:1797`） | `#1C1208`／`#F0E8D4`（!important 贏過 inline） | `--cold-wash`／`--cold-parchment`／`--cold-accent` 邊 | inline `onmouseover` 目前寫死 `#8d9b76`，建議整顆改用 class + scene-cold hover，拿掉 inline onmouseover/onmouseout | 壞—ID 攔截 **+** inline JS 需一併清掉 |
+| 19 | 關閉（用量 modal，右上✕） | `#usageClose` | `text-gray-400 hover:text-gray-600` | 灰字 | `--cold-dim` | hover 未涵蓋 | 已修好（base），hover 未涵蓋 |
+| 20 | 關閉（用量 modal，底部按鈕） | `#usageClose2` | inline `style="background:#8A9BA8"` + `onmouseover/onmouseout` 硬編碼，**沒有任何 !important 規則跟它競爭**，inline 直接勝出 | `#8A9BA8` 實色底（跟全站任何 token 都無關） | 建議改用 `.btn-outline-m` 或新 class，拿掉 inline，改吃 `--cold-wash`/`--cold-parchment`/`--cold-accent` | 拿掉 inline onmouseover，改 CSS hover | 未涵蓋（且是三種硬編碼按鈕配色裡最孤立的一個） |
+| 21 | 儲存（同步 modal） | `#syncSave` | `bg-blue-600 text-white` | 飽和寶藍實色底 | 不應維持飽和藍——比照主要按鈕改 `--cold-wash`/`--cold-parchment`/`--cold-accent` 邊，或至少壓低飽和度換成 `--cold-accent` 邊框版 | 需新增 | 未涵蓋 |
+| 22 | 關閉（同步 modal） | `#syncClose` | `bg-gray-200` | 米灰底 | `--glass-cold-fill` | 需新增 | 已修好（base，隨 Tailwind sweep），hover 未涵蓋 |
+| 23 | 手動輸入／上傳圖片 | `.input-tab` / `.input-tab--active` | `index.html:1007-1011`（scene-cold 已覆寫） | — | 已於修正輪 1 修好 | 已涵蓋 | 已修好 |
+| 24 | 今日新增／複習／全部 | `#tabToday/#tabDue/#tabAll` + `.tab--active` | `index.html:1019-1039`（修正輪 1 新增） | — | 已修好 | 已涵蓋 | 已修好 |
+| 25 | 單字卡結果頁籤：單字卡／翻譯／文法重點 | `#rtabWords/#rtabTrans/#rtabGrammar` + `.result-tab`/`.result-tab--active` | **完全未稽核過**，需在修正輪 2 展開（class 定義位置待查，推測在 `theme-perfume-day.css` 的 `.result-tab-*` 區塊，讀取 `--color-*` 系列，跟 `--cold-*` 無關的機率很高） | 未知，需補查 | `--cold-parchment` 字（active）／`--cold-dim`（inactive）／底線 `--cold-accent` | 待查 | **未涵蓋（新發現，優先稽核）** |
+| 26 | 展開／重新分析（摺疊帶） | `#stripExpandBtn.btn-outline-m` / `#stripReanalyzeBtn.btn-ghost-m` | 純 class，無 ID 攔截 | — | 已隨 `.btn-outline-m`/`.btn-ghost-m` 全站規則修好 | 已涵蓋 | 已修好 |
+| 27 | 收藏到 Notion（sidebar） | `#sidebarNotionBtn.btn-outline-m` | 純 class | — | 已修好 | 已涵蓋 | 已修好 |
+| 28 | 分頁器（上一頁/下一頁 × 3 組） | `#todayPrev/#todayNext/#duePrev/#dueNext/#allPrev/#allNext` | `bg-gray-100`，`hover:bg-gray-200` | 米灰底 | `--glass-cold-fill` | `hover:bg-gray-200` 未涵蓋 | 已修好（base），hover 未涵蓋 |
+| 29 | 復原（undo toast） | `#undoBtn` | inline `style="background:rgba(255,255,255,.18)"` | 半透明白疊在 toast 底色上 | toast 本身若已是深底，這個半透明白疊層效果通用，不需要改（待第 9 節確認 `#undoToast` 底色本身沒有暖色殘留） | — | 需連同 `#undoToast` 一併檢查 |
+| 30 | ✕（記憶輔助彈窗） | `#mnemonicClose` | 未稽核，樣式來源待查（`.mnemonic-close`） | 未知 | 待補 | 待補 | **未涵蓋（新發現）** |
+
+**全站按鈕表共列 30 顆**（含 3 顆分頁器群組已合併計為 1 列，實際 DOM 元素數量更多）。「壞—ID 攔截」有 **7 處**（#1/#2/#4/#5/#6/#8/#18），全部同一種病灶（class 規則打不贏背後的 ID 規則），修法完全一致，可以一次性批次處理，見第 12 節。
+
+---
+
+## 8. Tailwind utility 對照表（含語意角色，不是無腦映同一色）
+
+| Tailwind class | Day 語意角色 | scene-cold 對應 token | 備注 |
+|---|---|---|---|
+| `bg-white` | 頂層卡片／modal 面板底 | `--glass-cold-fill` | 已於修正輪 1 sweep（`index.html:1122`） |
+| `bg-gray-50` | 次要卡片底／table thead／次要按鈕底 | `--glass-cold-fill` | 同上；語意上比 `bg-gray-100` 淺一階，但目前對應同一 token——冷色系統沒有拆這麼細的分層，可接受 |
+| `bg-gray-100` | 卡片底／分頁器按鈕底／disabled 按鈕底／table zebra | `--glass-cold-fill` | 同上；**disabled 按鈕**若用這個 class，記得額外檢查 `opacity` 是否也正確調低，token 本身不處理 disabled 語意 |
+| `bg-gray-200` | 次要按鈕底（`#quizIDK` 原始 class，但實際被 ID 規則攔截，見表 7 #9） | `--glass-cold-fill` | 同上；注意此 class 在 `#quizIDK` 上其實不生效（ID 攔截），不要誤以為它已經在管這顆按鈕 |
+| `border-gray-100` | 頁籤下緣分隔線（極淡） | `--glass-cold-border` | 已 sweep |
+| `border-gray-200` | 一般輸入框／卡片邊框 | `--glass-cold-border` | 已 sweep |
+| `border-gray-300` | 按鈕邊框（資料管理 4 顆等） | `--glass-cold-border` | 已 sweep |
+| `text-gray-300` | 極淡裝飾文字（罕見） | `--cold-dim` | 已 sweep |
+| `text-gray-400` | 次要說明／pager 頁碼／額度提示 | `--cold-dim` | 已 sweep |
+| `text-gray-500` | 次要標籤／label（`petStageLabel` 以外的通用 label） | `--cold-dim` | 已 sweep |
+| `text-gray-600` | 說明文字（資料管理描述、usage modal 內文） | `--cold-dim` | 已 sweep |
+| `text-gray-700` | 次要內文（quizPrompt 部分文字、usage modal 表格） | `--cold-dim` | 已 sweep |
+| `text-gray-800` | 較重要的內文（少見，通常是 body 預設繼承色） | `--cold-parchment` | 已 sweep |
+| `text-gray-900` | 強調數字（usageCostTotal） | `--cold-parchment` | 已 sweep |
+| `text-amber-700` | **新發現，未涵蓋**：quiz 提示/翻譯 label（`ui.js:1137,1158`） | 建議新增 `--cold-dim`（維持「次要說明」語意層級，不要给 amber 冷色替代品，因为这类 label 本质是次要文字，不是強調色） | 見第 9 節 |
+| `text-red-600` / `text-rose-700` | 錯誤/答錯語意色（quizFeedback 即時回饋、summary 錯題表格） | 建議新增 `--cold-wrong: color-mix(in srgb, var(--cold-dim) 60%, #b5645a 40%)`（低飽和的冷調紅棕，不是鮮紅，符合「沒有戲劇性」原則） | 見第 9 節；**不要沿用 `--wound`**（`--wound` 全站僅供 Day14 劇情事件使用，見 `theme-perfume-night.css` Step 4 的硬性禁令） |
+| `text-green-600` / `text-green-700` | 正確語意色（quizFeedback 即時回饋、summary 表格） | 建議新增 `--cold-correct: color-mix(in srgb, var(--cold-accent) 70%, var(--cold-parchment) 30%)`（用現有 accent 提亮，不引入新色相） | 見第 9 節 |
+| `bg-blue-600` | 同步 modal 儲存按鈕（**孤例**，全站唯一一處飽和藍） | 建議直接替換掉，改用 `.btn-primary-m` 或等效 class，不建議另開一個「藍色 token」只為了這一顆按鈕 | 見第 9 節 |
+| `bg-yellow-*` / `bg-amber-*`（卡片/背景用途） | grep 全站未發現此類用途（僅上面 `text-amber-700` 一處是文字色） | — | 見第 9 節完整 grep 結果 |
+
+---
+
+## 9. 暖色殘留清單（grep 全站結果，含行號與用途）
+
+### 9.1 硬編碼暖色 hex（直接寫在 CSS 或 inline style，不經任何 token）
+
+| Hex | 位置 | 用途 | 建議 |
+|---|---|---|---|
+| `#1C1208` / `#F0E8D4` | `theme-perfume-day.css:672-674`（belt-and-suspenders ID 清單）、`theme-perfume-wc.css:1954-1956`（`html:not([data-theme=dark]) #startQuizBtn`） | 表 7 「壞—ID 攔截」7 顆按鈕的實際底色/字色 | 需要對等特異性的 `body.scene-cold` ID 覆寫，見第 12 節 |
+| `#FDF6E3` | `theme-perfume-wc.css:1428`（`.quiz-btn-primary,#quizSubmit,#grammarQuizSubmit,#qsStart` 文字色） | 表 7 #6/#8 文字色 | 同上，改吃 `var(--cold-parchment)` |
+| `#A3B18A` | `index.html:1797`（`#usageSaveBudget` inline style）、`ui.js:1329`（「太強了！全對」inline `style="color:#8F9A78"` 附近同色系，注意這兩個 hex 實際不同：`#A3B18A` vs `#8F9A78`，都是舊 Morandi 鼠尾草綠家族，只是深淺不同版本） | 儲存預算按鈕底色；quiz summary「全對」訊息文字色 | 前者隨按鈕一併重做；後者改用 `var(--cold-accent)` 或新增語意 token（見 9.3） |
+| `#8d9b76` / `#7a8d9a` | `index.html:1797,1801`（`onmouseover`/`onmouseout` inline JS 硬編碼 hover 色） | `#usageSaveBudget`／`#usageClose2` 的 hover 態 | 拿掉 inline JS，改用 CSS class + scene-cold hover 規則 |
+| `#8A9BA8` | `index.html:1801`（`#usageClose2` inline style） | 見表 7 #20 | 同上 |
+| `#8F9A78` | `js/ui.js:1134`（dictation 模式播放按鈕 inline `style="color:#8F9A78;border-color:#8F9A78;"`）；`js/ui.js:1329`（quiz summary「太強了！全對」） | 播放按鈕圖示色；全對訊息文字色 | 兩處都建議改吃 `var(--cold-accent)` |
+| `#7a9068` / `#6b7f57` | `theme-ocean.css:577-583`（`[data-theme="dark"] #quizSubmit`） | 舊版深色模式（非 scene-cold）的 quizSubmit 配色，只有使用者手動切換月亮圖示才會生效 | 屬於「兩套深色系統並存」的既有已知問題（見 `VISUAL_QA_5E.md` 第 0 節根因摘要），暫不處理，等按鈕系統徹底併軌到 scene-cold 再決定是否棄用 `[data-theme=dark]` 整個系統 |
+
+### 9.2 Tailwind 暖色 class（grep 全站 `.html`／`.js`）
+
+| Class | 位置 | 用途 |
+|---|---|---|
+| `text-amber-700` | `js/ui.js:1137`（dictation 提示「提示：...」）、`js/ui.js:1158`（typing 模式「翻譯：...」） | 對應使用者回報畫面 3「翻譯：」label 橘紅色，**確認命中** |
+| `bg-blue-600` | `index.html:1820`（`#syncSave`「儲存」按鈕） | 唯一一處飽和藍，見表 7 #21 |
+| `text-red-600` | `js/ui.js:1223`（quizFeedback 答錯即時回饋） | 語意色，非殘留 bug，但需要冷調等效版（見第 8 節） |
+| `text-green-600` | `js/ui.js:1220`（quizFeedback 答對即時回饋） | 同上 |
+| `text-rose-700` | `js/ui.js:1297`（quiz summary 錯題表格「你的答案」欄） | 同上 |
+| `text-green-700` | `js/ui.js:1298`（quiz summary 錯題表格「正確答案」欄） | 同上 |
+| `text-yellow-200` / `text-red-200` | `js/ui.js:1540`（用量超支警示，動態 toggle class） | 語意色（超支警示），使用場景是**暖色 header 漸層之上**（`.header-gradient` 目前維持暖色不受 scene-cold 影響，見 `index.html:734-748`），不建議改動——header 本身就是刻意保留的暖色系統，這兩個 class 在那個脈絡下沒有違和 |
+
+`bg-amber-*` / `bg-yellow-*`（背景用途）：全站 grep 無命中，僅有上面列出的文字色與 toggle-class 用法。
+
+### 9.3 建議新增的語意色 token（不是重新引入暖色，是給「正確/錯誤」語意找一個冷調安全的家）
+
+現有 `--cold-*` 家族沒有「錯誤/正確」語意色——`--wound` 依規則禁止挪用（Day 14 劇情事件專屬）。建議在 `body.scene-cold` 內新增兩個衍生 token（都是從既有 `--cold-*` 家族色混出來，不引入新色相，符合「只用一個 accent」的硬規則精神，因為這兩個只用於語意回饋而非互動 accent）：
+
+```css
+body.scene-cold {
+  --cold-correct: color-mix(in srgb, var(--cold-accent) 70%, var(--cold-parchment) 30%);
+  --cold-wrong:   color-mix(in srgb, var(--cold-dim) 55%, #7a4a42 45%);  /* 低飽和冷調紅棕，非鮮紅 */
+}
+```
+
+用途對照：`text-green-600`/`text-green-700` → `var(--cold-correct)`；`text-red-600`/`text-rose-700` → `var(--cold-wrong)`。
+
+---
+
+## 10. input / select / 展示框 全站盤點
+
+| 元素 | Selector | 現況 class | 目前狀態 |
+|---|---|---|---|
+| 匯入文章 textarea | `#articleInput` | inline `color:var(--text)` | 已修好（scoped ID 覆寫） |
+| 自訂單字查詢 | `#customWordInput` | 純 border | 已修好（`#customWordSidebar` 容器覆寫） |
+| 自訂單字編輯欄位（7 個） | `#cw_word/#cw_pos/#cw_level/#cw_def/#cw_example_en/#cw_example_ai/#cw_example_zh` | 純 border | 已修好（同上） |
+| 搜尋單字 | `#allSearch` | `p-2 border rounded` | 已修好（`body.scene-cold select` 不適用，這是 `<input>`，走的是 `input[type="text"]` 軟性 fallback，`index.html:1251-1259`，無 ID/裸 tag !important 對手，可正常生效） |
+| 詞性 select | `#allPos` | `p-2 border rounded` | 已修好（`body.scene-cold select { !important }`，修正輪 1 新增，`index.html:1108-1112`） |
+| 難度 select | `#allLevel` | 同上 | 已修好 |
+| 排序 select | `#allSort` | 同上 | 已修好 |
+| 測驗輸入框 | `#quizAnswer` | `w-full p-3 border rounded`（**裸 class，無 type 屬性選擇器命中**——注意 `<input id="quizAnswer" ...>`沒有寫 `type="text"`，瀏覽器預設行為等同 text，但 CSS 選擇器 `input[type="text"]` **不會**匹配沒有寫 `type` 屬性的 `<input>`！這是屬性選擇器的已知陷阱） | **未涵蓋（新發現的真根因）**：`input[type="text"]` 選擇器語法上就吃不到它，這才是使用者回報「輸入英文單字...米白底」的真正原因，不是特異性問題 |
+| 用量預算 | `#usageBudgetInput` | `border border-gray-200` + `type="number"` | 已修好（`input[type="number"]` 有命中） |
+| 同步代碼（目前） | `#syncCodeCurrent` | `border rounded bg-gray-100`，`type="text"` | 已修好（`type="text"` 命中 + `bg-gray-100` sweep 命中，兩者疊加無衝突） |
+| 同步代碼（輸入） | `#syncCodeInput` | `border rounded`，`type="text"` | 已修好 |
+| 中文提示框（quiz `q.definition`） | `.p-3.bg-gray-50.rounded`（無 ID，`ui.js:1156`） | 純 Tailwind class | 已修好（`bg-gray-50` sweep），文字色繼承自 `#quizModal > div` 的 `--cold-parchment` |
+| 例句展示（`q.maskedExample`） | `.text-sm.text-gray-600`（`ui.js:1157`） | 純 Tailwind class | 已修好（`text-gray-600` sweep） |
+| 翻譯展示（`q.exampleZh`） | `.text-sm.text-amber-700`（`ui.js:1158`） | **未涵蓋**——`text-amber-700` 不在任何 sweep 清單裡 | 見第 9 節，需新增 |
+| 提示展示（dictation `q.hintZh`） | `.text-sm.text-amber-700`（`ui.js:1137`） | 同上 | 同上 |
+
+**修正輪 2 最關鍵的新發現：`#quizAnswer` 沒有 `type="text"` 屬性，`input[type="text"]` 選擇器語法上完全吃不到它。** 這比任何特異性問題都根本——選擇器寫對了特異性也没用，因為它從一開始就不匹配這個元素。修法二選一：(1) 在 HTML 幫 `#quizAnswer` 補上 `type="text"`（`index.html` 目前寫法只有 `<input id="quizAnswer" class="w-full p-3 border rounded" placeholder="...">`，沒有 `type` 屬性）；(2) 或者 CSS 選擇器改用 `body.scene-cold #quizAnswer` 直接點名 ID，兩者擇一即可，選 (2) 風險更低（不動 HTML 屬性，純 CSS 新增一條規則）。
+
+---
+
+## 11. Modal 內部文字盤點：`#quizModal` / `#quizSettings`（含動態注入內容）
+
+### 11.1 `#quizSettings`（測驗設定，靜態 HTML）
+
+| 文字節點 | Selector | Token | 狀態 |
+|---|---|---|---|
+| 標題「測驗設定」 | `.sidebar-title`（`#quizSettings` 內） | `--qz-ink` → 已被 `body.scene-cold #quizSettings { --qz-ink: var(--cold-parchment); }` 覆寫；另有第 0 節兜底 `body.scene-cold .sidebar-title { color: var(--cold-parchment) !important; }` 雙重保險 | 已修好 |
+| 「每題結束後自動播放」 | 純文字，繼承 `#quizSettings > div` 的 `color` | 已修好 |
+| 4 個 radio label（不自動播放/只播單字/只播例句/單字+例句） | 純文字 + 原生 radio | 文字已修好；radio `accent-color` 已於修正輪 1 覆寫 | 已修好 |
+| checkbox「題目顯示例句中文翻譯」 | 純文字 + 原生 checkbox | 同上 | 已修好 |
+| 「取消」按鈕 | `#qsCancel` | 見表 7 #7 | 已修好 |
+| 「開始測驗」按鈕 | `#qsStart` | 見表 7 #6 | 壞—需治本 |
+
+### 11.2 `#quizModal`（測驗進行中，含動態注入）
+
+| 文字節點 | Selector | Token | 狀態 |
+|---|---|---|---|
+| 標題「單字測驗」 | `.sidebar-title`（`#quizModal` 內，`index.html:1735` 附近） | 同 11.1，`--qz-ink` 已覆寫 + 兜底規則 | 已修好 |
+| 模式副標「複習模式 (1/15)」 | `#quizModeLabel`（inline `style="color:var(--theme-color)"`）+ `#quizProgress`（`.text-sm.font-normal.text-gray-400`） | `#quizModeLabel` 讀的是 **inline style 直接指向 `--theme-color`**（`theme-ocean.css` 的舊 token，`#8F9A78`/`#748cab`，跟 `--qz-*`/`--cold-*` 完全無關）——**未涵蓋，新發現**；`#quizProgress` 的 `text-gray-400` 已被 sweep | `#quizModeLabel` 壞；`#quizProgress` 已修好 |
+| 「✕」關閉 | `#quizClose`（`.text-gray-500.hover:text-gray-700`） | base 已 sweep；hover 未涵蓋 | 部分修好 |
+| 「請輸入對應的英文單字：」 | 純文字（`ui.js:1155`） | 繼承 `#quizModal > div` 的 `--cold-parchment` | 已修好 |
+| 中文提示框（`q.definition`） | `.p-3.bg-gray-50.rounded` | 見第 10 節 | 已修好 |
+| 「例句：...」 | `.text-sm.text-gray-600` | 見第 10 節 | 已修好 |
+| 「翻譯：...」label＋內容 | `.text-sm.text-amber-700`（`ui.js:1158`） | **未涵蓋**——label 與內容目前是同一個 `<div>`，同一個 class，使用者形容「label 橘紅、內容白色」是因為冒號後的中文內容其實跟 label 同色，只是視覺上使用者的注意力先被 label 的橘紅吸走，內容那幾個字剛好夠亮所以主觀感覺「OK」——**實際上整行都是 `text-amber-700`，不是分開兩色**，這是重要澄清 | 壞，需新增（見第 9.3） |
+| 中文提示（dictation `q.hintZh`） | `.text-sm.text-amber-700`（`ui.js:1137`） | 同上 | 壞，需新增 |
+| 播放按鈕（dictation） | `#qPlay`（inline `style="color:#8F9A78;border-color:#8F9A78;"`） | 硬編碼舊 Morandi 綠 | 壞，需新增（見第 9.1） |
+| 「聽完輸入答案」 | `.text-sm.text-gray-500` | 已 sweep | 已修好 |
+| 輸入框 `#quizAnswer` | 見第 10 節 | `type="text"` 屬性缺失，選擇器吃不到 | **壞（新發現的根本問題）** |
+| 「提交」按鈕 | `#quizSubmit` | 見表 7 #8 | 壞—需治本 |
+| 「不會」按鈕 | `#quizIDK` | 見表 7 #9 | 大致已修好 |
+| 「下一題（Enter）」按鈕 | `#quizNext` | 見表 7 #10 | 已修好 |
+| 答對/答錯即時回饋 | `#quizFeedback` 內動態 `<span class="text-green-600">`/`<span class="text-red-600">` | **未涵蓋**，見第 8、9 節建議新增 `--cold-correct`/`--cold-wrong` | 壞，需新增 |
+| **測驗完成頁**（同一個 `#quizModal`，`showQuizSummary()` 動態改寫 `#quizPrompt.innerHTML`，`ui.js:1281-1334`，**使用者完全沒看過的畫面**） | | | |
+| 「測驗完成」標題 | `.text-lg.sidebar-title` | 兜底規則已覆蓋 | 已修好 |
+| 「總題數：X 答對：Y...」 | `.text-sm.text-gray-700` | 已 sweep | 已修好 |
+| 「太強了！全對」 | inline `style="color:#8F9A78"`（`ui.js:1329`） | 硬編碼舊 Morandi 綠 | **壞，新發現** |
+| 錯題表格「你的答案」欄 | `.text-rose-700` | 見第 8、9 節 | 壞，需新增 |
+| 錯題表格「正確答案」欄 | `.text-green-700` | 見第 8、9 節 | 壞，需新增 |
+| 錯題表格 thead | `.bg-gray-100` | 已 sweep | 已修好 |
+| 錯題表格 zebra（奇數列） | `.bg-gray-50` | 已 sweep | 已修好 |
+| 錯題表格外框 | 裸 `border` class（無 `-gray-*` 後綴） | Tailwind 預設 `border` class 的顏色行為取決於 Tailwind 版本設定，此專案用 CDN 版，實際渲染顏色需另外抽查（不在本次 grep 範圍內，標記待查） | 待查 |
+| 「只重測錯題」／「全部重測」 | 見表 7 #11/#12 | 已修好 |
+
+---
+
+## 12. Hover / Active 態規劃（上一輪完全沒寫，這是「滑過去爆色」的根因）
+
+原則：**所有互動元件的 hover 態一律用 `color-mix()` 在既有 base 色上疊加 `--cold-accent`（10–15% 不透明度）或調整明度 ±10–15%，不得引入新色相**，對應 `theme-perfume-night.css` 已經驗證過的公式（`.btn-night--primary:hover`/`.btn-night--ghost:hover`）。
+
+| 元件族 | Base | Hover | Active |
+|---|---|---|---|
+| `.btn-primary-m`/`.quiz-btn-primary`/`.quiz-btn-next` | `--cold-wash` 底／`--cold-parchment` 字／`--cold-accent` 邊 | `color-mix(--cold-wash 80%, --cold-accent 20%)` 底 | `color-mix(--cold-wash 70%, black 30%)` 底 |
+| `.btn-outline-m` | 透明底／`--cold-parchment` 字／`--glass-cold-border` 邊 | `rgba(92,118,134,.10)` 底／邊框轉 `color-mix(--cold-accent 60%, transparent)` | `rgba(92,118,134,.16)` |
+| `.btn-ghost-m` | 透明底／`--cold-dim` 字 | `rgba(92,118,134,.10)` 底／字轉 `--cold-parchment` | `rgba(92,118,134,.16)` |
+| 資料管理 4 顆（`bg-gray-*` 系列） | `--glass-cold-fill` | 需新增 `body.scene-cold [class*="hover:bg-gray"]:hover` 等效規則——**Tailwind 的 `hover:` 變體 class 無法用簡單的全域選擇器一次涵蓋**，建議改法：直接針對這 4 顆按鈕的 ID／或新增一個共用 class（例如 `.btn-data-mgmt`）取代裸 Tailwind class，才能一次性控制 hover，而不是每加一個 `hover:bg-gray-200` 就要多寫一條 `body.scene-cold .hover\:bg-gray-200:hover` 轉義選擇器（技術上可行但極醜、極易漏） | — |
+| `#tabToday/#tabDue/#tabAll` | `--cold-dim` 字／透明底 | `rgba(92,118,134,.10)` 底／字轉 `--cold-parchment` | `.tab--active` 態另計 |
+| `.input-tab` | `color-mix(--cold-parchment 55%, --cold-dim 45%)` | `--cold-parchment` | `.input-tab--active` 另計 |
+| `#quizIDK`/`#qsCancel` | 半透明底／`--cold-dim` 或 `--cold-parchment` 字／`--glass-cold-border` 邊 | 建議統一改 `rgba(92,118,134,.10)` 底 | — |
+| pager 按鈕（`#todayPrev` 等） | `--glass-cold-fill` | 需新增（同「資料管理」的 Tailwind hover: 變體問題） | — |
+
+**建議的治本方向**（不在本文件範圍內實作，留給 `@frontend-developer` 評估）：凡是「hover 態用 Tailwind `hover:bg-gray-*`/`hover:text-*` 寫死」的按鈕，長期應該**換成共用 class**（比照 `.btn-outline-m`/`.btn-ghost-m` 的模式），而不是繼續疊加 Tailwind 任意值 class——目前這批「資料管理」「分頁器」按鈕正是全站僅剩的、還在用「裸 Tailwind + hover: 變體」寫按鈕的地方，也是未來最容易再次「hover 爆色」的地方。
+
+---
+
+## 13. 可照抄的完整實作清單（修正輪 2）
+
+依優先序排列，每條都是「Day 現況 / Night 目標 / selector / hover 態」四欄，不留「請自行決定」的空白。
+
+### P0（表 7 標記「壞—ID 攔截」的 7 顆按鈕，同一種病灶、同一種修法）
+
+**目標 selector 清單**：`#analyzeBtn`、`#saveBtn`、`#customAnalyzeBtn`、`#customAddBtn`、`#startQuizBtn`、`#usageSaveBudget`（以上 6 顆對應 `day.css:664` 的 ID 清單）；`#qsStart`、`#quizSubmit`、`#grammarQuizSubmit`（對應 `wc.css:1424` 的 qz-accent ID 清單，`#qsStart` 同時中兩槍，修法要同時涵蓋）。
+
+| Day 現況 | Night 目標 | selector | hover 態 |
+|---|---|---|---|
+| `#1C1208` 底／`#F0E8D4` 字（day.css ID 清單） | `--cold-wash` 底／`--cold-parchment` 字／`1px solid --cold-accent` 邊 | `body.scene-cold #analyzeBtn, body.scene-cold #saveBtn, body.scene-cold #customAnalyzeBtn, body.scene-cold #customAddBtn, body.scene-cold #startQuizBtn, body.scene-cold #usageSaveBudget`（每個都要單獨帶 `body.scene-cold` 前綴，不能只放在選擇器群組最前面一次——CSS 群組選擇器裡每個逗號分隔的子選擇器都要各自達到足夠特異性） | `color-mix(in srgb, var(--cold-wash) 80%, var(--cold-accent) 20%)` |
+| `--qz-accent` 實色底／`#FDF6E3` 字（wc.css qz 清單） | 同上 | `body.scene-cold #qsStart, body.scene-cold #quizSubmit, body.scene-cold #grammarQuizSubmit` | 同上 |
+| （`#usageSaveBudget` 額外項）inline `onmouseover`/`onmouseout` 寫死 `#8d9b76` | 拿掉這兩個 inline attribute，改用上面的 CSS hover 規則 | 同一顆按鈕，改 HTML 屬性 | — |
+
+### P0（補：`#quizAnswer` 選擇器語法陷阱）
+
+| Day 現況 | Night 目標 | selector | hover 態 |
+|---|---|---|---|
+| 裸 `border rounded`，無 `type` 屬性，`input[type="text"]` 選擇器吃不到 | `--glass-cold-fill` 底／`--cold-parchment` 字／`--glass-cold-border` 邊 | `body.scene-cold #quizAnswer`（直接點名 ID，不依賴 `type` 屬性選擇器） | focus 態沿用 `#articleInput:focus` 的 `--cold-accent` 公式 |
+
+### P1（`.quiz-btn-primary` 家族設計公式重做，非只是 token 對調）
+
+| Day 現況 | Night 目標 | selector | hover 態 |
+|---|---|---|---|
+| `background: var(--qz-accent) !important`（實色滿版）＋字面 `#FDF6E3` | 拆成兩條規則：(1) 在 P0 已經用 ID 覆寫解決特異性問題；(2) 額外確認 `.quiz-btn-primary` class-only 規則本身也同步改成「深底+亮字+accent 邊」公式（覆蓋沒有專屬 ID 攔截的其他 `.quiz-btn-primary` 用法，例如未來新增的按鈕） | `body.scene-cold .quiz-btn-primary`（已存在於修正輪 1，不需新增，只需確認 P0 的 ID 覆寫優先權夠高） | 同 P0 |
+
+### P1（語意色新增：正確/錯誤/翻譯/提示）
+
+| Day 現況 | Night 目標 | selector | hover 態 |
+|---|---|---|---|
+| `text-amber-700`（翻譯/提示 label，`ui.js:1137,1158`） | `--cold-dim` | `body.scene-cold .text-amber-700` | — |
+| `text-green-600`（quizFeedback 答對） | `var(--cold-correct)`（新 token，見 9.3） | `body.scene-cold .text-green-600` | — |
+| `text-red-600`（quizFeedback 答錯） | `var(--cold-wrong)`（新 token） | `body.scene-cold .text-red-600` | — |
+| `text-rose-700`（summary 錯題「你的答案」） | `var(--cold-wrong)` | `body.scene-cold .text-rose-700` | — |
+| `text-green-700`（summary 錯題「正確答案」） | `var(--cold-correct)` | `body.scene-cold .text-green-700` | — |
+| inline `color:#8F9A78`（quiz summary 全對訊息＋dictation 播放按鈕） | `var(--cold-accent)` | 兩處都要改成 class 或 `body.scene-cold` 能命中的選擇器，**不能只換 hex 值**，因為目前是 inline style，需要把 `ui.js` 產生這段 HTML 的地方拿掉 inline `style`、改成 class（例如新增 `.quiz-summary-perfect`／`.quiz-play-btn`），才有選擇器可以掛 scene-cold 規則 | — |
+| inline `color:var(--theme-color)`（`#quizModeLabel`） | `var(--cold-accent)` | 同上，拿掉 inline，改 class 或直接 `body.scene-cold #quizModeLabel` | — |
+
+### P2（Tailwind `hover:` 變體遺缺，資料管理 4 顆＋分頁器＋usageReset/usageClose/quizClose）
+
+| Day 現況 | Night 目標 | selector | hover 態 |
+|---|---|---|---|
+| 各種 `hover:bg-gray-*`/`hover:text-*`/`hover:border-*` Tailwind 變體，base 態已被 sweep，hover 態未涵蓋 | 統一改成 `rgba(92,118,134,.10)` 底／`--cold-parchment` 字／`color-mix(--cold-accent 60%, transparent)` 邊 | 建議不要逐一轉義 Tailwind hover 變體選擇器（`.hover\:bg-gray-200:hover` 這種寫法可行但難維護），改為幫這批按鈕新增一個共用 class（例如 `.btn-data-mgmt`）取代裸 Tailwind class，一次性定義 base+hover+active，長期更好維護 | 見左欄 |
+
+### P2（同步 modal 飽和藍孤例）
+
+| Day 現況 | Night 目標 | selector | hover 態 |
+|---|---|---|---|
+| `bg-blue-600 text-white`（`#syncSave`） | 改用 `.btn-primary-m`（直接換 class，不需要新 token） | `index.html:1820` 的 class 屬性從 `bg-blue-600 text-white rounded` 改成 `btn-primary-m` | 隨 `.btn-primary-m` 自動繼承 |
+
+### P3（待查，優先權較低但需要排進下一輪稽核）
+
+- `#rtabWords/#rtabTrans/#rtabGrammar`（`.result-tab`/`.result-tab--active`）：全新發現，完全未稽核，需要獨立展開一次 grep（表 7 #25）。
+- 錯題表格外框裸 `border` class 的實際渲染色（表 11.2 待查項）。
+- `#mnemonicClose`／`.mnemonic-*` 記憶輔助彈窗整個元件：未稽核（表 7 #30）。
+- `#undoToast`／`#undoBtn`：需確認 toast 底色本身是否有暖色殘留（表 7 #29）。
+- `[data-theme="dark"]` 這整套舊深色系統是否要正式棄用：目前跟 `body.scene-cold` 各自為政，長期建議二選一，但不在本次范圍內決定。
