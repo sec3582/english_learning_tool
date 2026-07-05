@@ -4,8 +4,7 @@ import { APPS_SCRIPT_URL } from "./api.js";
 import { initPixelPet } from "./pixel_pet.js";
 import { stopAll } from "./speech.js";
 
-// 由 APPS_SCRIPT_URL（http://localhost:3000/api）推導出 /scrape 與 /notion-save 端點
-const SCRAPE_URL      = APPS_SCRIPT_URL.replace(/\/api$/, "/scrape");
+// 由 APPS_SCRIPT_URL（http://localhost:3000/api）推導出 /notion-save 端點
 const NOTION_SAVE_URL = APPS_SCRIPT_URL.replace(/\/api$/, "/notion-save");
 
 const $ = (id) => document.getElementById(id);
@@ -19,45 +18,11 @@ const on = (id, evt, fn) => {
   if (el && typeof fn === "function") el.addEventListener(evt, fn);
 };
 
-// OCR：圖片 → 文字 → 填到 articleInput
-async function handleImageUpload() {
-  const input = document.getElementById("imageUpload");
-  if (!input.files.length) return alert("請先選擇圖片");
-
-  const file = input.files[0];
-  document.getElementById("loading").classList.remove("hidden");
-  document.getElementById("loading").textContent = "正在辨識圖片文字...";
-
-  try {
-    // 載入 Tesseract.js（如果還沒在 html 引入，要在 <head> 加 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>）
-    const { createWorker } = Tesseract;
-    const worker = await createWorker("eng");
-    const ret = await worker.recognize(file);
-    await worker.terminate();
-
-    const text = ret.data.text.trim();
-    if (!text) {
-      alert("未辨識到文字，請換張清晰的英文圖片");
-    } else {
-      // 寫入 textarea
-      document.getElementById("articleInput").value = text;
-      alert("圖片文字已匯入，可以交給 AI 分析囉！");
-    }
-  } catch (err) {
-    console.error("OCR 錯誤", err);
-    alert("圖片辨識失敗，請稍後再試");
-  } finally {
-    document.getElementById("loading").classList.add("hidden");
-    document.getElementById("loading").textContent = "AI 分析中，請稍後...";
-  }
-}
-
-
 /* ── 匯入文章 Tab 切換 ── */
 function initInputTabs() {
   const tabs = [
     { btn: "inputTabManual", panel: "inputPanelManual" },
-    { btn: "inputTabUrl",    panel: "inputPanelUrl"    },
+    { btn: "inputTabUpload", panel: "inputPanelUpload" },
   ];
 
   tabs.forEach(({ btn, panel }) => {
@@ -202,6 +167,15 @@ function bindEvents() {
   on("customAddBtn", "click", UI.handleCustomAdd);
   on("ocrPickBtn", "click", UI.handlePickOcrFile);
   on("ocrRunBtn", "click", UI.handleRunOcr);
+
+  // 自訂新增單字（sidebar 摺疊，預設收合；比照 #progressCardHeader 的 toggle 邏輯）
+  on("customWordHeader", "click", () => {
+    const body = $("customWordBody");
+    const chevron = $("customWordChevron");
+    if (!body || !chevron) return;
+    const nowHidden = body.classList.toggle("hidden");
+    chevron.style.transform = nowHidden ? "rotate(-90deg)" : "rotate(0deg)";
+  });
   on("loadSheetsBtn", "click", () => UI.handleLoadSheets());
   on("pushSheetsBtn", "click", UI.handlePushSheets);
 
@@ -347,82 +321,6 @@ function bindEvents() {
     }
   });
 
-
-  // —— 網址抓取 ——
-  function _cleanFetchedText(text) {
-    return text
-      // 解碼 HTML entities（&#x27; → ' 等）
-      .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
-      .replace(/&#(\d+);/g, (_, dec) => String.fromCharCode(Number(dec)))
-      .replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
-      .replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&nbsp;/g, " ")
-      // 移除殘留的 HTML 標籤
-      .replace(/<[^>]+>/g, " ")
-      // 移除控制字元（換行、tab 保留）
-      .replace(/[^\S\n\t ]+/g, " ")
-      // 合併多餘空白行（超過兩行換為兩行）
-      .replace(/\n{3,}/g, "\n\n")
-      .trim();
-  }
-
-  function _setUrlStatus(msg, type = "info") {
-    const el = $("urlStatus");
-    if (!el) return;
-    const styles = {
-      info:    "background:#F3F4F1;color:#6B7280;",
-      success: "background:#EEF2E8;color:#7a9068;",
-      error:   "background:#FEF2F2;color:#C0392B;",
-      youtube: "background:#FFF7ED;color:#92400E;",
-    };
-    el.style.cssText = styles[type] || styles.info;
-    el.textContent = msg;
-    el.classList.toggle("hidden", !msg);
-  }
-
-  on("urlFetchBtn", "click", async () => {
-    const url = $("urlInput")?.value.trim();
-    if (!url) { _setUrlStatus("請輸入網址", "error"); return; }
-
-    const btn = $("urlFetchBtn");
-    btn.textContent = "抓取中…";
-    btn.disabled = true;
-    _setUrlStatus("正在擷取網頁內容…", "info");
-
-    try {
-      const res = await fetch(SCRAPE_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url }),
-      });
-      const data = await res.json();
-
-      if (!data.ok) {
-        _setUrlStatus(data.error, "error");
-        return;
-      }
-
-      // 切到「手動輸入」Tab，把文字填入輸入框
-      $("inputTabManual")?.click();
-      const ta = $("articleInput");
-      if (ta) {
-        ta.value = _cleanFetchedText(data.text);
-        ta.dispatchEvent(new Event("input", { bubbles: true }));
-      }
-      $("urlInput").value = "";
-      _setUrlStatus("", "");
-      UI.showToast?.(`已擷取 ${data.text.length} 字，可點「讓 AI 挑單字」開始分析！`, { duration: 4000 });
-    } catch (e) {
-      _setUrlStatus(
-        navigator.onLine
-          ? "無法連接伺服器，請稍後再試。"
-          : "無網路連線，請檢查網路狀態。",
-        "error"
-      );
-    } finally {
-      btn.textContent = "擷取內容";
-      btn.disabled = false;
-    }
-  });
 
 
   on("customWordInput", "keydown", (e) => {

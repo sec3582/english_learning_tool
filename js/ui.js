@@ -1,5 +1,5 @@
 // js/ui.js（頂端 imports）
-import { analyzeArticle, extractJSON, getUsageSummary, getUsageBudget, setUsageBudget, resetUsageMonth, analyzeCustomWordAPI, generateGrammarQuiz, gradeGrammarAnswer } from "./api.js";
+import { analyzeArticle, extractJSON, getUsageSummary, getUsageBudget, setUsageBudget, resetUsageMonth, analyzeCustomWordAPI, generateGrammarQuiz, gradeGrammarAnswer, APPS_SCRIPT_URL } from "./api.js";
 import { getGrammarPracticePoints, addGrammarPoint, removeGrammarPoint, recordGrammarPractice } from "./grammarStorage.js";
 import { addWord, getAllWords, deleteWord, updateWord, getTodayWords, getDueWords, getDueCount, saveAllWords, scheduleNext, ensureDueForAll, getMasteredCount, getDailyStats, getSyncMeta, clearDirtyAndSetLastSync, removeFromDeletedKeys } from "./storage.js";
 import { getMatchedRelations } from "./wordRelations.js";
@@ -1794,7 +1794,10 @@ function importJsonFile(file) {
 
 
 
-/* ===== 圖片 OCR（沿用你的 UI 流程） ===== */
+/* ===== 圖片／PDF 上傳辨識（Phase 5f：接上後端 /extract-image /extract-pdf） ===== */
+const EXTRACT_IMAGE_URL = APPS_SCRIPT_URL.replace(/\/api$/, "/extract-image");
+const EXTRACT_PDF_URL   = APPS_SCRIPT_URL.replace(/\/api$/, "/extract-pdf");
+
 let _lastOcrFile = null;
 
 export function handlePickOcrFile() {
@@ -1811,9 +1814,32 @@ export function handlePickOcrFile() {
 }
 
 export async function handleRunOcr() {
-  if (!_lastOcrFile) return alert("尚未選擇圖片");
+  if (!_lastOcrFile) return alert("尚未選擇圖片或 PDF");
   await doOCR(_lastOcrFile);
 }
+
+// 拖放上傳：點擊選檔以外的第二種入口，共用同一個 doOCR 流程
+export function initUploadDropzone() {
+  const dropzone = document.getElementById("uploadDropzone");
+  if (!dropzone || dropzone.dataset.initDone) return;
+  dropzone.dataset.initDone = "1";
+
+  ["dragover", "dragenter"].forEach(evt => dropzone.addEventListener(evt, (e) => {
+    e.preventDefault();
+    dropzone.classList.add("upload-dropzone--active");
+  }));
+  ["dragleave", "drop"].forEach(evt => dropzone.addEventListener(evt, (e) => {
+    e.preventDefault();
+    dropzone.classList.remove("upload-dropzone--active");
+  }));
+  dropzone.addEventListener("drop", (e) => {
+    const file = e.dataTransfer?.files?.[0];
+    if (!file) return;
+    _lastOcrFile = file;
+    doOCR(file);
+  });
+}
+document.addEventListener("DOMContentLoaded", initUploadDropzone);
 
 // OCR 文字清理：移除排版產生的不正常斷行，還原自然段落結構
 function cleanOcrText(raw) {
@@ -1849,48 +1875,46 @@ function cleanOcrText(raw) {
 }
 
 async function doOCR(file) {
-  const status = document.getElementById("ocrStatus");
-  const runBtn = document.getElementById("ocrRunBtn");
-  if (!window.Tesseract) {
-    alert("找不到 Tesseract.js，請確認已在 index.html 載入 CDN。");
-    return;
-  }
+  const dropzone  = document.getElementById("uploadDropzone");
+  const loading   = document.getElementById("uploadLoading");
+  const statusRow = document.getElementById("uploadStatusRow");
+  const status    = document.getElementById("ocrStatus");
+  const runBtn    = document.getElementById("ocrRunBtn");
 
-  status.textContent = "正在辨識圖片文字…";
+  dropzone?.classList.add("hidden");
+  statusRow?.classList.add("hidden");
+  loading?.classList.remove("hidden");
   runBtn?.classList.add("hidden");
 
+  const isPdf      = file.type === "application/pdf";
+  const endpoint   = isPdf ? EXTRACT_PDF_URL : EXTRACT_IMAGE_URL;
+  const fieldName  = isPdf ? "pdf" : "image";
+
   try {
-    const { createWorker } = window.Tesseract;
-    const worker = await createWorker("eng", 1, {
-      logger: (m) => {
-        if (m?.progress != null) {
-          const p = Math.round((m.progress || 0) * 100);
-          status.textContent = `OCR 進行中… ${p}%`;
-        }
-      },
-    });
-    const ret = await worker.recognize(file);
-    await worker.terminate();
+    const form = new FormData();
+    form.append(fieldName, file);
+    const res  = await fetch(endpoint, { method: "POST", body: form });
+    const data = await res.json();
 
-    const rawText = (ret?.data?.text || "").trim();
-    if (!rawText) {
-      status.textContent = "沒有辨識到文字，請換張更清晰的圖片";
-      return;
+    if (!data.ok) {
+      status.textContent = data.error || (isPdf ? "PDF 解析失敗" : "圖片辨識失敗");
+    } else {
+      const text = cleanOcrText((data.text || "").trim());
+      const ta = document.getElementById("articleInput");
+      if (ta) {
+        ta.value = ta.value ? (ta.value + "\n\n" + text) : text;
+        ta.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+      status.textContent = `辨識完成，已寫入輸入框（${text.length} 字）。請校對後按「讓 AI 挑單字」。`;
     }
-
-    const text = cleanOcrText(rawText);
-
-    const ta = document.getElementById("articleInput");
-    if (!ta) return alert("找不到 articleInput");
-    ta.value = ta.value ? (ta.value + "\n\n" + text) : text;
-    ta.dispatchEvent(new Event("input", { bubbles: true }));
-
-    status.textContent = `OCR 完成。已寫入輸入框（${text.length} 字）`;
-    runBtn?.classList.remove("hidden");
-
   } catch (err) {
     console.error(err);
-    status.textContent = "OCR 失敗，請重試或換一張清晰的圖片";
+    status.textContent = navigator.onLine
+      ? "辨識失敗，請稍後再試。"
+      : "無網路連線，請檢查網路狀態。";
+  } finally {
+    loading?.classList.add("hidden");
+    statusRow?.classList.remove("hidden");
     runBtn?.classList.remove("hidden");
   }
 }

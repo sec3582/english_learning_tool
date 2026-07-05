@@ -14,8 +14,6 @@
     }
   </script>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- ① 加入 Tesseract.js（建議放在 head 或 body 結尾） -->
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <link rel="stylesheet" href="theme-ocean.css">
   <link rel="stylesheet" href="theme-perfume-day.css">
   <link rel="stylesheet" href="theme-perfume-wc.css">
@@ -807,7 +805,8 @@
   }
 
   /* 全站夜模式擴大範圍（2026-07 追加）：右側四張側欄卡片
-     （學習進度／單字清單／像素電子雞／資料管理）。
+     （學習進度／單字清單／作坊燭火／資料管理；#pixelPetCard 這個 ID
+     是舊名殘留，Phase 5f 只換皮不動 ID，避免無謂牽動 JS/CSS 依賴）。
      這四個容器的暖色 background 分別來自 theme-perfume-day.css /
      theme-perfume-wc.css 的 #wordListCard、#pixelPetCard、#backupCard
      規則（皆為 !important）；#progressCard 沒有專屬規則，暖色其實是
@@ -903,38 +902,255 @@
     border-bottom-color: var(--cold-accent) !important;
   }
 
-  /* 4) 「自訂新增單字」卡片：原本連 id/專屬 class 都沒有，完全暴露在
-     theme-ocean.css 的 .bg-white.rounded-xl.shadow.p-6 類別選擇器下，
-     四張頂層卡片的覆蓋規則根本碰不到它。已在 markup 補上
-     id="customWordCard"，這裡用跟其他 glass card 一致的規則覆蓋，並
-     處理內部 label / input / textarea（原本無背景色 class，直接繼承
-     瀏覽器預設，深底上會變成看不見的深色字）。 */
-  body.scene-cold #customWordCard {
+  /* 4)「自訂新增單字」摺疊區塊（Phase 5f 搬進 #wordListCard sidebar，
+     原本的 #customWordCard 已移除，選擇器改吃新容器 #customWordSidebar，
+     token 與規則本身不變）。 */
+  body.scene-cold #customWordSidebar {
     background: var(--glass-cold-fill) !important;
     border: 1px solid var(--glass-cold-border) !important;
+    border-radius: 10px;
     backdrop-filter: blur(16px) saturate(115%);
     -webkit-backdrop-filter: blur(16px) saturate(115%);
-    box-shadow: 0 16px 48px var(--cold-shadow) !important;
     color: var(--cold-parchment) !important;
     --text: var(--cold-parchment);
     --muted: var(--cold-dim);
   }
 
-  body.scene-cold #customWordCard label {
+  body.scene-cold #customWordHeader:hover {
+    background: rgba(92, 118, 134, 0.06) !important;
+  }
+
+  body.scene-cold #customWordSidebar label {
     color: var(--cold-dim) !important;
   }
 
-  body.scene-cold #customWordCard input,
-  body.scene-cold #customWordCard textarea {
+  body.scene-cold #customWordSidebar input,
+  body.scene-cold #customWordSidebar textarea {
     background: var(--glass-cold-fill) !important;
     border-color: var(--glass-cold-border) !important;
     color: var(--cold-parchment) !important;
   }
 
-  body.scene-cold #customWordCard input::placeholder,
-  body.scene-cold #customWordCard textarea::placeholder {
+  body.scene-cold #customWordSidebar input::placeholder,
+  body.scene-cold #customWordSidebar textarea::placeholder {
     color: var(--cold-dim) !important;
     opacity: 1 !important;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     Phase 5f — Step 0：按鈕系統統一（docs/VISUAL_QA_5E.md 第 0 節）
+     根因：.btn-primary-m / .btn-outline-m / .btn-ghost-m / .quiz-btn-* 這幾個
+     全站共用按鈕 class，原本只認 [data-theme="dark"]（月亮圖示切換），完全
+     不認 body.scene-cold。導致每一個被 scene-cold 覆寫過背景的卡片，裡面的
+     按鈕仍然是 Day Mode 配色。這裡讓它們統一改吃 --cold-accent，比照
+     theme-perfume-night.css 的 .btn-night--primary / .btn-night--ghost 配色
+     公式（color-mix 疊加白/黑的極小比例，不引入新色相）。修好這裡以後，
+     後續任何 scene-cold 卡片只要按鈕用這幾個共用 class，會自動跟上，
+     不需要再逐一補按鈕規則。 */
+  body.scene-cold .btn-primary-m,
+  body.scene-cold .quiz-btn-primary,
+  body.scene-cold .quiz-btn-next {
+    background: var(--cold-accent) !important;
+    color: var(--cold-void) !important;
+    box-shadow: none !important;
+  }
+
+  body.scene-cold .btn-primary-m:hover:not(:disabled),
+  body.scene-cold .quiz-btn-primary:hover:not(:disabled),
+  body.scene-cold .quiz-btn-next:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--cold-accent) 88%, white 12%) !important;
+  }
+
+  body.scene-cold .btn-primary-m:active:not(:disabled),
+  body.scene-cold .quiz-btn-primary:active:not(:disabled),
+  body.scene-cold .quiz-btn-next:active:not(:disabled) {
+    background: color-mix(in srgb, var(--cold-accent) 90%, black 10%) !important;
+  }
+
+  body.scene-cold .btn-primary-m:focus-visible,
+  body.scene-cold .quiz-btn-primary:focus-visible,
+  body.scene-cold .quiz-btn-next:focus-visible {
+    box-shadow: 0 0 0 3px var(--cold-accent-ring) !important;
+  }
+
+  body.scene-cold .btn-primary-m *,
+  body.scene-cold .quiz-btn-primary *,
+  body.scene-cold .quiz-btn-next * {
+    color: inherit !important;
+    opacity: 1 !important;
+  }
+
+  /* #analyzeBtn 另外被 day.css 的「FINAL COLOR LOCK」鎖了一份文字色
+     （ID + class 的高特異性），scene-cold 底下要用同樣高度的選擇器蓋掉，
+     否則會維持羊皮紙色文字疊在冷調 --cold-accent 底色上。 */
+  body.scene-cold #analyzeBtn.btn-primary-m,
+  body.scene-cold #analyzeBtn.btn-primary-m:hover:not(:disabled),
+  body.scene-cold #analyzeBtn.btn-primary-m:active:not(:disabled),
+  body.scene-cold #analyzeBtn.btn-primary-m:disabled,
+  body.scene-cold #analyzeBtn.btn-primary-m * {
+    color: var(--cold-void) !important;
+  }
+
+  body.scene-cold .btn-outline-m {
+    background: transparent !important;
+    color: var(--cold-parchment) !important;
+    border-color: var(--glass-cold-border) !important;
+  }
+
+  body.scene-cold .btn-outline-m:hover:not(:disabled),
+  body.scene-cold .btn-outline-m:active:not(:disabled) {
+    color: var(--cold-parchment) !important;
+    border-color: color-mix(in srgb, var(--cold-accent) 60%, transparent) !important;
+    background: rgba(92, 118, 134, 0.10) !important;
+  }
+
+  body.scene-cold .btn-outline-m:focus-visible {
+    border-color: color-mix(in srgb, var(--cold-accent) 60%, transparent) !important;
+    box-shadow: 0 0 0 3px var(--cold-accent-ring) !important;
+  }
+
+  body.scene-cold .btn-ghost-m {
+    color: var(--cold-dim) !important;
+  }
+
+  body.scene-cold .btn-ghost-m:hover:not(:disabled),
+  body.scene-cold .btn-ghost-m:active:not(:disabled) {
+    background: rgba(92, 118, 134, 0.10) !important;
+    color: var(--cold-parchment) !important;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     Phase 5f — Step 4：docs/VISUAL_QA_5E.md 清單修復
+     ═══════════════════════════════════════════════════════════════════════ */
+
+  /* 4.1「測驗設定」modal（#quizSettings，跟已修好的 #quizModal 是不同 ID，
+     之前完全沒被白名單覆蓋到）。 */
+  body.scene-cold #quizSettings > div {
+    background: var(--glass-cold-fill) !important;
+    border: 1px solid var(--glass-cold-border) !important;
+    backdrop-filter: blur(20px) saturate(120%);
+    -webkit-backdrop-filter: blur(20px) saturate(120%);
+    box-shadow: 0 20px 60px var(--cold-shadow) !important;
+    color: var(--cold-parchment) !important;
+    --text: var(--cold-parchment);
+    --muted: var(--cold-dim);
+    --navy: var(--cold-parchment);
+  }
+
+  body.scene-cold #qsCancel {
+    background: transparent !important;
+    border: 1px solid var(--glass-cold-border) !important;
+    color: var(--cold-parchment) !important;
+  }
+
+  body.scene-cold #quizSettings input[type="radio"],
+  body.scene-cold #quizSettings input[type="checkbox"] {
+    accent-color: var(--cold-accent);
+  }
+
+  /* 4.2 單字建議卡片（.word-suggestion-card，位於「匯入文章」分析結果的
+     #rtabPanelWords，不是側欄，但這是使用者回報「單字清單例句框」對比度
+     問題的實際來源元件——低對比的淡棕例句字色是為 Day Mode 羊皮紙底設計，
+     套進冷調玻璃卡片後對比完全消失）。 */
+  body.scene-cold #rtabPanelWords {
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  body.scene-cold .word-suggestion-card {
+    background: var(--glass-cold-fill) !important;
+    border: 1px solid var(--glass-cold-border) !important;
+    box-shadow: none !important;
+    color: var(--cold-parchment) !important;
+  }
+
+  body.scene-cold .word-suggestion-card .stamp-word {
+    color: var(--cold-parchment) !important;
+  }
+
+  body.scene-cold .word-suggestion-card .word-card-meta,
+  body.scene-cold .word-suggestion-card .word-card-def,
+  body.scene-cold .word-suggestion-card .word-card-example {
+    color: var(--cold-dim) !important;
+  }
+
+  body.scene-cold .word-suggestion-card .speak-btn-warm {
+    color: var(--cold-dim) !important;
+  }
+
+  body.scene-cold .word-suggestion-card .speak-btn-warm:hover {
+    background: rgba(92, 118, 134, 0.10) !important;
+    color: var(--cold-parchment) !important;
+  }
+
+  /* 4.3 textarea / input 白底融合：通用兜底規則。刻意不加 !important，
+     用低優先權的 type 選擇器，讓既有 scoped !important 規則（例如
+     #articleInput）繼續贏過這條——這條只負責「沒人管過的輸入框」，
+     不負責覆蓋已經精修過的元件。 */
+  body.scene-cold input[type="text"],
+  body.scene-cold input[type="number"],
+  body.scene-cold input[type="search"],
+  body.scene-cold select,
+  body.scene-cold textarea {
+    background: var(--glass-cold-fill);
+    border-color: var(--glass-cold-border);
+    color: var(--cold-parchment);
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     Phase 5f — Step 2：上傳圖片頁籤（dropzone / loading / 額度提示）
+     ═══════════════════════════════════════════════════════════════════════ */
+  .upload-dropzone {
+    border: 1px dashed var(--color-input-border, #D8C9A8);
+    border-radius: var(--radius-input, 8px);
+    padding: 28px 16px;
+    text-align: center;
+    color: var(--muted);
+  }
+  .upload-dropzone--active {
+    border-color: var(--primary, #8F9A78);
+  }
+  body.scene-cold .upload-dropzone {
+    border-color: var(--glass-cold-border) !important;
+    color: var(--cold-dim) !important;
+    background: var(--glass-cold-fill) !important;
+  }
+  body.scene-cold .upload-dropzone--active {
+    border-color: var(--cold-accent) !important;
+  }
+  .upload-dropzone__hint {
+    margin-bottom: 10px;
+    font-size: 0.875rem;
+  }
+
+  .upload-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 20px 0;
+    color: var(--muted);
+    font-size: 0.875rem;
+  }
+  body.scene-cold .upload-loading {
+    color: var(--cold-dim) !important;
+  }
+  .upload-loading__spinner {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    animation: upload-spin 0.7s linear infinite;
+    display: inline-block;
+  }
+  @keyframes upload-spin { to { transform: rotate(360deg); } }
+
+  .upload-quota-hint {
+    font-size: 0.75rem;
+    color: var(--muted, #9CA3AF);
+  }
+  body.scene-cold .upload-quota-hint {
+    color: var(--cold-dim) !important;
   }
   </style>
 
@@ -1011,27 +1227,18 @@
         <!-- Article Input -->
         <section id="articleInputSection" class="bg-white rounded-xl shadow p-6">
 
-          <!-- 標題列 + OCR 上傳 -->
+          <!-- 標題列 -->
           <div class="flex items-center justify-between mb-5">
             <h2 class="section-h">
               <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
               匯入文章
             </h2>
-            <div class="flex items-center gap-2">
-              <input id="ocrFile" type="file" accept="image/*" class="hidden">
-              <button id="ocrPickBtn" class="btn-sm-m">
-                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-                上傳圖片
-              </button>
-              <button id="ocrRunBtn" class="btn-sm-m hidden">重跑 OCR</button>
-              <span id="ocrStatus" class="text-xs text-gray-400 max-w-[180px] truncate"></span>
-            </div>
           </div>
 
-          <!-- 頁籤（純文字，無 emoji） -->
+          <!-- 頁籤（純文字，無 emoji；手動輸入／上傳圖片平權，同字重同高度） -->
           <div class="flex border-b border-gray-100 mb-5">
             <button id="inputTabManual"  class="input-tab input-tab--active">手動輸入</button>
-            <button id="inputTabUrl"     class="input-tab">網址</button>
+            <button id="inputTabUpload"  class="input-tab">上傳圖片</button>
           </div>
 
           <!-- Panel①：手動輸入 -->
@@ -1065,17 +1272,29 @@
             </div>
           </div>
 
-          <!-- Panel②：網址 / YT -->
-          <div id="inputPanelUrl" class="hidden space-y-3">
-            <p class="text-sm text-gray-400">貼上網址或 YouTube 連結，自動擷取文章內容。</p>
-            <div class="flex gap-2">
-              <input id="urlInput" type="url"
-                class="flex-1 p-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#A3B18A] focus:ring-2 focus:ring-[#A3B18A]/20"
-                placeholder="https://…">
-              <button id="urlFetchBtn" class="btn-primary-m">擷取內容</button>
+          <!-- Panel②：上傳圖片 / PDF（Phase 5f：接上後端 /extract-image /extract-pdf） -->
+          <div id="inputPanelUpload" class="hidden space-y-3">
+            <input id="ocrFile" type="file" accept="image/jpeg,image/png,application/pdf" class="hidden">
+
+            <!-- 狀態一：預設，尚未選檔 -->
+            <div id="uploadDropzone" class="upload-dropzone">
+              <p class="upload-dropzone__hint">拖曳圖片或 PDF 到這裡，或</p>
+              <button id="ocrPickBtn" type="button" class="btn-outline-m">選擇檔案</button>
             </div>
-            <!-- 動態狀態：成功 / 錯誤 / YouTube 提示 -->
-            <div id="urlStatus" class="hidden text-xs rounded-lg px-3 py-2 leading-relaxed"></div>
+
+            <!-- 狀態二：辨識中 -->
+            <div id="uploadLoading" class="hidden upload-loading">
+              <span class="upload-loading__spinner"></span>
+              <span>辨識中，請稍候…</span>
+            </div>
+
+            <!-- 狀態三：完成／錯誤 -->
+            <div id="uploadStatusRow" class="hidden flex items-center gap-2">
+              <span id="ocrStatus" class="text-sm flex-1" style="color:var(--muted);"></span>
+              <button id="ocrRunBtn" type="button" class="btn-ghost-m hidden" style="font-size:.8125rem; flex-shrink:0;">重跑 OCR</button>
+            </div>
+
+            <p class="upload-quota-hint">圖片辨識較耗用本月額度</p>
           </div>
 
         </section>
@@ -1124,57 +1343,6 @@
 
         </div>
 
-        <!-- Custom add -->
-        <section id="customWordCard" class="bg-white rounded-xl shadow p-6 space-y-4">
-          <h2 class="section-h">
-            <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            自訂新增單字
-          </h2>
-
-          <!-- 查詢詞 + 分析按鈕 -->
-          <div class="flex gap-2 items-stretch">
-            <input id="customWordInput" type="text"
-              class="flex-1 px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#7C96AB] focus:ring-2 focus:ring-[#7C96AB]/20"
-              placeholder="輸入單字或片語…">
-            <button id="customAnalyzeBtn" class="btn-primary-m">分析</button>
-          </div>
-
-          <!-- 自動填入的編輯卡片 -->
-          <div id="customWordEdit" class="hidden space-y-3">
-            <div class="grid grid-cols-2 gap-3">
-              <div class="col-span-2">
-                <label class="block text-xs font-medium text-gray-500 mb-1">英文單字</label>
-                <input id="cw_word" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#7C96AB]">
-              </div>
-              <div>
-                <label class="block text-xs font-medium text-gray-500 mb-1">詞性</label>
-                <input id="cw_pos" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#7C96AB]" placeholder="noun / verb…">
-              </div>
-              <div>
-                <label class="block text-xs font-medium text-gray-500 mb-1">難度 (A1–C2)</label>
-                <input id="cw_level" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#7C96AB]" placeholder="B1">
-              </div>
-              <div class="col-span-2">
-                <label class="block text-xs font-medium text-gray-500 mb-1">中文解釋</label>
-                <input id="cw_def" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#7C96AB]">
-              </div>
-              <div class="col-span-2">
-                <label class="block text-xs font-medium text-gray-500 mb-1">文章例句</label>
-                <textarea id="cw_example_en" rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:border-[#7C96AB]"></textarea>
-              </div>
-              <div class="col-span-2">
-                <label class="block text-xs font-medium text-gray-500 mb-1">AI 造句</label>
-                <textarea id="cw_example_ai" rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:border-[#7C96AB]"></textarea>
-              </div>
-              <div class="col-span-2">
-                <label class="block text-xs font-medium text-gray-500 mb-1">翻譯</label>
-                <textarea id="cw_example_zh" rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:border-[#7C96AB]"></textarea>
-              </div>
-            </div>
-            <button id="customAddBtn" class="w-full btn-primary-m justify-center">加入我的清單</button>
-          </div>
-        </section>
-
       </div>
 
       <!-- Right: sidebar -->
@@ -1220,6 +1388,57 @@
             </button>
           </div>
 
+          <!-- 自訂新增單字（Phase 5f 搬進 sidebar，摺疊，預設收合；比照 #progressCard 摺疊模式） -->
+          <div id="customWordSidebar" class="mb-3">
+            <div id="customWordHeader" class="flex items-center justify-between cursor-pointer select-none" style="padding:4px 2px;">
+              <h3 class="sidebar-title" style="font-size:.875rem;">自訂新增單字</h3>
+              <span id="customWordChevron" style="font-size:.85rem;color:#B0A090;transform:rotate(-90deg);transition:transform .2s;display:inline-block">▼</span>
+            </div>
+            <div id="customWordBody" class="hidden" style="margin-top:8px;">
+              <div style="height:1px;background:#EDE5D8;margin:0 0 12px"></div>
+
+              <div class="space-y-2 mb-3">
+                <input id="customWordInput" type="text"
+                  class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#7C96AB] focus:ring-2 focus:ring-[#7C96AB]/20"
+                  placeholder="輸入單字或片語…">
+                <button id="customAnalyzeBtn" class="w-full btn-outline-m justify-center" style="font-size:.8125rem;">分析</button>
+              </div>
+
+              <!-- 自動填入的編輯卡片：sidebar 窄欄改單欄排列 -->
+              <div id="customWordEdit" class="hidden space-y-2">
+                <div>
+                  <label class="block text-xs font-medium text-gray-500 mb-1">英文單字</label>
+                  <input id="cw_word" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#7C96AB]">
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-500 mb-1">詞性</label>
+                  <input id="cw_pos" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#7C96AB]" placeholder="noun / verb…">
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-500 mb-1">難度 (A1–C2)</label>
+                  <input id="cw_level" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#7C96AB]" placeholder="B1">
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-500 mb-1">中文解釋</label>
+                  <input id="cw_def" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#7C96AB]">
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-500 mb-1">文章例句</label>
+                  <textarea id="cw_example_en" rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:border-[#7C96AB]"></textarea>
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-500 mb-1">AI 造句</label>
+                  <textarea id="cw_example_ai" rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:border-[#7C96AB]"></textarea>
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-500 mb-1">翻譯</label>
+                  <textarea id="cw_example_zh" rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:border-[#7C96AB]"></textarea>
+                </div>
+                <button id="customAddBtn" class="w-full btn-primary-m justify-center">加入我的清單</button>
+              </div>
+            </div>
+          </div>
+
           <!-- All filters -->
           <div id="allFilters" class="grid grid-cols-2 gap-2 mb-3 hidden">
             <input id="allSearch" class="col-span-2 p-2 border rounded" placeholder="搜尋單字或中文解釋" />
@@ -1263,12 +1482,12 @@
 
         </div>
 
-      <!-- PixelPet 像素電子雞 -->
+      <!-- 作坊燭火（Phase 5f 換皮自像素電子雞，資料邏輯完全不變） -->
       <div id="pixelPetCard" class="bg-white rounded-xl shadow p-4">
         <div class="flex items-center justify-between mb-3">
-          <h3 class="sidebar-title">像素電子雞</h3>
+          <h3 class="sidebar-title">作坊燭火</h3>
           <div class="flex flex-col items-end gap-0.5">
-            <div id="petStageLabel" class="text-xs text-gray-500">小雞</div>
+            <div id="petStageLabel" class="text-xs text-gray-500">新蠟燭</div>
             <div id="xpPct" class="font-bold tabular-nums text-gray-500" style="font-size:1rem;line-height:1.1">0/100</div>
           </div>
         </div>
@@ -1278,14 +1497,14 @@
         </div>
         <div class="space-y-1.5">
           <div class="flex items-center gap-2 text-xs">
-            <span class="text-gray-400 shrink-0" style="width:2rem">飽食</span>
+            <span class="text-gray-400 shrink-0" style="width:2rem">燭光</span>
             <div class="flex-1 rounded-full overflow-hidden" style="height:7px;background:#F0ECE6">
               <div id="hungerBar" class="h-full rounded-full" style="background:#A3B18A;width:100%;transition:width .5s,background .5s"></div>
             </div>
             <span id="hungerPct" class="text-gray-400 shrink-0 tabular-nums" style="width:2.4rem;text-align:right">100%</span>
           </div>
           <div class="flex items-center gap-2 text-xs">
-            <span class="text-gray-400 shrink-0" style="width:2rem">心情</span>
+            <span class="text-gray-400 shrink-0" style="width:2rem">蠟淚</span>
             <div class="flex-1 rounded-full overflow-hidden" style="height:7px;background:#F0ECE6">
               <div id="moodBar" class="h-full rounded-full" style="background:#BC9C7F;width:100%;transition:width .5s,background .5s"></div>
             </div>

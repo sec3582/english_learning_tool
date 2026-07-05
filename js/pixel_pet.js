@@ -1,5 +1,8 @@
 /**
- * js/pixel_pet.js — 像素電子雞 PixelPet
+ * js/pixel_pet.js — 作坊燭火（Phase 5f 由「像素電子雞」換皮而成）
+ *
+ * 只換 sprite 與命名，資料邏輯完全不動——見下方 localStorage 鍵值表，
+ * 全部沿用舊有欄位名稱，未來若要接回小說系統（v2 目標 6）不需要遷移資料。
  *
  * localStorage 鍵值：
  *   lastAddWordTime    — 最後新增單字的時間戳 (ms)
@@ -7,118 +10,169 @@
  *   currentXP          — 目前等級內的 XP
  *   level              — 目前等級 (從 1 起)
  *   pet_last_active_ts — 最後互動時間（用於判斷睡眠）
- *   petHunger          — 目前飽食度 (0–100)
+ *   petHunger          — 目前飽食度 (0–100)，視覺對應：燭火亮度（穩定明亮 ↔ 搖曳將熄）
  *   petHungerDecayTs   — 上次飽食度衰減計算時間戳
- *   petMood            — 目前心情度 (0–100)
+ *   petMood            — 目前心情度 (0–100)，視覺對應：蠟淚整齊度（平整凝結 ↔ 雜亂垂掛）
  *   petMoodDecayTs     — 上次心情度衰減計算時間戳
  */
 import { getDueCount } from './storage.js';
 
 // ─── Color palette ────────────────────────────────────────────────────────────
 const _ = null;
-const EC = '#F5E6CC', EH = '#FFFDF5', EK = '#B0A080';
-const CY = '#FFD700', CD = '#FFC200', CT = '#FFF0A0', CB = '#FF8C00';
-const RD = '#CC2200', RB = '#8B7355', RL = '#C4A882', RK = '#6B5535', RF = '#FF8C00';
-const EY = '#222222', EG = '#FFFFFF';
+// 蠟身：暖象牙蠟（主色／高光／陰影）＋ 燭芯
+const WX = '#EDE0C8', WH = '#F7EFDC', WS = '#C9B48C', WK = '#3A2A1C';
+// 蠟淚（心情低落時的雜亂垂墜，只在 messy 版本用到）
+const DR = '#A97C4A';
+// 鑲金燭台（LV16+ 專屬，呼應 storyboard.md CG-3 的蠟／金屬材質語彙）
+const GD = '#C89B3C', GS = '#8B6B2E';
+// 火焰：F1/F2/F3 不是固定色，只是「亮度層級」標記——實際顏色由
+// flameColor() 依飽食度即時計算（亮＝穩定明亮，暗＝搖曳將熄），
+// 對應決策 [[decision-5f-upload-pet]] 的 hunger→燭火亮度映射。
+const F1 = 'F1', F2 = 'F2', F3 = 'F3';
+
+// 火焰亮度：hunger 0–100 線性內插兩個端點色
+const FLAME_RAMPS = {
+  F1: ['#8A5A2E', '#FFF3B0'], // core：暗焦褐 → 亮米黃
+  F2: ['#7A4A22', '#F5A623'], // mid：暗褐 → 琥珀
+  F3: ['#5C3A1C', '#C97A1E'], // outer：更暗褐 → 橙褐
+};
+function _mixHex(hexA, hexB, t) {
+  const a = parseInt(hexA.slice(1), 16), b = parseInt(hexB.slice(1), 16);
+  const ar = (a >> 16) & 255, ag = (a >> 8) & 255, ab = a & 255;
+  const br = (b >> 16) & 255, bg = (b >> 8) & 255, bb = b & 255;
+  const r = Math.round(ar + (br - ar) * t);
+  const g = Math.round(ag + (bg - ag) * t);
+  const bl = Math.round(ab + (bb - ab) * t);
+  return `rgb(${r},${g},${bl})`;
+}
+function flameColor(token, hunger) {
+  const t = Math.max(0, Math.min(1, hunger / 100));
+  const [dim, bright] = FLAME_RAMPS[token];
+  return _mixHex(dim, bright, t);
+}
 
 // ─── Pixel sprite grids (16 × 20, 3 px/cell → 48 × 60 SVG) ──────────────────
-const EGG = [
-  [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
-  [_,_,_,_,_,EC,EC,EC,EC,EC,EC,_,_,_,_,_],
-  [_,_,_,_,EC,EC,EC,EC,EC,EC,EC,EC,_,_,_,_],
-  [_,_,_,EC,EH,EH,EC,EC,EC,EC,EC,EC,EC,_,_,_],
-  [_,_,EC,EC,EH,EC,EC,EC,EC,EC,EC,EC,EC,EC,_,_],
-  [_,_,EC,EC,EC,EC,EC,EC,EC,EC,EC,EC,EC,EC,_,_],
-  [_,_,EC,EC,EC,EC,EC,EK,EC,EC,EC,EC,EC,EC,_,_],
-  [_,_,EC,EC,EC,EC,EK,EC,EK,EC,EC,EC,EC,EC,_,_],
-  [_,_,EC,EC,EC,EC,EC,EK,EC,EC,EC,EC,EC,EC,_,_],
-  [_,_,EC,EC,EC,EC,EC,EC,EC,EC,EC,EC,EC,EC,_,_],
-  [_,_,EC,EC,EC,EC,EC,EC,EC,EC,EC,EC,EC,EC,_,_],
-  [_,_,_,EC,EC,EC,EC,EC,EC,EC,EC,EC,EC,_,_,_],
-  [_,_,_,_,EC,EC,EC,EC,EC,EC,EC,EC,_,_,_,_],
-  [_,_,_,_,_,EC,EC,EC,EC,EC,EC,_,_,_,_,_],
+// 進化階梯：新蠟燭（LV1–5）→ 半燃蠟燭（LV6–15）→ 鑲金燭台（LV16+），
+// 對應原本 蛋 → 小雞 → 大公雞 的三段式進化。半燃／鑲金各有 NEAT／MESSY
+// 兩個蠟淚版本，由 mood 決定選哪一版（見 getStageSVG）；新蠟燭剛點燃，
+// 還沒有蠟淚可言，只有一個版本。
+// 新蠟燭（LV1–5）：矮胖、剛點燃，還沒有蠟淚
+const CANDLE_NEW = [
   [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
   [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
-  [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
-  [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
-  [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
-  [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
-];
-
-const CHICK = [
-  [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
-  [_,_,_,_,_,CY,CY,CY,CY,CY,CY,_,_,_,_,_],
-  [_,_,_,_,CY,CY,CY,CY,CY,CY,CY,CY,CB,CB,_,_],
-  [_,_,_,_,CY,CY,EY,EG,CY,CY,CY,CY,CB,CB,_,_],
-  [_,_,_,_,CY,CY,CY,CY,CY,CY,CY,CY,CB,_,_,_],
-  [_,_,_,_,_,CY,CY,CY,CY,CY,CY,_,_,_,_,_],
-  [_,CD,CD,_,CY,CY,CY,CY,CY,CY,CY,_,CD,CD,_,_],
-  [_,CD,CY,CY,CY,CY,CY,CY,CY,CY,CY,CY,CY,CD,_,_],
-  [_,CD,CY,CT,CT,CT,CT,CT,CT,CY,CY,CY,CY,CD,_,_],
-  [_,CD,CY,CT,CT,CT,CT,CT,CT,CY,CY,CY,CY,CD,_,_],
-  [_,_,CD,CY,CY,CY,CY,CY,CY,CY,CY,CY,CD,_,_,_],
-  [_,_,_,_,CY,CY,CY,CY,CY,CY,CY,_,_,_,_,_],
-  [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
-  [_,_,_,_,_,CB,_,_,_,CB,_,_,_,_,_,_],
-  [_,_,_,_,_,CB,_,_,_,CB,_,_,_,_,_,_],
-  [_,_,_,_,CB,CB,CB,_,CB,CB,CB,_,_,_,_,_],
-  [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+  [_,_,_,_,_,_,_,F1,F1,_,_,_,_,_,_,_],
+  [_,_,_,_,_,_,F2,F1,F1,F2,_,_,_,_,_,_],
+  [_,_,_,_,_,F2,F2,F1,F1,F2,F2,_,_,_,_,_],
+  [_,_,_,_,_,F3,F2,F2,F2,F2,F3,_,_,_,_,_],
+  [_,_,_,_,_,_,F3,F2,F2,F3,_,_,_,_,_,_],
+  [_,_,_,_,_,_,_,WK,WK,_,_,_,_,_,_,_],
+  [_,_,_,_,_,WH,WX,WX,WX,WX,WS,_,_,_,_,_],
+  [_,_,_,_,_,WX,WX,WX,WX,WX,WX,_,_,_,_,_],
+  [_,_,_,_,_,WX,WX,WX,WX,WX,WX,_,_,_,_,_],
+  [_,_,_,_,_,WX,WX,WX,WX,WX,WX,_,_,_,_,_],
+  [_,_,_,_,_,WX,WX,WX,WX,WX,WX,_,_,_,_,_],
+  [_,_,_,_,_,WX,WX,WX,WX,WX,WX,_,_,_,_,_],
+  [_,_,_,_,_,WX,WX,WX,WX,WX,WX,_,_,_,_,_],
+  [_,_,_,_,WS,WX,WX,WX,WX,WX,WS,_,_,_,_,_],
+  [_,_,_,_,WS,WS,WS,WS,WS,WS,WS,_,_,_,_,_],
   [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
   [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
   [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
 ];
 
-
-const ROOSTER = [
-  [_,_,_,_,_,RD,_,RD,_,RD,_,_,_,_,_,_],
-  [_,_,_,_,_,RD,RD,RD,RD,RD,_,_,_,_,_,_],
-  [_,_,_,_,RB,RB,RB,RB,RB,RB,RB,_,_,_,_,_],
-  [_,_,_,_,RB,RB,EY,EG,RB,RB,RB,RF,RF,_,_,_],
-  [_,_,_,RD,RB,RB,RB,RB,RB,RB,RB,RF,_,_,_,_],
-  [_,_,_,RD,RD,RB,RB,RB,RB,RB,_,_,_,_,_,_],
-  [_,_,_,_,_,RB,RB,RB,RB,RB,_,_,_,_,_,_],
-  [_,RK,RK,RB,RB,RB,RB,RB,RB,RB,_,_,RD,_,_,_],
-  [_,RK,RK,RB,RL,RL,RL,RL,RB,RB,_,RD,RD,_,_,_],
-  [_,RK,RB,RB,RL,RL,RL,RL,RB,RB,_,RD,RD,_,_,_],
-  [_,_,RK,RB,RB,RB,RB,RB,RB,RB,_,_,RD,_,_,_],
-  [_,_,_,_,RB,RB,RB,RB,RB,_,_,_,_,_,_,_],
-  [_,_,_,_,RB,RB,RB,RB,RB,_,_,_,_,_,_,_],
-  [_,_,_,_,_,RF,_,_,_,RF,_,_,_,_,_,_],
-  [_,_,_,_,_,RF,_,_,_,RF,_,_,_,_,_,_],
-  [_,_,_,_,RF,RF,RF,RF,RF,RF,_,_,_,_,_,_],
-  [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
-  [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+// 半燃蠟燭（LV6–15）：燒了一段時間，蠟身變高——NEAT／MESSY 由 mood 決定
+const CANDLE_HALF_NEAT = [
+  [_,_,_,_,_,_,_,F1,F1,_,_,_,_,_,_,_],
+  [_,_,_,_,_,_,F2,F1,F1,F2,_,_,_,_,_,_],
+  [_,_,_,_,_,F2,F2,F1,F1,F2,F2,_,_,_,_,_],
+  [_,_,_,_,_,F3,F2,F2,F2,F2,F3,_,_,_,_,_],
+  [_,_,_,_,_,_,F3,F2,F2,F3,_,_,_,_,_,_],
+  [_,_,_,_,_,_,_,WK,WK,_,_,_,_,_,_,_],
+  [_,_,_,_,WH,WX,WX,WX,WX,WX,WS,_,_,_,_,_],
+  [_,_,_,_,WX,WX,WX,WX,WX,WX,WX,_,_,_,_,_],
+  [_,_,_,_,WX,WX,WX,WX,WX,WX,WX,_,_,_,_,_],
+  [_,_,_,_,WX,WX,WX,WX,WX,WX,WX,_,_,_,_,_],
+  [_,_,_,_,WX,WX,WX,WX,WX,WX,WX,_,_,_,_,_],
+  [_,_,_,_,WX,WX,WX,WX,WX,WX,WX,_,_,_,_,_],
+  [_,_,_,_,WX,WX,WX,WX,WX,WX,WX,_,_,_,_,_],
+  [_,_,_,_,WX,WX,WX,WX,WX,WX,WX,_,_,_,_,_],
+  [_,_,_,_,WX,WX,WX,WX,WX,WX,WX,_,_,_,_,_],
+  [_,_,_,_,WX,WX,WX,WX,WX,WX,WX,_,_,_,_,_],
+  [_,_,_,WS,WX,WX,WX,WX,WX,WX,WS,_,_,_,_,_],
+  [_,_,_,WS,WS,WS,WS,WS,WS,WS,WS,_,_,_,_,_],
   [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
   [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
 ];
+const CANDLE_HALF_MESSY = CANDLE_HALF_NEAT.map((row, i) => {
+  if (i === 9)  { const r = [...row]; r[3] = DR; r[11] = DR; return r; }
+  if (i === 10) { const r = [...row]; r[3] = DR; return r; }
+  return row;
+});
+
+// 鑲金燭台（LV16+）：最盛大版本，坐在金色燭台上，火焰也更亮更寬
+const CANDLE_GILDED_NEAT = [
+  [_,_,_,_,_,_,F1,F1,F1,_,_,_,_,_,_,_],
+  [_,_,_,_,_,F2,F1,F1,F1,F2,_,_,_,_,_,_],
+  [_,_,_,_,F2,F2,F1,F1,F1,F2,F2,_,_,_,_,_],
+  [_,_,_,_,F3,F2,F2,F2,F2,F2,F3,_,_,_,_,_],
+  [_,_,_,_,_,F3,F2,F2,F2,F3,_,_,_,_,_,_],
+  [_,_,_,_,_,_,F3,F2,F2,F3,_,_,_,_,_,_],
+  [_,_,_,_,_,_,_,WK,WK,_,_,_,_,_,_,_],
+  [_,_,_,_,WH,WX,WX,WX,WX,WX,WS,_,_,_,_,_],
+  [_,_,_,_,WX,WX,WX,WX,WX,WX,WX,_,_,_,_,_],
+  [_,_,_,_,WX,WX,WX,WX,WX,WX,WX,_,_,_,_,_],
+  [_,_,_,_,WX,WX,WX,WX,WX,WX,WX,_,_,_,_,_],
+  [_,_,_,_,WX,WX,WX,WX,WX,WX,WX,_,_,_,_,_],
+  [_,_,_,_,WX,WX,WX,WX,WX,WX,WX,_,_,_,_,_],
+  [_,_,_,_,WX,WX,WX,WX,WX,WX,WX,_,_,_,_,_],
+  [_,_,_,_,WX,WX,WX,WX,WX,WX,WX,_,_,_,_,_],
+  [_,_,_,WS,WX,WX,WX,WX,WX,WX,WS,_,_,_,_,_],
+  [_,_,GS,GD,GD,GD,GD,GD,GD,GD,GD,GS,_,_,_,_],
+  [_,GS,GD,GD,GD,GD,GD,GD,GD,GD,GD,GD,GS,_,_,_],
+  [_,_,GS,GS,GD,GD,GD,GD,GD,GD,GD,GD,GS,GS,_,_],
+  [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+];
+const CANDLE_GILDED_MESSY = CANDLE_GILDED_NEAT.map((row, i) => {
+  if (i === 9)  { const r = [...row]; r[3] = DR; r[11] = DR; return r; }
+  if (i === 10) { const r = [...row]; r[3] = DR; return r; }
+  return row;
+});
 
 // ─── SVG renderer ─────────────────────────────────────────────────────────────
-function gridToSVG(grid, px = 3) {
+// hunger 用來即時計算火焰亮度（見 flameColor）；F1/F2/F3 以外的格子是
+// 固定色碼（蠟／燭芯／鑲金），直接輸出，不受 hunger 影響。
+function gridToSVG(grid, hunger, px = 3) {
   const rows = grid.length, cols = grid[0].length;
   let rects = '';
   for (let r = 0; r < rows; r++)
-    for (let c = 0; c < cols; c++)
-      if (grid[r][c])
-        rects += `<rect x="${c*px}" y="${r*px}" width="${px}" height="${px}" fill="${grid[r][c]}"/>`;
+    for (let c = 0; c < cols; c++) {
+      const cell = grid[r][c];
+      if (!cell) continue;
+      const fill = (cell === F1 || cell === F2 || cell === F3)
+        ? flameColor(cell, hunger)
+        : cell;
+      rects += `<rect x="${c*px}" y="${r*px}" width="${px}" height="${px}" fill="${fill}"/>`;
+    }
   return `<svg viewBox="0 0 ${cols*px} ${rows*px}" xmlns="http://www.w3.org/2000/svg" style="image-rendering:pixelated;display:block">${rects}</svg>`;
 }
 
 // ─── Stage helpers ────────────────────────────────────────────────────────────
-// 進化條件綁定等級：LV1–5 = 蛋、LV6–15 = 小雞、LV16+ = 大公雞
+// 進化條件綁定等級（不變）：LV1–5 = 新蠟燭、LV6–15 = 半燃蠟燭、LV16+ = 鑲金燭台
 function getPetStage(lv) {
-  if (lv <= 5)  return 'egg';
-  if (lv <= 15) return 'chick';
-  return 'rooster';
+  if (lv <= 5)  return 'candle-new';
+  if (lv <= 15) return 'candle-half';
+  return 'candle-gilded';
 }
-function getStageSVG(stage) {
-  if (stage === 'egg')     return gridToSVG(EGG);
-  if (stage === 'rooster') return gridToSVG(ROOSTER);
-  return gridToSVG(CHICK);
+function getStageSVG(stage, hunger, mood) {
+  const neat = mood >= 50; // mood → 蠟淚整齊度：≥50 平整凝結，否則雜亂垂掛
+  if (stage === 'candle-new')    return gridToSVG(CANDLE_NEW, hunger);
+  if (stage === 'candle-gilded') return gridToSVG(neat ? CANDLE_GILDED_NEAT : CANDLE_GILDED_MESSY, hunger);
+  return gridToSVG(neat ? CANDLE_HALF_NEAT : CANDLE_HALF_MESSY, hunger);
 }
 function getStageLabel(stage) {
-  if (stage === 'egg')     return '雞蛋';
-  if (stage === 'rooster') return '大公雞';
-  return '小雞';
+  if (stage === 'candle-new')    return '新蠟燭';
+  if (stage === 'candle-gilded') return '鑲金燭台';
+  return '半燃蠟燭';
 }
 
 // ─── XP / Level system ────────────────────────────────────────────────────────
@@ -150,13 +204,14 @@ export function addXP(amount) {
 // ─── Stat calculations ────────────────────────────────────────────────────────
 /**
  * 飽食度（持久化儲存 + 時間衰減）
- * rate = 5%/hr (蛋/小雞)；7%/hr (大公雞)
+ * rate = 5%/hr (新蠟燭/半燃蠟燭)；7%/hr (鑲金燭台) —— 數值不變，只是
+ * 舊 stage key 'rooster' 已改名 'candle-gilded'（見 getPetStage）
  * 恢復來源：新增單字 +30%、通過複習 +10%
  */
 function computeHungerDecay() {
   const lv    = Number(localStorage.getItem('level') || 1);
   const stage = getPetStage(lv);
-  const rate  = stage === 'rooster' ? 7 : 5;
+  const rate  = stage === 'candle-gilded' ? 7 : 5;
 
   let hunger = Number(localStorage.getItem('petHunger') ?? -1);
   if (hunger < 0) {
@@ -227,19 +282,20 @@ function addMood(amount) {
 }
 
 // ─── Penalty decorations ──────────────────────────────────────────────────────
+// 心情 < 10：無人照料的燭灰堆（原本是雞糞，換皮成灰燼，形狀/門檻不變）
 const PX = 5;
-const BR = '#7B4A2D', BL = '#C07840', BD = '#4A2810';
+const SA = '#6B6058', SL = '#8C8079', SD = '#3A322C';
 const GR = '#888888', GL = '#BBBBBB';
 
-const POOP_GRID = [
-  [_,_,_,BL,BL,_,_,_],
-  [_,_,BL,BR,BR,BL,_,_],
-  [_,BR,BR,BR,BR,BR,BR,_],
-  [BR,BR,BR,BR,BR,BR,BR,BR],
-  [BR,BR,BR,BR,BR,BR,BR,BR],
-  [_,BD,BR,BR,BR,BR,BD,_],
-  [_,_,BR,BR,BR,BR,_,_],
-  [_,_,_,BD,BD,_,_,_],
+const ASH_GRID = [
+  [_,_,_,SL,SL,_,_,_],
+  [_,_,SL,SA,SA,SL,_,_],
+  [_,SA,SA,SA,SA,SA,SA,_],
+  [SA,SA,SA,SA,SA,SA,SA,SA],
+  [SA,SA,SA,SA,SA,SA,SA,SA],
+  [_,SD,SA,SA,SA,SA,SD,_],
+  [_,_,SA,SA,SA,SA,_,_],
+  [_,_,_,SD,SD,_,_,_],
 ];
 
 const WEB_GRID = [
@@ -268,9 +324,9 @@ function updatePenaltyDecor(mood) {
   const el = document.getElementById('petPenalty');
   if (!el) return;
   if (mood < 20) {
-    const grid = mood < 10 ? POOP_GRID : WEB_GRID;
-    if (!el._lastMoodTier || el._lastMoodTier !== (mood < 10 ? 'poop' : 'web'))  {
-      el._lastMoodTier = mood < 10 ? 'poop' : 'web';
+    const grid = mood < 10 ? ASH_GRID : WEB_GRID;
+    if (!el._lastMoodTier || el._lastMoodTier !== (mood < 10 ? 'ash' : 'web'))  {
+      el._lastMoodTier = mood < 10 ? 'ash' : 'web';
       el.innerHTML = penaltyToSVG(grid);
     }
     el.style.display = 'block';
@@ -376,7 +432,7 @@ export function updatePetDisplay() {
   }
 
   // ── Sprite ──
-  artEl.innerHTML = getStageSVG(stage);
+  artEl.innerHTML = getStageSVG(stage, hunger, mood);
   artEl.className = `pet-art ${autoState}`;
 
   if (bubbleEl) {
