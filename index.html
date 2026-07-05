@@ -4,12 +4,24 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Jill's Word Garden</title>
+  <!-- Header-disappears-after-reload 根因修正：瀏覽器預設 scrollRestoration
+       是 "auto"，同分頁內多次重新整理（開發時常見）會自動還原上次的捲動
+       位置，把 fixed 定位 header 之外的內容往上推、header 被推出視窗頂端。
+       必須在任何 restore 發生前、越早越好設定成 manual。 -->
+  <script>
+    if ('scrollRestoration' in history) {
+      history.scrollRestoration = 'manual';
+    }
+  </script>
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- ① 加入 Tesseract.js（建議放在 head 或 body 結尾） -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <link rel="stylesheet" href="theme-ocean.css">
   <link rel="stylesheet" href="theme-perfume-day.css">
   <link rel="stylesheet" href="theme-perfume-wc.css">
+  <!-- 沉浸式文本小說·夜模式（.scene-cold 冷調視覺系統 + Suminagashi 墨流背景） -->
+  <link rel="stylesheet" href="theme-perfume-night.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
   <!-- GSAP for cinematic opening animation -->
   <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
 
@@ -59,12 +71,17 @@
   }
   .btn-outline-m:hover{ color: var(--text); border-color: var(--primary); }
 
-  /* ─── Phase 6: 探照燈微塵 Dust Motes ─── */
+  /* ─── Phase 6: 探照燈微塵 Dust Motes ───
+     原本 z-index:9997 讓 135 顆 rgba(255,230,180,0.85) 的暖色微塵疊在
+     幾乎所有 UI 之上（只低於 9999 的電影黑幕），這是裝飾層，不該蓋過
+     任何互動元件。降到 1：蓋過墨流 canvas（z-index:-1）但在所有 UI
+     （header/main 皆 z-index:2、卡片皆 z-index:auto/2 內）之下。
+     pointer-events:none 本來就有，維持不變，確保不擋點擊。 */
   #dust-container {
     position: fixed;
     inset: 0;
     pointer-events: none;
-    z-index: 9997;
+    z-index: 1;
     overflow: hidden;
   }
   .dust-mote {
@@ -646,11 +663,298 @@
     padding-left: 12px;
     font-weight: 400;
   }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     沉浸式文本小說·夜模式整合（scoped overrides，2026-07）
+     規格來源：docs/VISUAL_SPEC.md / docs/UI_COMPONENTS.md
+     範圍：只改頁首（.header-gradient）、輸入區（#articleInputSection）、
+     單字卡（.wc-card）、測驗 modal（#quizModal 內層）這 4 個區塊；側欄
+     （進度／單字清單／電子雞／資料管理）、mnemonic 彈窗、toast 全部維持
+     原本 Day Mode 樣式，不在這裡覆寫。全部用 `body.scene-cold` 前綴 scope，
+     不移除任何既有 class、不改動 JS 依賴的 ID／結構。
+     ═══════════════════════════════════════════════════════════════════════ */
+
+  /* #ink-layer 在這個長頁面需要 fixed（捲動時墨流背景不跟著跑），
+     theme-perfume-night.css 的預覽頁版本是 absolute（單一 viewport 高），
+     這裡用更高優先權的 override 蓋掉它。z-index 也補上 !important——
+     這條規則裡另一個屬性（position）已經用了 !important，若 z-index
+     沒有一起用 !important，之後任何等優先權或更晚載入的規則都可能只贏走
+     z-index 這一個屬性，導致 canvas 疊到內容上面。 */
+  #ink-layer {
+    position: fixed !important;
+    z-index: -1 !important;
+  }
+
+  /* ═══ 真正的共同根因（2026-07，用 Playwright 實測 computed style 找到）═══
+     <body class="bg-gray-100 text-gray-800 scene-cold"> 這三個 class 從
+     頭到尾都在，從沒被移除。theme-perfume-day.css 為了讓 Day Mode 對抗
+     任意 Tailwind gray class 污染，寫了：
+       :root:not([data-theme="dark"]) .bg-gray-100  { background:...!important }
+       :root:not([data-theme="dark"]) .text-gray-800{ color:...!important }
+     這兩條的 specificity 是 (0 ID, 3 class 等級, 0 type)。
+     theme-perfume-night.css 原本用來對抗 Day Mode 的
+       body.scene-cold { background: var(--cold-void) !important; color:...}
+     只有 (0 ID, 1 class, 1 type) —— 3 個 class 等級 > 1 個，Day Mode 那組
+     規則直接贏，body 的實際背景/文字色從頭到尾都還是暖色 #F0E8D4 / #1C1208，
+     不是冷調墨黑。這才是這一整輪「header / word-card / textarea 怎麼修都
+     沒用」的共同根因：所有玻璃卡片的半透明感，其實都是疊在這層暖色 body
+     背景上，不是疊在冷調墨流上；淺色卡片文字 + 暖色 body 背景 = 對比消失。
+     修法：body 自己剛好同時帶 bg-gray-100 / text-gray-800 / scene-cold
+     這三個 class，直接把這三個都串進選擇器，湊出 (0,3,1) 的 specificity
+     贏過 day.css 的 (0,3,0)，不需要碰 theme-perfume-day.css 本身。 */
+  body.bg-gray-100.text-gray-800.scene-cold {
+    background: var(--cold-void) !important;
+    color: var(--cold-parchment) !important;
+  }
+
+  /* 補強 Day Mode 原本的 header/main 疊層規則（theme-perfume-day.css 裡的
+     `header, main { position:relative; z-index:2; }` 沒有加 !important）。
+     這裡用同樣的 selector、同樣的 z-index 數值，但加上 !important 重新
+     宣告一次，確保不管前面任何規則的 source order 或特殊情況，
+     header/main 都一定會蓋在 #ink-layer 之上，不會被墨流背景蓋住。 */
+  header,
+  main {
+    position: relative !important;
+    z-index: 2 !important;
+  }
+
+  /* 頁首：冷調玻璃卡片，取代 Day Mode 的暖色漸層。
+     注意：theme-perfume-wc.css 的 .header-gradient／.header-gradient *
+     規則本身就是刻意用 !important 寫的（用來蓋掉 index.html 舊 inline
+     style），如果我們這裡不跟著加 !important，background/border/color
+     一定會輸給那邊，畫面就會維持 Day Mode 的暗褐色漸層，跟沒套用一樣。 */
+  /* 根因排查（2026-07 追加）：--glass-cold-fill 只有 5% alpha，頁首背景
+     幾乎完全透明，實際觀感等於「墨流 canvas 當下畫到哪裡」。ink-suminagashi.js
+     的墨滴亮度是 hsbToRgb(hue, 22, 78) —— brightness 78，偏亮，且墨滴會
+     隨機飄到畫面任何位置（包含頂端）。頁首底下剛好飄過一滴亮墨時，
+     backdrop-filter 的 blur+saturate 會把那塊區域整個洗亮，跟本來就偏淺色
+     的 --cold-parchment 文字撞在一起，對比消失——這是間歇性「完全看不見」
+     的真正原因，不是 cascade 輸掉。修法：頁首自己要有夠不透明的深色底，
+     不能只靠 5% alpha 的玻璃感去露出背後的墨流。 */
+  body.scene-cold .header-gradient {
+    background: linear-gradient(180deg, rgba(20, 23, 26, 0.88), rgba(27, 31, 35, 0.82)) !important;
+    border-bottom: 1px solid var(--glass-cold-border) !important;
+    backdrop-filter: blur(20px) saturate(120%);
+    -webkit-backdrop-filter: blur(20px) saturate(120%);
+    color: var(--cold-parchment) !important;
+    box-shadow: 0 4px 24px var(--cold-shadow) !important;
+    --text: var(--cold-parchment);
+    --muted: var(--cold-dim);
+    --navy: var(--cold-parchment);
+  }
+
+  body.scene-cold .header-gradient * {
+    color: var(--cold-parchment) !important;
+  }
+
+  /* 輸入區：玻璃卡片視覺，保留原本的 Tailwind 版面／間距 class 不動。
+     額外覆寫 --text/--muted：articleInput textarea 是用 inline
+     style="color:var(--text)"，只設定 .articleInputSection 的 color
+     屬性不會影響它（inline var(--text) 仍會往上找 --text 這個自訂屬性
+     本身，不是找 color），必須在這裡重新定義 --text/--muted 這兩個
+     token，textarea 才不會變成暗色文字疊在暗色玻璃底上。 */
+  /* theme-perfume-wc.css 對 #articleInputSection 的 color 也是 !important
+     （見「1. Scoped base-color cascade」），background/border 雖然目前
+     沒有其他 !important 規則競爭，但為了和其他三個區塊維持一致、避免將來
+     任何規則改動就整組失效，這裡統一補上 !important。 */
+  body.scene-cold #articleInputSection {
+    background: var(--glass-cold-fill) !important;
+    border: 1px solid var(--glass-cold-border) !important;
+    backdrop-filter: blur(20px) saturate(120%);
+    -webkit-backdrop-filter: blur(20px) saturate(120%);
+    box-shadow: 0 20px 60px var(--cold-shadow) !important;
+    color: var(--cold-parchment) !important;
+    --text: var(--cold-parchment);
+    --muted: var(--cold-dim);
+  }
+
+  /* 單字卡：JS（js/ui.js）動態產生 .wc-card，這裡只覆寫既有規則的視覺呈現，
+     不需要新增 wrapper 元素。同樣要重新定義 --text/--muted——.wc-title
+     strong / .wc-def / .wc-ai-text / .wc-ai-zh 等既有規則都是直接讀
+     var(--text)/var(--muted)（原本是 Day Mode 的深色文字 #2c2c2c），
+     不重新定義的話文字會是暗色疊在暗色玻璃底上，幾乎看不見。 */
+  /* theme-perfume-wc.css 的 .wc-card 規則本身就寫著「beats index.html
+     inline <style>」，background/border/border-radius/box-shadow 全部
+     都是 !important（就是為了蓋掉這個檔案本來的樣式），不加 !important
+     這裡的冷調玻璃樣式完全生效不了，卡片會維持 Day Mode 的暖色羊皮紙。 */
+  body.scene-cold .wc-card {
+    background: var(--glass-cold-fill) !important;
+    border: 1px solid var(--glass-cold-border) !important;
+    backdrop-filter: blur(16px) saturate(115%);
+    -webkit-backdrop-filter: blur(16px) saturate(115%);
+    box-shadow: 0 16px 48px var(--cold-shadow) !important;
+    color: var(--cold-parchment) !important;
+    --text: var(--cold-parchment);
+    --muted: var(--cold-dim);
+  }
+
+  /* 測驗 modal 內層卡片。.sidebar-title（標題「單字測驗」）讀的是
+     var(--navy)（Day Mode 深綠 #4a5940），同樣要重新定義，否則在冷調
+     玻璃底上會是暗色文字疊暗色底 */
+  /* theme-perfume-wc.css 對 #quizModal > div 的 background/border/
+     box-shadow/color 全部是 !important（見「2. Card containers —
+     exam sheet material」），一樣要跟著補 !important 才會生效。 */
+  body.scene-cold #quizModal > div {
+    background: var(--glass-cold-fill) !important;
+    border: 1px solid var(--glass-cold-border) !important;
+    backdrop-filter: blur(20px) saturate(120%);
+    -webkit-backdrop-filter: blur(20px) saturate(120%);
+    box-shadow: 0 20px 60px var(--cold-shadow) !important;
+    color: var(--cold-parchment) !important;
+    --text: var(--cold-parchment);
+    --muted: var(--cold-dim);
+    --navy: var(--cold-parchment);
+  }
+
+  /* 全站夜模式擴大範圍（2026-07 追加）：右側四張側欄卡片
+     （學習進度／單字清單／像素電子雞／資料管理）。
+     這四個容器的暖色 background 分別來自 theme-perfume-day.css /
+     theme-perfume-wc.css 的 #wordListCard、#pixelPetCard、#backupCard
+     規則（皆為 !important）；#progressCard 沒有專屬規則，暖色其實是
+     theme-ocean.css 的 .bg-white.rounded-xl.shadow.p-6 類別選擇器，
+     但為求四張卡片行為一致，這裡統一用同一組 !important 規則覆蓋。 */
+  body.scene-cold #progressCard,
+  body.scene-cold #wordListCard,
+  body.scene-cold #pixelPetCard,
+  body.scene-cold #backupCard {
+    background: var(--glass-cold-fill) !important;
+    border: 1px solid var(--glass-cold-border) !important;
+    backdrop-filter: blur(16px) saturate(115%);
+    -webkit-backdrop-filter: blur(16px) saturate(115%);
+    box-shadow: 0 16px 48px var(--cold-shadow) !important;
+    color: var(--cold-parchment) !important;
+    --text: var(--cold-parchment);
+    --muted: var(--cold-dim);
+    --navy: var(--cold-parchment);
+  }
+
+  /* #wordListCard .sidebar-title 被 theme-perfume-wc.css 直接寫死
+     `color: var(--wc-word-color) !important;`，不是讀 --navy，
+     單純重新定義 --navy token 沒有用，必須在這裡直接蓋 color。 */
+  body.scene-cold #wordListCard .sidebar-title {
+    color: var(--cold-parchment) !important;
+  }
+
+  /* 匯入文章卡片的 textarea：#articleInput 的暖色羊皮紙背景同樣來自
+     theme-perfume-wc.css 的 !important 規則（P1. Article-section
+     inputs），必須逐一蓋掉，否則外框變冷但內部書寫面仍是米色。 */
+  body.scene-cold #articleInput {
+    background: var(--glass-cold-fill) !important;
+    border: 1px solid var(--glass-cold-border) !important;
+    color: var(--cold-parchment) !important;
+    box-shadow: none !important;
+  }
+
+  body.scene-cold #articleInput::placeholder {
+    color: var(--cold-dim) !important;
+    opacity: 1 !important;
+  }
+
+  body.scene-cold #articleInput:focus {
+    border-color: var(--cold-accent) !important;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--cold-accent) 20%, transparent) !important;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     根因排查後追加（2026-07）：這 3 組是「整塊實色沒被覆蓋」，不是被
+     dust-container 這種疊層染色的問題，是各自獨立的 Day Mode !important
+     規則，之前的 4 張頂層卡片 / .wc-card 通用覆蓋完全沒碰到它們。
+     ═══════════════════════════════════════════════════════════════════════ */
+
+  /* 1) 單字清單內每一張單字項目卡片（li > .wc-card）。
+     theme-perfume-wc.css 用
+       html:not([data-theme="dark"]) #sidebarTodayList .wc-card
+     這種帶 :not([data-theme="dark"]) 的寫法把 specificity 拉到跟
+     body.scene-cold .wc-card 一樣高（都是 1 個 ID + 2 個 class 等級），
+     打平之後純比 source order，风险太高；day.css 的
+     #sidebarAllList li:nth-child(odd/even) .wc-card 也是同量級。
+     這裡多繞一層 html 前綴，把 type 數量拉高到明確贏過對方，不必賭
+     source order。 */
+  html body.scene-cold #sidebarTodayList .wc-card,
+  html body.scene-cold #sidebarDueList .wc-card,
+  html body.scene-cold #sidebarAllList .wc-card {
+    background: var(--glass-cold-fill) !important;
+    border: 1px solid var(--glass-cold-border) !important;
+    box-shadow: none !important;
+    color: var(--cold-parchment) !important;
+    --text: var(--cold-parchment);
+    --muted: var(--cold-dim);
+  }
+
+  /* 2) 卡片標題（.section-h，「匯入文章」「自訂新增單字」共用同一個
+     class）與其 icon。day.css 的 .section-h 直接寫死
+     `color: var(--color-ink-1) !important`，不是讀 --text，重新定義
+     token 沒有用，必須直接蓋 color。 */
+  body.scene-cold .section-h {
+    color: var(--cold-parchment) !important;
+  }
+
+  body.scene-cold .section-h svg {
+    color: var(--cold-dim) !important;
+  }
+
+  /* 3) 輸入來源 tabs 的 active 狀態。day.css 的
+     #articleInputSection .input-tab--active 也是直接寫死 color/
+     border-bottom-color（!important），非 active 的 .input-tab 本身
+     讀 var(--muted)，已經被 #articleInputSection 那條規則的
+     --muted token 覆寫過，這裡只需要處理 active 狀態。 */
+  body.scene-cold #articleInputSection .input-tab--active {
+    color: var(--cold-parchment) !important;
+    border-bottom-color: var(--cold-accent) !important;
+  }
+
+  /* 4) 「自訂新增單字」卡片：原本連 id/專屬 class 都沒有，完全暴露在
+     theme-ocean.css 的 .bg-white.rounded-xl.shadow.p-6 類別選擇器下，
+     四張頂層卡片的覆蓋規則根本碰不到它。已在 markup 補上
+     id="customWordCard"，這裡用跟其他 glass card 一致的規則覆蓋，並
+     處理內部 label / input / textarea（原本無背景色 class，直接繼承
+     瀏覽器預設，深底上會變成看不見的深色字）。 */
+  body.scene-cold #customWordCard {
+    background: var(--glass-cold-fill) !important;
+    border: 1px solid var(--glass-cold-border) !important;
+    backdrop-filter: blur(16px) saturate(115%);
+    -webkit-backdrop-filter: blur(16px) saturate(115%);
+    box-shadow: 0 16px 48px var(--cold-shadow) !important;
+    color: var(--cold-parchment) !important;
+    --text: var(--cold-parchment);
+    --muted: var(--cold-dim);
+  }
+
+  body.scene-cold #customWordCard label {
+    color: var(--cold-dim) !important;
+  }
+
+  body.scene-cold #customWordCard input,
+  body.scene-cold #customWordCard textarea {
+    background: var(--glass-cold-fill) !important;
+    border-color: var(--glass-cold-border) !important;
+    color: var(--cold-parchment) !important;
+  }
+
+  body.scene-cold #customWordCard input::placeholder,
+  body.scene-cold #customWordCard textarea::placeholder {
+    color: var(--cold-dim) !important;
+    opacity: 1 !important;
+  }
   </style>
 
-
 </head>
-<body class="bg-gray-100 text-gray-800">
+<body class="bg-gray-100 text-gray-800 scene-cold">
+
+  <!-- 真正的 header 隱形根因（用 Playwright 實測找到，不是 CSS specificity
+       問題）：js/ink-suminagashi.js 沒呼叫 canvas.parent(...) 時，p5.js
+       原始碼的預設行為是 document.getElementsByTagName("main")[0]（找不到
+       main 還會自己建一個），把 canvas 塞進『這個頁面既有的 <main>』裡面。
+       main 本身是 position:relative;z-index:2 的定位元素（Day Mode 既有
+       規則），一旦變成 canvas 的父層就會建立自己的 stacking context——
+       canvas 的 z-index:-1 只在 main 內部生效，main 整個（連同裡面全螢幕
+       fixed 的 canvas）在 body 層級跟 header 同樣 z-index:2 只比 DOM
+       順序，main 在 header 之後，於是整層蓋過 header。
+       ink-suminagashi.js 本來就會找 #night-stage 並呼叫 canvas.parent()，
+       只是正式頁面一直沒有這個容器。補上這個空殼 div（display:contents，
+       零版面/零 stacking 影響）就能讓 canvas 掛在這裡，而不是掉進 main，
+       不需要改 js/*.js 任何一行。 -->
+  <div id="night-stage" style="display:contents;"></div>
 
   <!-- ═══ Phase 4.5: 電影黑幕 ═══ -->
   <div id="cinema-curtain" style="position:fixed;inset:0;background-color:var(--color-ink-1);z-index:9999;pointer-events:none;"></div>
@@ -821,7 +1125,7 @@
         </div>
 
         <!-- Custom add -->
-        <section class="bg-white rounded-xl shadow p-6 space-y-4">
+        <section id="customWordCard" class="bg-white rounded-xl shadow p-6 space-y-4">
           <h2 class="section-h">
             <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             自訂新增單字
@@ -1221,8 +1525,21 @@
   <!-- ═══ Phase 4.5: 電影級開場 The Director ═══ -->
   <script>
   document.addEventListener('DOMContentLoaded', function () {
-    // Guard: if GSAP didn't load, skip gracefully
-    if (typeof gsap === 'undefined') return;
+    // 補強 <head> 裡的 history.scrollRestoration = 'manual'：那個只防止
+    // 瀏覽器「還原」上次捲動位置，如果這次載入的過程中有任何其他因素
+    // （例如 scroll anchoring 對非同步內容做出反應）讓頁面被捲走，
+    // 這裡強制歸零，確保 header 每次載入都在視窗頂。
+    window.scrollTo(0, 0);
+
+    // Guard: if GSAP didn't load (CDN blocked/offline/slow), don't leave the
+    // opaque #cinema-curtain (z-index:9999, no transition) permanently
+    // covering the entire page — fade-out never runs without gsap, so it
+    // would otherwise hide header/main/everything forever.
+    if (typeof gsap === 'undefined') {
+      const fallbackCurtain = document.getElementById('cinema-curtain');
+      if (fallbackCurtain) fallbackCurtain.style.display = 'none';
+      return;
+    }
 
     const curtain   = document.getElementById('cinema-curtain');
     const dispMap   = document.getElementById('displacement-map');
@@ -1385,6 +1702,12 @@
     });
   });
   </script>
+
+  <!-- 沉浸式文本小說·夜模式：Suminagashi 墨流背景 sketch（instance-mode p5.js，
+       僅依 #ink-layer 這個 id 掛載樣式；index.html 沒有 #night-stage 容器，
+       sketch 會照原本邏輯 fallback 成預設掛在 document.body，不影響其他
+       DOM 結構） -->
+  <script src="js/ink-suminagashi.js"></script>
 
 </body>
 </html>

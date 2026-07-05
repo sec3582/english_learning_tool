@@ -1,0 +1,430 @@
+/*
+ * theme-perfume-night.css
+ * Perfume (2006) — Night Mode / 沉浸式文本小說 冷調視覺系統
+ * Film: Perfume: The Story of a Murderer, Dir. Tom Tykwer, DP Frank Griebe
+ * Source of truth: docs/VISUAL_SPEC.md
+ *
+ * 與 theme-perfume-day.css 並列的獨立主題檔案 ── 不共用、不繼承 Day Mode 的
+ * 任何暖色 token（--color-*、--wc-*）。此檔案尚未在 index.html 掛載 <link>，
+ * 僅作為 v2「沉浸式文本小說」功能的獨立視覺系統草稿。
+ *
+ * 檔案結構：
+ *   Step 0 — 場景色彩 tokens（.scene-cold / .scene-warm，VISUAL_SPEC §2.1–2.4）
+ *   Step 1 — 動畫共用 tokens（VISUAL_SPEC §3.1）
+ *   Step 2 — 首頁骨架（.night-stage / #ink-layer / .glass-card，VISUAL_SPEC §5.1）
+ *   Step 3 — 元件：.word-card ／ .blank-input ／ .btn-night-*
+ *   Step 4 — 傷口色（Day 14 專屬，VISUAL_SPEC §2.3 / §3.3 ── 禁止重用）
+ */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Step 0 — 場景色彩 Tokens（VISUAL_SPEC §2.1 / §2.2 / §2.4）
+   規則：
+     - .scene-cold 與 .scene-warm 各自完整定義一組 token，套用在最外層容器
+       （例如 .night-stage 本身，或包住整個敘事頁面的容器）。
+     - 兩組 class 禁止在同一畫面同時套用／混用 token。切換由劇情狀態機
+       控制（幫 .night-stage 換 class），不是使用者手動切換的主題設定。
+     - 非互動性的「場景別名」token（--scene-void / --scene-wash /
+       --scene-parchment / --scene-dim / --scene-glass-fill /
+       --scene-glass-border）刻意再包一層，讓 .glass-card / .word-card 這類
+       「內容容器」元件可以直接吃目前作用中的場景色，不用自己判斷是
+       cold 還是 warm。
+     - 刻意「不」提供 --scene-accent 這種通用別名 ── 見 Step 3 按鈕與輸入框
+       區塊的說明，強調色被硬性鎖定在 --cold-accent，避免被場景別名
+       誤接到 --warm-gold。
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.scene-cold {
+  /* ── 冷調系統（主世界，VISUAL_SPEC §2.1，約佔畫面時間 85–90%） ── */
+  --cold-void:          #14171a;  /* 全站底色（霧黑，非純黑；帶極淡藍灰） */
+  --cold-wash:          #1b1f23;  /* 次層墨色、Liquid Glass 卡片底層陰影 */
+  --cold-parchment:     #d6dbe0;  /* 主要文字（冷灰白，非純白） */
+  --cold-dim:           #838d96;  /* 次要文字、說明文字 */
+  --cold-accent:        #5c7686;  /* 唯一允許的冷調強調色 ── 禁止提高飽和度 */
+  --glass-cold-fill:    rgba(214, 219, 224, 0.05);  /* 冷調 Liquid Glass 卡片填色 */
+  --glass-cold-border:  rgba(92, 118, 134, 0.20);   /* 冷調 Liquid Glass 卡片邊緣 */
+
+  /* 衍生 token（非 VISUAL_SPEC 原表列出，僅為實作方便從 --cold-accent 算出的
+     透明度變體，供 focus ring / 陰影使用；仍然只是「同一個顏色的亮度或
+     透明度變化」，沒有引入新色相） */
+  --cold-accent-ring:   rgba(92, 118, 134, 0.35);
+  --cold-shadow:        rgba(8, 10, 12, 0.45);
+
+  /* 場景別名 ── 給 .glass-card / .word-card 這類內容容器使用 */
+  --scene-void:         var(--cold-void);
+  --scene-wash:         var(--cold-wash);
+  --scene-parchment:    var(--cold-parchment);
+  --scene-dim:          var(--cold-dim);
+  --scene-glass-fill:   var(--glass-cold-fill);
+  --scene-glass-border: var(--glass-cold-border);
+  --scene-shadow:       var(--cold-shadow);
+
+  background: var(--cold-void);
+  color:      var(--cold-parchment);
+}
+
+.scene-warm {
+  /* ── 暖調系統（教會／政客場景，VISUAL_SPEC §2.2，稀有敘事事件，約 10–15%） ── */
+  --warm-void:          #241a12;  /* 場景底色（燭光暗底，非純黑；帶暖棕） */
+  --warm-parchment:     #e8dcc8;  /* 主要文字（羊皮紙白，非純白） */
+  --warm-gold:          #a8792e;  /* 暗金強調（火把、燭光反射、標題底線） */
+  --warm-dim:           #8c7355;  /* 次要文字 */
+  --glass-warm-fill:    rgba(232, 220, 200, 0.06);  /* 暖調 Liquid Glass 卡片填色 */
+  --glass-warm-border:  rgba(168, 121, 46, 0.24);   /* 暖調 Liquid Glass 卡片邊緣 */
+
+  /* 衍生 token（同 .scene-cold 邏輯，僅供陰影使用；注意：不提供
+     --warm-gold 的 ring 衍生版本給互動元件 ── 互動狀態一律鎖定
+     --cold-accent，見 Step 3 說明） */
+  --warm-shadow:        rgba(14, 9, 5, 0.50);
+
+  /* 場景別名 ── warm 系統沒有獨立的「次層墨色」token，--scene-wash 沿用
+     --warm-void（暖調場景的深度感來自燭光聚光燈式的單一光源，而非分層
+     墨色，因此不需要像 cold 系統那樣拆出第二層底色） */
+  --scene-void:         var(--warm-void);
+  --scene-wash:         var(--warm-void);
+  --scene-parchment:    var(--warm-parchment);
+  --scene-dim:          var(--warm-dim);
+  --scene-glass-fill:   var(--glass-warm-fill);
+  --scene-glass-border: var(--glass-warm-border);
+  --scene-shadow:       var(--warm-shadow);
+
+  background: var(--warm-void);
+  color:      var(--warm-parchment);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Step 1 — 動畫共用 Tokens（VISUAL_SPEC §3.1）
+   通則：具重量感的 ease-in-out，沒有 overshoot／bounce／彈簧曲線；
+   冷調主世界動畫時長下限 350ms ──「像液體，不是像按鈕」。
+   刻意獨立命名（--night-*），不與 theme-perfume-day.css 的 --motion-* 混用。
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --night-ease:               cubic-bezier(0.45, 0, 0.15, 1);
+  --night-duration-min:       350ms;   /* 通則下限──任何互動回饋都不得比這更快 */
+  --night-duration-card:      450ms;   /* 卡片 hover / 進場 */
+  --night-duration-slow:      600ms;   /* 較大範圍的狀態轉換 */
+  --night-duration-crossfade: 2800ms;  /* 冷／暖場景切換 crossfade（§2.4-4，2.5–3s） */
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Step 2 — 首頁骨架（VISUAL_SPEC §5.1）
+   唯一視覺焦點：一張浮在墨流背景上的 Liquid Glass 卡片。
+   留白至少佔畫面 55–60% ── 用 grid + place-items + 大量 padding 達成，
+   不使用零散 margin 手動置中。
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── 舞台容器：全螢幕，負責疊放背景層與卡片層的 stacking context ── */
+.night-stage {
+  position: relative;
+  isolation: isolate;           /* 建立獨立堆疊環境，避免子層 z-index 外洩 */
+  display: grid;
+  place-items: center;          /* 卡片永遠置中，不用 margin 微調 */
+  min-height: 100vh;
+  width: 100%;
+  padding: clamp(32px, 8vw, 96px);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* ── 墨流背景層：p5.js 繪製容器，此處只定義定位與層級 ── */
+#ink-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;         /* 背景層不攔截互動事件 */
+}
+
+/* ── 卡片層：確保永遠疊在墨流之上 ── */
+.night-stage > .glass-card {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Liquid Glass 卡片：backdrop-filter 模糊 + 半透明填色／邊框 ── */
+.glass-card {
+  width: min(100%, 560px);
+  padding: clamp(28px, 4vw, 44px);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  background:      var(--scene-glass-fill, var(--glass-cold-fill));
+  border:          1px solid var(--scene-glass-border, var(--glass-cold-border));
+  border-radius:   18px;
+  backdrop-filter:         blur(20px) saturate(120%);
+  -webkit-backdrop-filter: blur(20px) saturate(120%);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,  /* 極細高光，模擬玻璃邊緣 */
+    0 20px 60px var(--scene-shadow, var(--cold-shadow));
+
+  color: var(--scene-parchment, var(--cold-parchment));
+  transition:
+    box-shadow var(--night-duration-card) var(--night-ease),
+    border-color var(--night-duration-card) var(--night-ease);
+}
+
+/* 首頁不放次要 CTA／裝飾，卡片本身也不需要 hover 位移（沒有其他元素
+   跟它競爭注意力，不需要用動效證明自己「可以互動」） */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Step 3 — 主要元件
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── 3.1 單字卡片 .word-card ──────────────────────────────────────────────
+   與 .glass-card 共用「浮在墨流上」的語言，但作為練習頁的核心互動物件，
+   多一層 hover / focus 的緩慢浮起回饋。
+   ────────────────────────────────────────────────────────────────────── */
+.word-card {
+  position: relative;
+  width: min(100%, 480px);
+  padding: clamp(24px, 3.5vw, 36px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  background:      var(--scene-glass-fill, var(--glass-cold-fill));
+  border:          1px solid var(--scene-glass-border, var(--glass-cold-border));
+  border-radius:   16px;
+  backdrop-filter:         blur(16px) saturate(115%);
+  -webkit-backdrop-filter: blur(16px) saturate(115%);
+  box-shadow: 0 16px 48px var(--scene-shadow, var(--cold-shadow));
+
+  color: var(--scene-parchment, var(--cold-parchment));
+  transition:
+    transform     var(--night-duration-card) var(--night-ease),
+    box-shadow    var(--night-duration-card) var(--night-ease),
+    border-color  var(--night-duration-card) var(--night-ease);
+}
+
+.word-card__word {
+  font-family: "EB Garamond", "Cormorant Garamond", Georgia, serif;
+  font-size: 1.75rem;
+  font-weight: 500;             /* 全站不使用 Bold，見 VISUAL_SPEC §4 */
+  letter-spacing: 0.02em;
+  color: var(--scene-parchment, var(--cold-parchment));
+}
+
+.word-card__meta,
+.word-card__definition {
+  font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+  line-height: 1.8;
+  color: var(--scene-dim, var(--cold-dim));
+}
+
+/* Hover：極緩慢浮起 1–2px，邊框略為提亮 ── 唯一允許的互動色只有
+   --cold-accent（見下方按鈕／輸入框的硬性限制說明，同一條規則適用於
+   所有互動元件，.word-card 也不例外） */
+.word-card:hover,
+.word-card:focus-within {
+  transform:    translateY(-2px);
+  border-color: color-mix(in srgb, var(--cold-accent) 55%, transparent);
+  box-shadow:
+    0 20px 56px var(--scene-shadow, var(--cold-shadow)),
+    0 0 0 1px color-mix(in srgb, var(--cold-accent) 18%, transparent);
+}
+
+/* 永久疤痕預留位：Day 14 事件之後，該卡片會被加上這個 class（見 Step 4），
+   .word-card 本身完全不知道、也不預設 --wound 的存在。 */
+
+/* ── 3.2 填空輸入框 .blank-input ──────────────────────────────────────────
+   ────────────────────────────────────────────────────────────────────── */
+.blank-input {
+  display: inline-block;
+  min-width: 6ch;
+  padding: 4px 10px;
+  font: inherit;
+  font-variant-numeric: tabular-nums;   /* VISUAL_SPEC §4 数字防抖 */
+  color: var(--scene-parchment, var(--cold-parchment));
+  background: var(--scene-glass-fill, var(--glass-cold-fill));
+  border: 1px solid var(--scene-glass-border, var(--glass-cold-border));
+  border-bottom: 2px solid var(--cold-dim);   /* 底線強調輸入位置 */
+  border-radius: 4px;
+  outline: none;
+  transition:
+    border-color var(--night-duration-min) var(--night-ease),
+    box-shadow    var(--night-duration-min) var(--night-ease),
+    background    var(--night-duration-min) var(--night-ease);
+}
+
+.blank-input::placeholder {
+  color: var(--scene-dim, var(--cold-dim));
+  opacity: 0.7;
+}
+
+/* Hover：邊框由 dim 轉為 cold-accent 的低透明度版本 */
+.blank-input:hover:not(:focus):not(:disabled) {
+  border-bottom-color: color-mix(in srgb, var(--cold-accent) 70%, var(--cold-dim));
+}
+
+/* Focus：底線與外框都只用 --cold-accent 的亮度／透明度變化 ── 不得替換
+   成任何暖色，即使在 .scene-warm 場景底下這個規則依然成立 */
+.blank-input:focus {
+  border-color:        var(--glass-cold-border);
+  border-bottom-color: var(--cold-accent);
+  background:          color-mix(in srgb, var(--cold-accent) 8%, var(--glass-cold-fill));
+  box-shadow:           0 0 0 3px var(--cold-accent-ring);
+}
+
+.blank-input.is-correct {
+  border-bottom-color: color-mix(in srgb, var(--cold-accent) 85%, white 15%);
+}
+
+.blank-input.is-incorrect {
+  /* 錯誤狀態刻意也不使用鮮豔紅色警示 ── 用 --cold-dim 加深＋底線變粗，
+     維持冷調系統「沒有戲劇性」的基調（VISUAL_SPEC §1.1 場景 A） */
+  border-bottom-width: 3px;
+  border-bottom-color: var(--cold-dim);
+}
+
+.blank-input:disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* ── 3.3 功能按鈕 .btn-night ───────────────────────────────────────────────
+   硬性限制：hover / active / focus 一律只用 --cold-accent 的亮度或透明度
+   變化（color-mix 疊加白／黑的極小比例，或調整 opacity），不引入
+   --warm-gold 或任何新的鮮豔／飽和色 ── 即使畫面當下套用的是 .scene-warm，
+   按鈕互動狀態仍然固定讀取 --cold-accent，不吃 --scene-* 場景別名。
+   這是刻意的例外：按鈕是「功能性 chrome」，不是敘事表演的一部分。
+   ────────────────────────────────────────────────────────────────────── */
+.btn-night {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 22px;
+  font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  border-radius: 8px;
+  cursor: pointer;
+  user-select: none;
+  transition:
+    background   var(--night-duration-min) var(--night-ease),
+    border-color var(--night-duration-min) var(--night-ease),
+    color        var(--night-duration-min) var(--night-ease),
+    box-shadow   var(--night-duration-min) var(--night-ease),
+    opacity      var(--night-duration-min) var(--night-ease);
+}
+
+.btn-night:disabled {
+  opacity: 0.4;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+/* Primary：以 --cold-accent 作為底色本身（唯一允許整片使用強調色的元件），
+   hover/active 只調整這個顏色自身的亮度 */
+.btn-night--primary {
+  background: var(--cold-accent);
+  color:      var(--cold-void);         /* 深底色文字，確保對比 */
+  border:     1px solid transparent;
+}
+
+.btn-night--primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--cold-accent) 88%, white 12%);
+}
+
+.btn-night--primary:active:not(:disabled) {
+  background: color-mix(in srgb, var(--cold-accent) 90%, black 10%);
+}
+
+.btn-night--primary:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--cold-accent-ring);
+}
+
+/* Ghost：透明底、冷調邊框，hover/active 只用 --cold-accent 的低透明度疊層 */
+.btn-night--ghost {
+  background: transparent;
+  color:      var(--scene-parchment, var(--cold-parchment));
+  border:     1px solid var(--glass-cold-border);
+}
+
+.btn-night--ghost:hover:not(:disabled) {
+  background:   rgba(92, 118, 134, 0.10);   /* --cold-accent 的低透明度疊層 */
+  border-color: color-mix(in srgb, var(--cold-accent) 60%, transparent);
+}
+
+.btn-night--ghost:active:not(:disabled) {
+  background: rgba(92, 118, 134, 0.16);
+}
+
+.btn-night--ghost:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--cold-accent-ring);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Step 4 — 傷口色（VISUAL_SPEC §2.3 / §3.3）
+   ============================================
+   DAY 14 ONLY — DO NOT REUSE
+   此顏色全站僅能出現一次（谷底真相揭露事件）。
+   不要把它加進元件庫、按鈕、狀態色、或任何可能被
+   未來其他功能誤用的共用 class。
+   ============================================
+   .day14-reveal-card 不是通用 utility，只服務那一個唯一的敘事事件卡片。
+   --wound 不放進 .scene-cold、.scene-warm，也不放進任何共用元件（.glass-card /
+   .word-card / .btn-night-* / .blank-input）── 它只寫死在這一個 class 裡。
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.day14-reveal-card {
+  --wound: #8a3b2c;
+
+  /* 事件觸發瞬間：邊框由 --cold-accent 轉為 --wound，轉色拉長到 1.2s
+     （比通則 350ms 慢超過三倍，強調「這不是一般互動」，見 VISUAL_SPEC §3.3-2） */
+  border-color: var(--wound);
+  transition: border-color 1200ms var(--night-ease);
+}
+
+/* 放射狀暈染：半徑不超過卡片本身，絕不擴散到卡片以外的 UI 或背景墨流
+   （VISUAL_SPEC §3.3-3 ──「孤光審問」的具體實作） */
+.day14-reveal-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(circle at center, color-mix(in srgb, var(--wound) 22%, transparent) 0%, transparent 70%);
+}
+
+/* 事件結束後永久保留的髮絲寬邊線 ── 這是全站唯一允許看到 --wound 的地方，
+   其他任何卡片、任何時候都不得再出現這個顏色（VISUAL_SPEC §3.3-5） */
+.day14-reveal-card.is-healed {
+  border-width: 1px;
+  border-color: var(--wound);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Step 5 — 整合進 index.html 正式頁面時的地雷處理（2026-07）
+   index.html 是既有的、正式上線中的 Day Mode 頁面，本身載入
+   theme-perfume-day.css，其中兩條規則會蓋掉 / 污染這裡的冷調系統：
+     1. `body { background/color !important }`（theme-perfume-day.css
+        第 126–129 行）── 沒有 !important 的 .scene-cold background/color
+        會直接被蓋掉。
+     2. `body::before`（M-1 質感紋理）與 `body::after`（暖色 vignette，
+        z-index:1）── 疊在冷調墨流 canvas（z-index:0）之上，把暖棕色
+        vignette 蓋在冷調背景上，違反「兩套色系不互相污染」的規則。
+   以下兩條規則只在 body 帶有 .scene-cold class 時生效（source order 排在
+   theme-perfume-day.css 的 <link> 之後，加上同樣的 !important 讓後者贏，
+   跟現有程式碼庫用 !important 對抗 Tailwind 的手法一致），不影響
+   night-preview.html（它沒有載入 theme-perfume-day.css，本來就沒有這個
+   衝突）。
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* 地雷 1：蓋過 theme-perfume-day.css 的 body{ background/color !important } */
+body.scene-cold {
+  background: var(--cold-void) !important;
+  color: var(--cold-parchment) !important;
+}
+
+/* 地雷 2：關閉 Day Mode 的 body::before / body::after，讓 Suminagashi 墨流
+   canvas 完全取代這兩層背景層 */
+body.scene-cold::before,
+body.scene-cold::after {
+  content: none;
+}

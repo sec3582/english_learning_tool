@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>墨流背景預覽 · 夜模式 Suminagashi Preview</title>
+
+<!--
+  獨立預覽頁面：只用來驗證「沉浸式文本小說」夜模式的 Suminagashi 墨流背景，
+  不含文章匯入或任何正式功能，也不修改 index.html 或現有 js/*.js 模組。
+  規格來源：docs/VISUAL_SPEC.md §3.1；元件骨架來源：docs/UI_COMPONENTS.md §2。
+-->
+<link rel="stylesheet" href="theme-perfume-night.css" />
+
+<!-- p5.js（已透過 WebFetch 確認此版本 CDN 連結可正常載入） -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
+
+<style>
+  /* 這裡只放這個預覽頁專屬、theme-perfume-night.css 尚未涵蓋的極少量樣式，
+     不重新定義 .night-stage / .scene-cold / #ink-layer / .glass-card 等既有 class。 */
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  .preview-note {
+    margin: 0;
+    font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", system-ui,
+      sans-serif;
+    font-size: 0.9rem;
+    line-height: 1.8;
+    color: var(--scene-dim, var(--cold-dim));
+  }
+</style>
+</head>
+<body>
+  <!-- .night-stage.scene-cold：夜模式冷調舞台容器（theme-perfume-night.css 既有定義） -->
+  <div class="night-stage scene-cold" id="night-stage">
+    <!--
+      #ink-layer 的 <canvas> 由 js/ink-suminagashi.js 的 p5 sketch 於執行期間
+      動態建立並掛載到這個容器下，沿用 theme-perfume-night.css 已定義好的
+      #ink-layer 定位樣式（position: absolute; inset: 0; z-index: 0;）。
+    -->
+
+    <section class="glass-card">
+      <h1 class="word-card__word">墨流背景預覽</h1>
+      <p class="preview-note">
+        這是「沉浸式文本小說」夜模式視覺系統的獨立驗證頁面，只用來檢視
+        Suminagashi 墨流背景的動態效果，不含文章匯入或任何正式功能。
+      </p>
+      <p class="preview-note">
+        背景中的墨滴由 Perlin noise 驅動做緩慢漂移，色相鎖定在冷調系統的
+        青灰／靛藍（VISUAL_SPEC 暖調系統的琥珀色不會出現在這裡）。單滴墨
+        完整暈開的節奏落在 25–40 秒之間，動態刻意做得很重、很慢——像液體，
+        不是像按鈕。
+      </p>
+      <p class="preview-note">
+        若系統開啟「減少動態效果」（prefers-reduced-motion），畫面會停留在
+        單一靜態墨跡構圖，不會持續播放動畫。
+      </p>
+    </section>
+  </div>
+
+  <script src="js/ink-suminagashi.js"></script>
+</body>
+</html>
