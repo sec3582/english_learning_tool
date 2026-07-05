@@ -62,6 +62,86 @@
   color:      var(--cold-parchment);
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   Phase 5f — P0 Commit 2：--color-* 家族治本（docs/COLOR_TOKEN_MIGRATION.md）
+   根因：theme-perfume-day.css 的 :root 定義了一整組 --color-* token
+   （compiled-spec.md 的核心色彩層，35 個、167 處引用），是繼 --wc-*／--qz-*
+   之後第三個、也是用量最大的獨立色彩系統。這裡把整組 token 在
+   body.scene-cold 重新宣告，讓所有讀 var(--color-*) 的既有規則（day.css／
+   wc.css 裡上百條 !important 規則）不需要逐條修改，直接透過 custom
+   property 繼承拿到冷色值。
+
+   COLOR_TOKEN_MIGRATION.md §5 已 grep 確認：這 35 個 token 只在 :root 宣告
+   過一次，沒有任何 #id/.class scope 重新宣告過，因此 body.scene-cold（單一
+   class，特異性 (0,1,0)）足以覆蓋全站，不需要逐容器補 ID 對等宣告。
+
+   注意：這裡只解決「component 讀 var(--color-*) 這個 token 的值」的問題；
+   docs/VISUAL_QA_5E.md §7 那批「ID 選擇器把字面 hex 直接寫死在
+   background/color 上、根本不讀 --color-* token」的按鈕（#analyzeBtn 等 7
+   顆），不會因為這個 commit 被修好，需要 P0 Commit 3 額外處理。
+
+   Day Mode（:root，theme-perfume-day.css）一個字都不動，只在這裡新增
+   scene-cold 專屬覆寫。 */
+body.scene-cold {
+  /* ── 結構色：批次映射到既有 --cold-* 家族 ── */
+  --color-bg:                var(--cold-void);
+  --color-surface-card:      var(--glass-cold-fill);
+  --color-surface-panel:     var(--glass-cold-fill);
+  --color-surface-recessed:  color-mix(in srgb, var(--glass-cold-fill) 70%, var(--cold-void) 30%);
+  --color-surface-modal:     var(--glass-cold-fill);
+  --color-surface-panel-alt: color-mix(in srgb, var(--cold-wash) 92%, var(--cold-parchment) 8%);
+
+  --color-ink-1: var(--cold-parchment);
+  --color-ink-2: var(--cold-dim);
+  --color-ink-3: color-mix(in srgb, var(--cold-dim) 70%, transparent);
+
+  --color-ledger-hi:      rgba(92, 118, 134, 0.20);
+  --color-ledger-mid:     rgba(92, 118, 134, 0.15);
+  --color-ledger-lo:      rgba(92, 118, 134, 0.12);
+  --color-ledger-section: var(--glass-cold-border);
+
+  --color-rim-card:       rgba(214, 219, 224, 0.06);
+  --color-rim-panel:      rgba(214, 219, 224, 0.08);
+  --color-rim-modal-top:  rgba(214, 219, 224, 0.07);
+  --color-rim-modal-left: rgba(214, 219, 224, 0.04);
+
+  --color-input-border:     var(--glass-cold-border);
+  --color-card-separator:   var(--glass-cold-border);
+  --color-chip-navbar:      rgba(92, 118, 134, 0.20);
+
+  /* --color-rim-btn / --color-rim-hover 刻意不宣告：按鈕公式已在 P0
+     Commit 3 改成「深底+邊框」，不再需要 rim light token（見
+     COLOR_TOKEN_MIGRATION.md §4 第 3 點）。 */
+
+  /* ── 強調色：全部映射到唯一的 --cold-accent ── */
+  --color-accent:           var(--cold-accent);
+  --color-accent-dim:       var(--cold-accent);
+  --color-accent-focus:     var(--cold-accent-ring);
+  --color-input-border-foc: color-mix(in srgb, var(--cold-accent) 55%, transparent);
+
+  /* ── 遮罩（沿用修正輪 1 已在 #quizModal 系列驗證過的數值，正式收編成
+     token，供 .mnemonic-overlay 等其他還沒修過的遮罩共用） ── */
+  --cold-overlay:  rgba(20, 23, 26, 0.65);
+  --color-overlay: var(--cold-overlay);
+
+  /* ── 語意色：正確／錯誤（docs/VISUAL_QA_5E.md §9.3 提案，這輪正式寫入） ── */
+  --cold-correct: color-mix(in srgb, var(--cold-accent) 70%, var(--cold-parchment) 30%);
+  --cold-wrong:   color-mix(in srgb, var(--cold-dim) 55%, #7a4a42 45%);
+
+  /* ── 語意徽章色階（COLOR_TOKEN_MIGRATION.md §2.2 新設計，內部可互相區分，
+     不是全部壓同一個 --cold-* token） ── */
+  --cold-badge-pos-bg:       var(--cold-wash);
+  --cold-badge-pos-fg:       var(--cold-dim);
+  --cold-badge-mastered-bg:  color-mix(in srgb, var(--cold-accent) 55%, var(--cold-void) 45%);
+  --cold-badge-mastered-fg:  color-mix(in srgb, var(--cold-accent) 25%, var(--cold-parchment) 75%);
+  --cold-badge-due-bg:       color-mix(in srgb, var(--cold-wrong) 60%, var(--cold-void) 40%);
+  --cold-badge-due-fg:       var(--cold-parchment);
+  --cold-badge-enrich-tr-bg: color-mix(in srgb, var(--cold-accent) 20%, var(--glass-cold-fill));
+  --cold-badge-enrich-tr-fg: var(--cold-parchment);
+  --cold-badge-enrich-gr-bg: color-mix(in srgb, var(--cold-dim) 25%, var(--glass-cold-fill));
+  --cold-badge-enrich-gr-fg: var(--cold-parchment);
+}
+
 .scene-warm {
   /* ── 暖調系統（教會／政客場景，VISUAL_SPEC §2.2，稀有敘事事件，約 10–15%） ── */
   --warm-void:          #241a12;  /* 場景底色（燭光暗底，非純黑；帶暖棕） */
