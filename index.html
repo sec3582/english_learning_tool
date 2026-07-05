@@ -942,29 +942,37 @@
      根因：.btn-primary-m / .btn-outline-m / .btn-ghost-m / .quiz-btn-* 這幾個
      全站共用按鈕 class，原本只認 [data-theme="dark"]（月亮圖示切換），完全
      不認 body.scene-cold。導致每一個被 scene-cold 覆寫過背景的卡片，裡面的
-     按鈕仍然是 Day Mode 配色。這裡讓它們統一改吃 --cold-accent，比照
-     theme-perfume-night.css 的 .btn-night--primary / .btn-night--ghost 配色
-     公式（color-mix 疊加白/黑的極小比例，不引入新色相）。修好這裡以後，
-     後續任何 scene-cold 卡片只要按鈕用這幾個共用 class，會自動跟上，
-     不需要再逐一補按鈕規則。 */
+     按鈕仍然是 Day Mode 配色。修好這裡以後，後續任何 scene-cold 卡片只要
+     按鈕用這幾個共用 class，會自動跟上，不需要再逐一補按鈕規則。
+
+     修正輪 1（2026-07）：第一版把 primary 按鈕做成「--cold-accent 實色底 +
+     --cold-void 深字」，直接照搬 .btn-night--primary 的公式，但那個公式是
+     設計給「亮色 accent 底」用的——這裡的 --cold-accent (#5c7686) 本身只是
+     中低明度的青灰藍，深字疊上去實測對比不足（深底+深字，使用者回報
+     「讓 AI 挑單字」看不清楚）。改成「深底（--cold-wash）+ 亮字
+     （--cold-parchment）+ --cold-accent 邊框/rim」，同一種「深墨色底 +
+     稀有 accent 只用在邊緣」的語言，跟 decisions.md 的 Day Mode primary
+     按鈕公式（深墨底+米字+琥珀 rim）是同一個邏輯的冷色版本。 */
   body.scene-cold .btn-primary-m,
   body.scene-cold .quiz-btn-primary,
   body.scene-cold .quiz-btn-next {
-    background: var(--cold-accent) !important;
-    color: var(--cold-void) !important;
+    background: var(--cold-wash) !important;
+    color: var(--cold-parchment) !important;
+    border: 1px solid var(--cold-accent) !important;
     box-shadow: none !important;
   }
 
   body.scene-cold .btn-primary-m:hover:not(:disabled),
   body.scene-cold .quiz-btn-primary:hover:not(:disabled),
   body.scene-cold .quiz-btn-next:hover:not(:disabled) {
-    background: color-mix(in srgb, var(--cold-accent) 88%, white 12%) !important;
+    background: color-mix(in srgb, var(--cold-wash) 80%, var(--cold-accent) 20%) !important;
+    border-color: color-mix(in srgb, var(--cold-accent) 85%, white 15%) !important;
   }
 
   body.scene-cold .btn-primary-m:active:not(:disabled),
   body.scene-cold .quiz-btn-primary:active:not(:disabled),
   body.scene-cold .quiz-btn-next:active:not(:disabled) {
-    background: color-mix(in srgb, var(--cold-accent) 90%, black 10%) !important;
+    background: color-mix(in srgb, var(--cold-wash) 70%, black 30%) !important;
   }
 
   body.scene-cold .btn-primary-m:focus-visible,
@@ -982,13 +990,166 @@
 
   /* #analyzeBtn 另外被 day.css 的「FINAL COLOR LOCK」鎖了一份文字色
      （ID + class 的高特異性），scene-cold 底下要用同樣高度的選擇器蓋掉，
-     否則會維持羊皮紙色文字疊在冷調 --cold-accent 底色上。 */
+     否則會維持羊皮紙色文字疊在冷調底色上。文字色跟著上面的公式改成
+     --cold-parchment（亮字），不是第一版的 --cold-void（深字）。 */
   body.scene-cold #analyzeBtn.btn-primary-m,
   body.scene-cold #analyzeBtn.btn-primary-m:hover:not(:disabled),
   body.scene-cold #analyzeBtn.btn-primary-m:active:not(:disabled),
   body.scene-cold #analyzeBtn.btn-primary-m:disabled,
   body.scene-cold #analyzeBtn.btn-primary-m * {
-    color: var(--cold-void) !important;
+    color: var(--cold-parchment) !important;
+  }
+
+  /* 輸入來源 tabs（手動輸入／上傳圖片）：未選取態原本吃 --muted →
+     --cold-dim，實測太淡難以辨識是「這裡還有一個頁籤」。提高到介於
+     --cold-dim 與 --cold-parchment 之間的中對比，選取態與 hover 仍然
+     維持最亮，保留「選取/未選取」的視覺層級但兩者都要可讀。 */
+  body.scene-cold #articleInputSection .input-tab {
+    color: color-mix(in srgb, var(--cold-parchment) 55%, var(--cold-dim) 45%) !important;
+  }
+  body.scene-cold #articleInputSection .input-tab:hover {
+    color: var(--cold-parchment) !important;
+  }
+
+  /* 「今日新增／複習／全部」sidebar tabs：不在 Step 0 白名單內，選擇器是
+     #tabToday/#tabDue/#tabAll + .tab--active（day.css 用 --color-ink-2 /
+     --color-surface-panel / --color-accent 這組跟 --cold-* 完全無關的
+     token，同一批規則也有 [data-theme="dark"] 版本可以直接照抄結構，只
+     是把 --wc-* 換成 --cold-*）。 */
+  body.scene-cold #tabToday,
+  body.scene-cold #tabDue,
+  body.scene-cold #tabAll {
+    background: transparent !important;
+    color: var(--cold-dim) !important;
+    border: none !important;
+  }
+  body.scene-cold #tabToday:hover,
+  body.scene-cold #tabDue:hover,
+  body.scene-cold #tabAll:hover {
+    background: rgba(92, 118, 134, 0.10) !important;
+    color: var(--cold-parchment) !important;
+  }
+  body.scene-cold #tabToday.tab--active,
+  body.scene-cold #tabDue.tab--active,
+  body.scene-cold #tabAll.tab--active {
+    background: rgba(92, 118, 134, 0.14) !important;
+    color: var(--cold-parchment) !important;
+    font-weight: 600 !important;
+    box-shadow: inset 0 -2.5px 0 var(--cold-accent) !important;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     修正輪 1 — 根因二：word-card 元件家族有自己一整組獨立 token
+     （--wc-surface / --wc-ai-bg / --wc-word-color / --wc-muted / --wc-accent
+     / --wc-rule / --wc-shadow-a/b/c / --wc-chip-bg/bdr / --wc-chip-ant-bg/bdr，
+     定義在 theme-perfume-wc.css :root，只在 [data-theme="dark"] 下才有第二組
+     值），.wc-ai-text / .wc-ai-zh / chips / badges 等全部直接讀這組 token，
+     不是讀 --text/--muted，之前的 scene-cold 覆寫完全沒碰到它們——這才是
+     「單字卡片例句框英文讀不出」的真正根因（.wc-ai-text 讀 --wc-word-color，
+     日間值是 #1C1208 近黑色，疊在冷調深色卡片上等於隱形；.wc-ai-zh 讀
+     --wc-muted，日間值是中棕色 #7A6045，勉強還看得出來，剛好對應使用者
+     形容的「英文讀不出、中文翻譯 OK」）。
+     修法：直接在 body.scene-cold 上重新宣告整組 --wc-* token，custom
+     property 會沿著 DOM 往下繼承蓋過 :root 的值，不需要去改那些
+     component 規則本身（它們還是讀同一個變數名稱，只是變數的值換了）。 */
+  body.scene-cold {
+    --wc-surface:      var(--cold-wash);
+    --wc-ai-bg:         var(--cold-void);
+    --wc-word-color:   var(--cold-parchment);
+    --wc-muted:         var(--cold-dim);
+    --wc-accent:        var(--cold-accent);
+    --wc-rule:          var(--glass-cold-border);
+    --wc-shadow-a:      var(--cold-shadow);
+    --wc-shadow-b:      var(--cold-shadow);
+    --wc-shadow-c:      var(--cold-shadow);
+    --wc-chip-bg:       rgba(92, 118, 134, 0.12);
+    --wc-chip-bdr:      rgba(92, 118, 134, 0.25);
+    --wc-chip-ant-bg:   rgba(92, 118, 134, 0.10);
+    --wc-chip-ant-bdr:  rgba(92, 118, 134, 0.22);
+  }
+
+  /* 根因三：測驗（#quizModal／#grammarQuizModal／#quizSettings）是完全
+     獨立的第三組 token 系統（--qz-parchment/--qz-ink/--qz-line/--qz-muted/
+     --qz-accent，theme-perfume-wc.css 「Exam Sheet」章節，約 40 條規則都讀
+     這組變數），跟 --navy／--wc-*／--cold-* 都無關——這是「測驗視窗字幾乎
+     看不見」的真正根因：上一輪只用 --navy/--text/--muted 修了外層卡片，
+     內部所有文字（標題、題目、選項 label、按鈕）讀的是 --qz-ink 等，
+     完全沒被碰到。同樣用「在容器上重新宣告整組 token」解法，一次蓋過
+     全部 ~40 條規則，不用逐條改。順便把外層遮罩從暖色霧翳
+     rgba(30,18,10,.65) 換成冷色，避免暖色滲進冷調頁面。 */
+  body.scene-cold #quizModal,
+  body.scene-cold #grammarQuizModal,
+  body.scene-cold #quizSettings {
+    --qz-parchment: var(--cold-wash);
+    --qz-ink:       var(--cold-parchment);
+    --qz-line:      var(--glass-cold-border);
+    --qz-muted:     var(--cold-dim);
+    --qz-accent:    var(--cold-accent);
+    background-color: rgba(20, 23, 26, 0.65) !important;
+  }
+
+  /* radio/checkbox 原生控制項：跟前一輪 #quizSettings 內的規則一致，
+     這裡把 accent-color 覆蓋範圍擴大到整個測驗系列（含 #quizModal 內部
+     如果有任何原生 input）。 */
+  body.scene-cold #quizModal input[type="radio"],
+  body.scene-cold #quizModal input[type="checkbox"],
+  body.scene-cold #quizSettings input[type="radio"],
+  body.scene-cold #quizSettings input[type="checkbox"] {
+    accent-color: var(--cold-accent);
+  }
+
+  /* 根因四：select 的米色底完全打不掉之前的「軟性 fallback」，因為
+     day.css 有兩條裸 `select { background:...!important }` 規則
+     （specificity 只有 1 個 type selector，但因為帶 !important，任何沒帶
+     !important 的規則──不管 specificity 多高──都輸給它）。上一輪的
+     body.scene-cold select 刻意不加 !important（想留給更精修的規則去贏），
+     結果反而連這兩條「隨手全站鎖色」的裸規則都打不贏。這裡直接補上
+     !important，配合原本就比較高的 selector specificity，穩贏。 */
+  body.scene-cold select {
+    background: var(--glass-cold-fill) !important;
+    border-color: var(--glass-cold-border) !important;
+    color: var(--cold-parchment) !important;
+  }
+
+  /* 根因五：全站到處都是 Tailwind 的 bg-white / bg-gray-* / text-gray-* /
+     border-gray-* 工具類別，直接寫死顏色，不吃任何 --text/--muted/--navy/
+     --wc-*/--qz-* token（day.css 只在 :root:not([data-theme="dark"]) 這種
+     全站等級 fight 過幾個，但只挑了少數幾個 class，範圍不夠）。「資料管理」
+     整塊（標題以外的說明文字＋4 顆按鈕）、分頁器按鈕、電子雞數值文字、
+     用量/同步兩個次要 modal，全部屬於這個模式。與其每個 ID 单独補一次，
+     這裡直接對這些工具類別本身在 body.scene-cold 底下做一次性覆寫，
+     以後任何新元件只要用這些 Tailwind class，都會自動吃到冷色。 */
+  body.scene-cold .bg-white,
+  body.scene-cold .bg-gray-50,
+  body.scene-cold .bg-gray-100,
+  body.scene-cold .bg-gray-200 {
+    background: var(--glass-cold-fill) !important;
+  }
+  body.scene-cold .border-gray-100,
+  body.scene-cold .border-gray-200,
+  body.scene-cold .border-gray-300 {
+    border-color: var(--glass-cold-border) !important;
+  }
+  body.scene-cold .text-gray-300,
+  body.scene-cold .text-gray-400,
+  body.scene-cold .text-gray-500,
+  body.scene-cold .text-gray-600,
+  body.scene-cold .text-gray-700 {
+    color: var(--cold-dim) !important;
+  }
+  body.scene-cold .text-gray-800,
+  body.scene-cold .text-gray-900 {
+    color: var(--cold-parchment) !important;
+  }
+
+  /* 保險絲：.sidebar-title 目前分散在至少 3 套不同的 color token 底下
+     （通用 --navy、#wordListCard 專屬的 --wc-word-color、測驗系列專屬的
+     --qz-ink），上面已經個別修過，這裡再加一條 class-only 的兜底規則，
+     確保任何沒有專屬 ID 規則的卡片標題（#progressCard/#backupCard/
+     #pixelPetCard）一定可讀，不必逐一驗證每張卡片是不是真的有吃到
+     --navy 的重新定義。 */
+  body.scene-cold .sidebar-title {
+    color: var(--cold-parchment) !important;
   }
 
   body.scene-cold .btn-outline-m {
@@ -1086,11 +1247,13 @@
   /* 4.3 textarea / input 白底融合：通用兜底規則。刻意不加 !important，
      用低優先權的 type 選擇器，讓既有 scoped !important 規則（例如
      #articleInput）繼續贏過這條——這條只負責「沒人管過的輸入框」，
-     不負責覆蓋已經精修過的元件。 */
+     不負責覆蓋已經精修過的元件。
+     注意：select 已經移到修正輪 1 的「根因四」用 !important 版本單獨處理
+     （day.css 對裸 `select` 標籤有 !important 鎖色，不加 !important 打不贏），
+     這裡不再重複列 select，避免兩條規則並存造成閱讀混淆。 */
   body.scene-cold input[type="text"],
   body.scene-cold input[type="number"],
   body.scene-cold input[type="search"],
-  body.scene-cold select,
   body.scene-cold textarea {
     background: var(--glass-cold-fill);
     border-color: var(--glass-cold-border);
