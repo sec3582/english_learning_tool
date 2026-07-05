@@ -962,10 +962,13 @@
     box-shadow: none !important;
   }
 
+  /* P0 Commit 3：hover 公式改成「底提亮 8%」（color-mix wash→parchment），
+     取代修正輪 1 的 wash→accent 版本——避免 hover 態疊加 accent 之後，
+     跟「邊框本來就是 accent」混在一起，明度變化不夠乾淨。 */
   body.scene-cold .btn-primary-m:hover:not(:disabled),
   body.scene-cold .quiz-btn-primary:hover:not(:disabled),
   body.scene-cold .quiz-btn-next:hover:not(:disabled) {
-    background: color-mix(in srgb, var(--cold-wash) 80%, var(--cold-accent) 20%) !important;
+    background: color-mix(in srgb, var(--cold-wash) 92%, var(--cold-parchment) 8%) !important;
     border-color: color-mix(in srgb, var(--cold-accent) 85%, white 15%) !important;
   }
 
@@ -988,17 +991,73 @@
     opacity: 1 !important;
   }
 
-  /* #analyzeBtn 另外被 day.css 的「FINAL COLOR LOCK」鎖了一份文字色
-     （ID + class 的高特異性），scene-cold 底下要用同樣高度的選擇器蓋掉，
-     否則會維持羊皮紙色文字疊在冷調底色上。文字色跟著上面的公式改成
-     --cold-parchment（亮字），不是第一版的 --cold-void（深字）。 */
-  body.scene-cold #analyzeBtn.btn-primary-m,
-  body.scene-cold #analyzeBtn.btn-primary-m:hover:not(:disabled),
-  body.scene-cold #analyzeBtn.btn-primary-m:active:not(:disabled),
-  body.scene-cold #analyzeBtn.btn-primary-m:disabled,
-  body.scene-cold #analyzeBtn.btn-primary-m * {
+  /* ═══════════════════════════════════════════════════════════════════════
+     P0 Commit 3 — 拆 docs/VISUAL_QA_5E.md §7 的 7 顆「壞—ID 攔截」按鈕
+     根因：這 7 顆背後各自躲著 ID 選擇器把字面 hex 寫死在 background/color
+     上，class 選擇器（哪怕再多個 class）永遠打不贏 ID：
+       - #analyzeBtn/#saveBtn/#customAnalyzeBtn/#customAddBtn/#startQuizBtn/
+         #usageSaveBudget → theme-perfume-day.css:664「belt-and-suspenders」
+         ID 清單，background/color 字面鎖 #1C1208/#F0E8D4。
+       - #startQuizBtn 實際勝出的是特異性更高的
+         theme-perfume-wc.css:1953 html:not([data-theme="dark"]) #startQuizBtn
+         （1 ID + 1 class 等效 + 1 type），跟上面那條同特異性的 body.scene-cold
+         版本會打平、只能靠 source order 贏，這裡額外補上 .btn-primary-m
+         class 把特異性拉高，避免依賴 tie-break。
+       - #quizSubmit → theme-perfume-wc.css:1424「qz-accent 實色滿版」ID 清單
+         （.quiz-btn-primary, #quizSubmit, #grammarQuizSubmit, #qsStart）。
+     這裡逐一用 body.scene-cold #id 覆寫，跟上面的 class 公式（深底+亮字+
+     accent 邊框）保持一致，需要抵銷 !important 的地方也照樣加 !important。
+     #qsStart／#grammarQuizSubmit 有一樣的病灶但這輪範圍只列使用者指定的
+     7 顆，留給下一輪。 */
+  body.scene-cold #analyzeBtn,
+  body.scene-cold #saveBtn,
+  body.scene-cold #customAnalyzeBtn,
+  body.scene-cold #customAddBtn,
+  body.scene-cold #usageSaveBudget,
+  body.scene-cold #quizSubmit {
+    background: var(--cold-wash) !important;
     color: var(--cold-parchment) !important;
+    border: 1px solid var(--cold-accent) !important;
+    box-shadow: none !important;
   }
+
+  /* #startQuizBtn 額外帶 .btn-primary-m，把特異性拉高到明確贏過
+     html:not([data-theme="dark"]) #startQuizBtn（同為 1 ID + 1 type，
+     class 數量 2 > 1，不需要依賴 source order tie-break）。 */
+  body.scene-cold #startQuizBtn.btn-primary-m {
+    background: var(--cold-wash) !important;
+    color: var(--cold-parchment) !important;
+    border: 1px solid var(--cold-accent) !important;
+    box-shadow: none !important;
+  }
+
+  body.scene-cold #analyzeBtn:hover:not(:disabled),
+  body.scene-cold #saveBtn:hover:not(:disabled),
+  body.scene-cold #customAnalyzeBtn:hover:not(:disabled),
+  body.scene-cold #customAddBtn:hover:not(:disabled),
+  body.scene-cold #usageSaveBudget:hover:not(:disabled),
+  body.scene-cold #quizSubmit:hover:not(:disabled),
+  body.scene-cold #startQuizBtn.btn-primary-m:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--cold-wash) 92%, var(--cold-parchment) 8%) !important;
+    border-color: color-mix(in srgb, var(--cold-accent) 85%, white 15%) !important;
+  }
+
+  body.scene-cold #analyzeBtn *,
+  body.scene-cold #saveBtn *,
+  body.scene-cold #customAnalyzeBtn *,
+  body.scene-cold #customAddBtn *,
+  body.scene-cold #usageSaveBudget *,
+  body.scene-cold #quizSubmit *,
+  body.scene-cold #startQuizBtn.btn-primary-m * {
+    color: inherit !important;
+    opacity: 1 !important;
+  }
+
+  /* #usageSaveBudget 額外有 inline onmouseover/onmouseout 寫死 #8d9b76 的
+     hover 色（見 index.html 的 button 標籤本身），CSS :hover 規則的
+     !important 會贏過 JS 直接寫的 inline style（inline style 沒有
+     !important），這裡不需要改 HTML/JS，上面的 CSS hover 規則已經足夠蓋過，
+     維持「不動 JS」的原則。 */
 
   /* 輸入來源 tabs（手動輸入／上傳圖片）：未選取態原本吃 --muted →
      --cold-dim，實測太淡難以辨識是「這裡還有一個頁籤」。提高到介於
