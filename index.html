@@ -239,6 +239,11 @@
     font-size:.72rem; font-weight:700; white-space:nowrap;
   }
 
+  /* 用量估算 modal「關閉」按鈕（原本是 inline style + onmouseover/onmouseout
+     寫死 #8A9BA8/#7a8d9a，scene-cold 完全碰不到，改掛 class）。 */
+  .usage-close2-btn{ background:#8A9BA8; }
+  .usage-close2-btn:hover{ background:#7a8d9a; }
+
   /* 學習進度卡片（修正輪 4：原本整段是 js/ui.js renderProgressCard() 的
      inline style innerHTML，沒有任何 class，scene-cold 完全碰不到——這裡
      把顏色搬進 class，數值/百分比等動態內容仍由 JS 產生）。 */
@@ -1551,6 +1556,19 @@
     background: var(--cold-overlay) !important;
   }
 
+  /* #usageClose2「關閉」按鈕：原本 inline style="background:#8A9BA8"
+     （藍灰色，使用者形容的「淺藍」）+ onmouseover/onmouseout 寫死
+     #7a8d9a，已在 HTML 改掛 .usage-close2-btn class，這裡覆寫冷色。 */
+  body.scene-cold .usage-close2-btn {
+    background: var(--cold-wash) !important;
+    color: var(--cold-parchment) !important;
+    border: 1px solid var(--cold-accent) !important;
+  }
+
+  body.scene-cold .usage-close2-btn:hover {
+    background: color-mix(in srgb, var(--cold-wash) 92%, var(--cold-parchment) 8%) !important;
+  }
+
   /* #qsCancel／#quizIDK／#grammarQuizShowHint 是 wc.css「7b. Secondary」
      同一組（wc.css:1444-1459）：base 的 rgba(61,43,31,.08) 底色本身不是
      token（低優先殘留），但 :hover 是硬編碼 rgba(200,149,42,.12) 琥珀色
@@ -2321,7 +2339,7 @@
       </div>
       <div class="flex justify-between items-center pt-1">
         <button id="usageReset" class="px-3 py-2 text-sm rounded-lg border border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700 bg-transparent">重置本月估算</button>
-        <button id="usageClose2" class="px-4 py-2 text-sm font-semibold text-white rounded-lg" style="background:#8A9BA8;" onmouseover="this.style.background='#7a8d9a'" onmouseout="this.style.background='#8A9BA8'">關閉</button>
+        <button id="usageClose2" class="px-4 py-2 text-sm font-semibold text-white rounded-lg usage-close2-btn">關閉</button>
       </div>
     </div>
   </div>
