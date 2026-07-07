@@ -791,12 +791,15 @@
      玻璃底上會是暗色文字疊暗色底 */
   /* theme-perfume-wc.css 對 #quizModal > div 的 background/border/
      box-shadow/color 全部是 !important（見「2. Card containers —
-     exam sheet material」），一樣要跟著補 !important 才會生效。 */
+     exam sheet material」），一樣要跟著補 !important 才會生效。
+     修正輪 3：background 從 --glass-cold-fill（5% alpha）換成
+     --cold-modal-fill（92% alpha）——modal 是操作/閱讀區，使用者回報
+     能看穿到後方畫面、干擾閱讀，不應該只用卡片等級的輕玻璃感。 */
   body.scene-cold #quizModal > div {
-    background: var(--glass-cold-fill) !important;
+    background: var(--cold-modal-fill) !important;
     border: 1px solid var(--glass-cold-border) !important;
-    backdrop-filter: blur(20px) saturate(120%);
-    -webkit-backdrop-filter: blur(20px) saturate(120%);
+    backdrop-filter: blur(24px) saturate(120%);
+    -webkit-backdrop-filter: blur(24px) saturate(120%);
     box-shadow: 0 20px 60px var(--cold-shadow) !important;
     color: var(--cold-parchment) !important;
     --text: var(--cold-parchment);
@@ -1007,14 +1010,16 @@
          （.quiz-btn-primary, #quizSubmit, #grammarQuizSubmit, #qsStart）。
      這裡逐一用 body.scene-cold #id 覆寫，跟上面的 class 公式（深底+亮字+
      accent 邊框）保持一致，需要抵銷 !important 的地方也照樣加 !important。
-     #qsStart／#grammarQuizSubmit 有一樣的病灶但這輪範圍只列使用者指定的
-     7 顆，留給下一輪。 */
+     #qsStart／#grammarQuizSubmit 當時同一病灶但留給下一輪，這輪（修正輪 3）
+     已經補齊，見下面 base/hover/active/focus-visible 清單。 */
   body.scene-cold #analyzeBtn,
   body.scene-cold #saveBtn,
   body.scene-cold #customAnalyzeBtn,
   body.scene-cold #customAddBtn,
   body.scene-cold #usageSaveBudget,
-  body.scene-cold #quizSubmit {
+  body.scene-cold #quizSubmit,
+  body.scene-cold #qsStart,
+  body.scene-cold #grammarQuizSubmit {
     background: var(--cold-wash) !important;
     color: var(--cold-parchment) !important;
     border: 1px solid var(--cold-accent) !important;
@@ -1037,9 +1042,25 @@
   body.scene-cold #customAddBtn:hover:not(:disabled),
   body.scene-cold #usageSaveBudget:hover:not(:disabled),
   body.scene-cold #quizSubmit:hover:not(:disabled),
+  body.scene-cold #qsStart:hover:not(:disabled),
+  body.scene-cold #grammarQuizSubmit:hover:not(:disabled),
   body.scene-cold #startQuizBtn.btn-primary-m:hover:not(:disabled) {
     background: color-mix(in srgb, var(--cold-wash) 92%, var(--cold-parchment) 8%) !important;
     border-color: color-mix(in srgb, var(--cold-accent) 85%, white 15%) !important;
+  }
+
+  /* #qsStart／#grammarQuizSubmit 的 active 態：wc.css qz-accent 群組本身
+     沒有寫 :active，瀏覽器預設會維持 :hover 的樣式，這裡補一條比 hover
+     更暗的版本，跟 .btn-primary-m 家族的 active 公式一致。 */
+  body.scene-cold #qsStart:active:not(:disabled),
+  body.scene-cold #grammarQuizSubmit:active:not(:disabled) {
+    background: color-mix(in srgb, var(--cold-wash) 70%, black 30%) !important;
+  }
+
+  body.scene-cold #qsStart:focus-visible,
+  body.scene-cold #grammarQuizSubmit:focus-visible {
+    outline: none !important;
+    box-shadow: 0 0 0 3px var(--cold-accent-ring) !important;
   }
 
   body.scene-cold #analyzeBtn *,
@@ -1048,6 +1069,8 @@
   body.scene-cold #customAddBtn *,
   body.scene-cold #usageSaveBudget *,
   body.scene-cold #quizSubmit *,
+  body.scene-cold #qsStart *,
+  body.scene-cold #grammarQuizSubmit *,
   body.scene-cold #startQuizBtn.btn-primary-m * {
     color: inherit !important;
     opacity: 1 !important;
@@ -1170,6 +1193,36 @@
     color: var(--cold-parchment) !important;
   }
 
+  /* 單字清單「搜尋單字或中文解釋」整組 filter bar（#allSearch/#allPos/
+     #allLevel/#allSort）：theme-perfume-wc.css:830-853 是獨立的 ID 選擇器
+     群組（background:#FBF5E8／color:#1C1208／focus 是硬編碼琥珀色 ring），
+     跟上面的 body.scene-cold select／input[type=...] 完全無關——ID 選擇器
+     的特異性贏過「class + attribute」組合，不管上面兩條 !important 規則
+     再怎麼精修都打不贏，這才是使用者回報「搜尋/詞性/難度/排序全部還是
+     暖黃」的真正根因，需要直接點名同一組 ID 才能蓋過。 */
+  body.scene-cold #allSearch,
+  body.scene-cold #allPos,
+  body.scene-cold #allLevel,
+  body.scene-cold #allSort {
+    background: var(--glass-cold-fill) !important;
+    border: 1px solid var(--glass-cold-border) !important;
+    color: var(--cold-parchment) !important;
+  }
+
+  body.scene-cold #allSearch::placeholder {
+    color: var(--cold-dim) !important;
+    opacity: 1 !important;
+  }
+
+  body.scene-cold #allSearch:focus,
+  body.scene-cold #allPos:focus,
+  body.scene-cold #allLevel:focus,
+  body.scene-cold #allSort:focus {
+    outline: none !important;
+    border-color: var(--cold-accent) !important;
+    box-shadow: 0 0 0 3px var(--cold-accent-ring) !important;
+  }
+
   /* 根因五：全站到處都是 Tailwind 的 bg-white / bg-gray-* / text-gray-* /
      border-gray-* 工具類別，直接寫死顏色，不吃任何 --text/--muted/--navy/
      --wc-*/--qz-* token（day.css 只在 :root:not([data-theme="dark"]) 這種
@@ -1244,12 +1297,14 @@
      ═══════════════════════════════════════════════════════════════════════ */
 
   /* 4.1「測驗設定」modal（#quizSettings，跟已修好的 #quizModal 是不同 ID，
-     之前完全沒被白名單覆蓋到）。 */
+     之前完全沒被白名單覆蓋到）。
+     修正輪 3：background 換成 --cold-modal-fill（見 #quizModal > div 同一輪
+     註解），理由相同。 */
   body.scene-cold #quizSettings > div {
-    background: var(--glass-cold-fill) !important;
+    background: var(--cold-modal-fill) !important;
     border: 1px solid var(--glass-cold-border) !important;
-    backdrop-filter: blur(20px) saturate(120%);
-    -webkit-backdrop-filter: blur(20px) saturate(120%);
+    backdrop-filter: blur(24px) saturate(120%);
+    -webkit-backdrop-filter: blur(24px) saturate(120%);
     box-shadow: 0 20px 60px var(--cold-shadow) !important;
     color: var(--cold-parchment) !important;
     --text: var(--cold-parchment);
@@ -1257,10 +1312,58 @@
     --navy: var(--cold-parchment);
   }
 
-  body.scene-cold #qsCancel {
+  /* 用量估算／同步設定兩個次要 modal：內層面板是裸 Tailwind bg-white，
+     目前只吃到 body.scene-cold .bg-white 的全站 sweep（--glass-cold-fill，
+     5% alpha），同樣有「看穿到後方畫面」的問題，比照上面兩個 modal 補
+     --cold-modal-fill 版本，selector 用 #usageModal > div／#syncModal > div
+     直接點名，特異性比 .bg-white 的 class sweep 更高，不會互相打架。 */
+  body.scene-cold #usageModal > div,
+  body.scene-cold #syncModal > div {
+    background: var(--cold-modal-fill) !important;
+    border: 1px solid var(--glass-cold-border) !important;
+    backdrop-filter: blur(24px) saturate(120%);
+    -webkit-backdrop-filter: blur(24px) saturate(120%);
+    box-shadow: 0 20px 60px var(--cold-shadow) !important;
+    color: var(--cold-parchment) !important;
+  }
+
+  body.scene-cold #usageModal,
+  body.scene-cold #syncModal {
+    background: var(--cold-overlay) !important;
+  }
+
+  /* #qsCancel／#quizIDK／#grammarQuizShowHint 是 wc.css「7b. Secondary」
+     同一組（wc.css:1444-1459）：base 的 rgba(61,43,31,.08) 底色本身不是
+     token（低優先殘留），但 :hover 是硬編碼 rgba(200,149,42,.12) 琥珀色
+     ＋rgba(200,149,42,.45) 邊框——這才是使用者回報「測驗設定/不會按鈕
+     hover 仍暖黃」的實際根因，三顆要一次補齊，不只修 qsCancel。 */
+  body.scene-cold #qsCancel,
+  body.scene-cold #quizIDK,
+  body.scene-cold #grammarQuizShowHint {
     background: transparent !important;
     border: 1px solid var(--glass-cold-border) !important;
     color: var(--cold-parchment) !important;
+  }
+
+  body.scene-cold #qsCancel:hover:not(:disabled),
+  body.scene-cold #quizIDK:hover:not(:disabled),
+  body.scene-cold #grammarQuizShowHint:hover:not(:disabled) {
+    background: rgba(92, 118, 134, 0.10) !important;
+    border-color: color-mix(in srgb, var(--cold-accent) 60%, transparent) !important;
+    color: var(--cold-parchment) !important;
+  }
+
+  body.scene-cold #qsCancel:active:not(:disabled),
+  body.scene-cold #quizIDK:active:not(:disabled),
+  body.scene-cold #grammarQuizShowHint:active:not(:disabled) {
+    background: rgba(92, 118, 134, 0.16) !important;
+  }
+
+  body.scene-cold #qsCancel:focus-visible,
+  body.scene-cold #quizIDK:focus-visible,
+  body.scene-cold #grammarQuizShowHint:focus-visible {
+    outline: none !important;
+    box-shadow: 0 0 0 3px var(--cold-accent-ring) !important;
   }
 
   body.scene-cold #quizSettings input[type="radio"],
@@ -1268,13 +1371,46 @@
     accent-color: var(--cold-accent);
   }
 
+  /* #quizAnswer／#grammarQuizAnswer：wc.css:1398-1417 是獨立於前面 P0
+     Commit（只補了 body.scene-cold input[type="text"] 軟性 fallback）的
+     ID 專屬規則，background/color 是硬編碼 #FBF5E8/var(--qz-ink)，:focus
+     另外硬編碼 rgba(200,149,42,...) 琥珀色 focus ring——這兩條都是 ID
+     選擇器，body.scene-cold input[type="text"] 贏不了，需要直接點名 ID。 */
+  body.scene-cold #quizAnswer,
+  body.scene-cold #grammarQuizAnswer {
+    background: var(--glass-cold-fill) !important;
+    border: 1px solid var(--glass-cold-border) !important;
+    color: var(--cold-parchment) !important;
+  }
+
+  body.scene-cold #quizAnswer::placeholder,
+  body.scene-cold #grammarQuizAnswer::placeholder {
+    color: var(--cold-dim) !important;
+    opacity: 1 !important;
+  }
+
+  body.scene-cold #quizAnswer:focus,
+  body.scene-cold #grammarQuizAnswer:focus {
+    outline: none !important;
+    border-color: var(--cold-accent) !important;
+    box-shadow: 0 0 0 3px var(--cold-accent-ring) !important;
+  }
+
   /* 4.2 單字建議卡片（.word-suggestion-card，位於「匯入文章」分析結果的
      #rtabPanelWords，不是側欄，但這是使用者回報「單字清單例句框」對比度
      問題的實際來源元件——低對比的淡棕例句字色是為 Day Mode 羊皮紙底設計，
-     套進冷調玻璃卡片後對比完全消失）。 */
+     套進冷調玻璃卡片後對比完全消失）。
+     修正輪 3：上一版把這個容器直接設成 transparent，原意是避免跟裡面的
+     .word-suggestion-card 疊出「雙層卡片」，但實測效果是整組卡片群下方
+     露出裸背景，看起來像卡片飄在畫面上、沒有共同的容器底——改回玻璃底
+     （跟 #quizModal > div 等其他容器同一公式），讓整組卡片群有可辨識的
+     群組邊界。 */
   body.scene-cold #rtabPanelWords {
-    background: transparent !important;
-    box-shadow: none !important;
+    background: var(--glass-cold-fill) !important;
+    border: 1px solid var(--glass-cold-border) !important;
+    backdrop-filter: blur(16px) saturate(115%);
+    -webkit-backdrop-filter: blur(16px) saturate(115%);
+    box-shadow: 0 16px 48px var(--cold-shadow) !important;
   }
 
   body.scene-cold .word-suggestion-card {
