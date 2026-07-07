@@ -1380,6 +1380,62 @@
     color: var(--cold-parchment) !important;
   }
 
+  /* 修正輪 5：使用者回報「選擇檔案」按鈕 hover 仍是淺藍色，追查發現
+     theme-ocean.css:93-99「Secondary / Ghost buttons」是全站第三個、
+     之前完全沒稽核過的 ID 選擇器群組（#ocrPickBtn/#ocrRunBtn/#allPrev/
+     #allNext/#qsCancel/#usageReset），background/color/border 讀 ocean
+     主題原生的 --card/--navy/--border（跟 --color-*/--wc-*/--qz-* 三組
+     都無關，是第四套系統），ID 特異性一樣贏過 .btn-outline-m/.btn-ghost-m
+     的 class 規則。--card/--border 在 Day 端是白/淺灰綠，不是字面意義的
+     藍色，但疊在冷調深色場景上是一塊突兀的蒼白色斑塊，跟使用者形容的
+     「淺藍色」是同一個視覺症狀（很可能還疊加了使用者測試時beat同時開了
+     舊版 [data-theme=dark] 月亮圖示，那組 --card 在 dark 變體確實是藍
+     #1d2d44）。#allPrev/#allNext/#qsCancel 已被其他 body.scene-cold #id
+     規則蓋過，不受影響；#ocrPickBtn/#ocrRunBtn/#usageReset 從未被任何一輪
+     處理過，這裡補上，數值對齊各自原本該吃到的 class 公式（.btn-outline-m/
+     .btn-ghost-m），確保視覺一致。 */
+  body.scene-cold #ocrPickBtn,
+  body.scene-cold #usageReset {
+    background: transparent !important;
+    color: var(--cold-parchment) !important;
+    border: 1px solid var(--glass-cold-border) !important;
+  }
+
+  body.scene-cold #ocrPickBtn:hover:not(:disabled),
+  body.scene-cold #usageReset:hover:not(:disabled) {
+    background: rgba(92, 118, 134, 0.10) !important;
+    border-color: color-mix(in srgb, var(--cold-accent) 60%, transparent) !important;
+    color: var(--cold-parchment) !important;
+  }
+
+  body.scene-cold #ocrPickBtn:active:not(:disabled),
+  body.scene-cold #usageReset:active:not(:disabled) {
+    background: rgba(92, 118, 134, 0.16) !important;
+  }
+
+  body.scene-cold #ocrPickBtn:focus-visible,
+  body.scene-cold #usageReset:focus-visible {
+    outline: none !important;
+    box-shadow: 0 0 0 3px var(--cold-accent-ring) !important;
+  }
+
+  body.scene-cold #ocrRunBtn {
+    background: transparent !important;
+    color: var(--cold-dim) !important;
+    border: none !important;
+  }
+
+  body.scene-cold #ocrRunBtn:hover:not(:disabled),
+  body.scene-cold #ocrRunBtn:active:not(:disabled) {
+    background: rgba(92, 118, 134, 0.10) !important;
+    color: var(--cold-parchment) !important;
+  }
+
+  body.scene-cold #ocrRunBtn:focus-visible {
+    outline: none !important;
+    box-shadow: 0 0 0 3px var(--cold-accent-ring) !important;
+  }
+
   /* ═══════════════════════════════════════════════════════════════════════
      Phase 5f — Step 4：docs/VISUAL_QA_5E.md 清單修復
      ═══════════════════════════════════════════════════════════════════════ */
