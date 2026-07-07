@@ -228,6 +228,60 @@
     font-size:1rem; border:none; letter-spacing:.02em;
   }
 
+  /* AI 建議卡片「已存在／已加入」標記（原本是 js/ui.js 的 markRowAsAdded()
+     inline style.cssText，沒有任何 class 可掛，scene-cold 完全碰不到，
+     這裡把顏色搬進 class，JS 只負責掛 class 名稱）。 */
+  .ai-card-marked{ background:#F0F0F0; opacity:0.55; }
+  .ai-mark-tip{
+    display:inline-flex; align-items:center; gap:3px;
+    margin-left:8px; padding:2px 9px; border-radius:999px;
+    background:#A3B18A; color:#fff;
+    font-size:.72rem; font-weight:700; white-space:nowrap;
+  }
+
+  /* 學習進度卡片（修正輪 4：原本整段是 js/ui.js renderProgressCard() 的
+     inline style innerHTML，沒有任何 class，scene-cold 完全碰不到——這裡
+     把顏色搬進 class，數值/百分比等動態內容仍由 JS 產生）。 */
+  .progress-card-summary{
+    display:block; font-size:.72rem; color:#B0A090; margin-top:2px;
+  }
+  .progress-card-chevron{
+    font-size:.85rem; color:#B0A090; transform:rotate(-90deg);
+    transition:transform .2s; display:inline-block;
+  }
+  .progress-divider{ height:1px; background:#EDE5D8; margin:12px 0 16px; }
+
+  .progress-stat-row{ display:flex; gap:8px; }
+  .progress-stat-pill{ flex:1; text-align:center; border-radius:8px; padding:10px 4px; }
+  .progress-stat-pill--mastered{ background:#F5F0E8; }
+  .progress-stat-pill--learning{ background:#FDF6EC; }
+  .progress-stat-pill--notstarted{ background:#F7F4F0; }
+  .progress-stat-num{ font-size:1.4rem; font-weight:700; }
+  .progress-stat-pill--mastered .progress-stat-num{ color:#6B5234; }
+  .progress-stat-pill--learning .progress-stat-num{ color:#8B6914; }
+  .progress-stat-pill--notstarted .progress-stat-num{ color:#9A8C7A; }
+  .progress-stat-label{ font-size:.68rem; color:#9A8070; margin-top:2px; }
+
+  .progress-stat-bar{
+    height:5px; border-radius:3px; background:#EDE5D8; overflow:hidden;
+    margin-top:10px; display:flex;
+  }
+  .progress-stat-bar-seg--mastered{ background:#9A7250; }
+  .progress-stat-bar-seg--learning{ background:#C4A050; }
+  .progress-stat-bar-seg--notstarted{ background:#D4C5B0; }
+
+  .progress-chart-title{
+    font-size:.68rem; color:#9A8070; font-weight:600;
+    letter-spacing:.04em; margin-bottom:4px;
+  }
+  .progress-chart-empty{
+    font-size:.72rem; color:#C0B4A4; text-align:center; padding:14px 0;
+  }
+  .progress-chart-grid-line{ stroke:#EDE5D8; }
+  .progress-chart-line{ stroke:#A07850; }
+  .progress-chart-dot{ fill:#7A5C38; }
+  .progress-chart-label{ fill:#B0A090; }
+
   /* Tabs（右側：今日/到期/全部） */
   .tab{
     padding:.4rem .7rem; font-size:.85rem; border:1px solid transparent;
@@ -743,6 +797,40 @@
 
   body.scene-cold .header-gradient * {
     color: var(--cold-parchment) !important;
+  }
+
+  /* 修正輪 4：首列 summary bar（已熟悉／待複習／本月估算／深色模式切換）
+     的數字 badge、usage 按鈕、moon icon 按鈕都是 ID 選擇器（wc.css:482-511
+     「Stat chips / Usage button / Dark mode toggle」），全部硬編碼琥珀色
+     background/color/border，特異性贏過上面的 .header-gradient * 通用
+     覆寫（ID 一定贏 class，不管 class 疊了幾層），需要逐一點名 ID 蓋過。 */
+  body.scene-cold #masteredBadge,
+  body.scene-cold #dueCountBadge {
+    background: var(--color-chip-navbar) !important;
+    color: var(--cold-parchment) !important;
+    border: 1px solid var(--glass-cold-border) !important;
+  }
+
+  body.scene-cold #usageCostBadge {
+    color: var(--cold-parchment) !important;
+  }
+
+  body.scene-cold #openUsageBtn {
+    color: var(--cold-dim) !important;
+  }
+
+  body.scene-cold #openUsageBtn:hover {
+    color: var(--cold-parchment) !important;
+  }
+
+  body.scene-cold #darkModeToggle {
+    background: rgba(92, 118, 134, 0.14) !important;
+    color: var(--cold-parchment) !important;
+    border: 1px solid var(--glass-cold-border) !important;
+  }
+
+  body.scene-cold #darkModeToggle:hover {
+    background: rgba(92, 118, 134, 0.22) !important;
   }
 
   /* 輸入區：玻璃卡片視覺，保留原本的 Tailwind 版面／間距 class 不動。
@@ -1439,6 +1527,81 @@
     color: var(--cold-parchment) !important;
   }
 
+  /* 「已存在／已加入」標記（修正輪 4）：卡片本身變暗用 --cold-void 疊一層，
+     不能沿用 Day Mode 的 #F0F0F0（亮灰）；綠色徽章禁止沿用，改冷調玻璃。 */
+  body.scene-cold .ai-card-marked {
+    background: var(--cold-void) !important;
+    opacity: 0.6 !important;
+  }
+
+  body.scene-cold .ai-mark-tip {
+    background: rgba(92, 118, 134, 0.20) !important;
+    color: var(--cold-parchment) !important;
+  }
+
+  /* 學習進度卡片（修正輪 4）：三個統計 pill 借用 COLOR_TOKEN_MIGRATION.md
+     §2.2 設計好、但一直沒有任何規則消費的 --cold-badge-mastered-*／
+     --cold-badge-pos-* token——已掌握＝亮冷藍（跟語意徽章設計的「mastered
+     =冷藍偏亮」一致），學習中＝中性冷灰（pos 語意），尚未開始＝最淡、幾乎
+     不搶注意力的玻璃底，三階視覺權重對應「重要程度」。 */
+  body.scene-cold .progress-card-summary,
+  body.scene-cold .progress-card-chevron {
+    color: var(--cold-dim) !important;
+  }
+  body.scene-cold .progress-divider {
+    background: var(--glass-cold-border) !important;
+  }
+
+  body.scene-cold .progress-stat-pill--mastered {
+    background: var(--cold-badge-mastered-bg) !important;
+  }
+  body.scene-cold .progress-stat-pill--learning {
+    background: var(--cold-badge-pos-bg) !important;
+  }
+  body.scene-cold .progress-stat-pill--notstarted {
+    background: var(--glass-cold-fill) !important;
+  }
+  body.scene-cold .progress-stat-pill--mastered .progress-stat-num {
+    color: var(--cold-badge-mastered-fg) !important;
+  }
+  body.scene-cold .progress-stat-pill--learning .progress-stat-num,
+  body.scene-cold .progress-stat-pill--notstarted .progress-stat-num {
+    color: var(--cold-parchment) !important;
+  }
+  body.scene-cold .progress-stat-label {
+    color: var(--cold-dim) !important;
+  }
+
+  body.scene-cold .progress-stat-bar {
+    background: var(--glass-cold-border) !important;
+  }
+  body.scene-cold .progress-stat-bar-seg--mastered {
+    background: var(--cold-accent) !important;
+  }
+  body.scene-cold .progress-stat-bar-seg--learning {
+    background: var(--cold-dim) !important;
+  }
+  body.scene-cold .progress-stat-bar-seg--notstarted {
+    background: color-mix(in srgb, var(--cold-dim) 30%, transparent) !important;
+  }
+
+  body.scene-cold .progress-chart-title,
+  body.scene-cold .progress-chart-empty {
+    color: var(--cold-dim) !important;
+  }
+  body.scene-cold .progress-chart-grid-line {
+    stroke: var(--glass-cold-border) !important;
+  }
+  body.scene-cold .progress-chart-line {
+    stroke: var(--cold-accent) !important;
+  }
+  body.scene-cold .progress-chart-dot {
+    fill: var(--cold-accent) !important;
+  }
+  body.scene-cold .progress-chart-label {
+    fill: var(--cold-dim) !important;
+  }
+
   /* 4.3 textarea / input 白底融合：通用兜底規則。刻意不加 !important，
      用低優先權的 type 選擇器，讓既有 scoped !important 規則（例如
      #articleInput）繼續贏過這條——這條只負責「沒人管過的輸入框」，
@@ -1453,6 +1616,38 @@
     background: var(--glass-cold-fill);
     border-color: var(--glass-cold-border);
     color: var(--cold-parchment);
+  }
+
+  /* 4.4 原生 input[type=file] 的「選擇檔案」偽元素（修正輪 4）：目前
+     #ocrFile／#importJsonFile 兩個原生 file input 都是 class="hidden"，
+     實際可見的「選擇檔案」是 #ocrPickBtn（.btn-outline-m，已有 scene-cold
+     覆寫），但 ::file-selector-button 全站目前零覆蓋，一旦以後有任何原生
+     file input 直接可見，滑鼠移上去會露出瀏覽器預設的淺藍/淺灰系統按鈕，
+     這裡先補齊，不留缺口。 */
+  body.scene-cold input[type="file"]::file-selector-button,
+  body.scene-cold input[type="file"]::-webkit-file-upload-button {
+    background: var(--glass-cold-fill) !important;
+    color: var(--cold-parchment) !important;
+    border: 1px solid var(--glass-cold-border) !important;
+    border-radius: 8px !important;
+    padding: 0.4rem 0.9rem !important;
+    cursor: pointer;
+  }
+
+  body.scene-cold input[type="file"]::file-selector-button:hover,
+  body.scene-cold input[type="file"]::-webkit-file-upload-button:hover {
+    background: rgba(92, 118, 134, 0.10) !important;
+    border-color: color-mix(in srgb, var(--cold-accent) 60%, transparent) !important;
+  }
+
+  body.scene-cold input[type="file"]::file-selector-button:active,
+  body.scene-cold input[type="file"]::-webkit-file-upload-button:active {
+    background: rgba(92, 118, 134, 0.16) !important;
+  }
+
+  body.scene-cold input[type="file"]:focus-visible::file-selector-button {
+    outline: none !important;
+    box-shadow: 0 0 0 3px var(--cold-accent-ring) !important;
   }
 
   /* ═══════════════════════════════════════════════════════════════════════
@@ -1709,14 +1904,16 @@
       <!-- 學習進度卡片 -->
       <div id="progressCard" class="bg-white rounded-xl shadow p-6">
         <div id="progressCardHeader" class="flex items-center justify-between cursor-pointer select-none">
-          <h3 class="sidebar-title">學習進度</h3>
-          <span id="progressCardChevron" style="font-size:0.85rem;color:#B0A090;transform:rotate(-90deg);transition:transform .2s;display:inline-block">▼</span>
+          <div>
+            <h3 class="sidebar-title">學習進度</h3>
+            <span id="progressCardSummary" class="progress-card-summary"></span>
+          </div>
+          <span id="progressCardChevron" class="progress-card-chevron">▼</span>
         </div>
         <div id="progressCardBody" class="hidden">
-          <div style="height:1px;background:#EDE5D8;margin:12px 0 16px"></div>
+          <div class="progress-divider"></div>
           <div id="progressStats"></div>
           <div id="progressChart" style="margin-top:16px"></div>
-          <div id="progressGroups" style="margin-top:16px"></div>
         </div>
       </div>
 

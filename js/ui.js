@@ -956,17 +956,11 @@ export function markRowAsAdded(cb, already) {
   const card = cb._card || cb.closest(".p-3, .ai-card, .word-row") || cb.closest("div");
   if (!card) return;
 
-  card.classList.add("pointer-events-none");
-  card.style.cssText += "background:#F0F0F0;opacity:0.55;";
+  card.classList.add("pointer-events-none", "ai-card-marked");
 
   if (!card.querySelector(".ai-mark-tip")) {
     const tip = document.createElement("span");
     tip.className = "ai-mark-tip";
-    tip.style.cssText =
-      "display:inline-flex;align-items:center;gap:3px;" +
-      "margin-left:8px;padding:2px 9px;border-radius:999px;" +
-      "background:#A3B18A;color:#fff;" +
-      "font-size:.72rem;font-weight:700;white-space:nowrap;";
     tip.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>${already ? "已存在" : "已加入"}`;
     card.appendChild(tip);
   }
@@ -1412,92 +1406,80 @@ function refreshMasteredAndChart(){
 
 /* ===== 學習進度卡片 ===== */
 function renderProgressCard() {
-  const statsEl  = document.getElementById("progressStats");
-  const chartEl  = document.getElementById("progressChart");
-  const groupsEl = document.getElementById("progressGroups");
-  if (!statsEl || !chartEl || !groupsEl) return;
+  const statsEl   = document.getElementById("progressStats");
+  const chartEl   = document.getElementById("progressChart");
+  const summaryEl = document.getElementById("progressCardSummary");
+  if (!statsEl || !chartEl) return;
 
   const words = getAllWords();
 
-  // ── Block 1: 熟練度三桶統計 ──
+  // ── 熟練度三桶統計（收合狀態摘要 + 展開狀態統計 pill 共用同一組數字）──
   const mastered   = words.filter(w => (w.stage || 0) >= 4).length;
   const learning   = words.filter(w => { const s = w.stage || 0; return s >= 1 && s <= 3; }).length;
   const notStarted = words.filter(w => (w.stage || 0) === 0).length;
   const total      = words.length;
   const pct = n => total ? (n / total * 100).toFixed(1) : 0;
 
+  if (summaryEl) {
+    summaryEl.textContent = `已掌握 ${mastered}｜學習中 ${learning}｜尚未開始 ${notStarted}`;
+  }
+
   statsEl.innerHTML = `
-    <div style="display:flex;gap:8px">
-      <div style="flex:1;text-align:center;background:#F5F0E8;border-radius:8px;padding:10px 4px">
-        <div style="font-size:1.4rem;font-weight:700;color:#6B5234">${mastered}</div>
-        <div style="font-size:0.68rem;color:#9A8070;margin-top:2px">已掌握</div>
+    <div class="progress-stat-row">
+      <div class="progress-stat-pill progress-stat-pill--mastered">
+        <div class="progress-stat-num">${mastered}</div>
+        <div class="progress-stat-label">已掌握</div>
       </div>
-      <div style="flex:1;text-align:center;background:#FDF6EC;border-radius:8px;padding:10px 4px">
-        <div style="font-size:1.4rem;font-weight:700;color:#8B6914">${learning}</div>
-        <div style="font-size:0.68rem;color:#9A8070;margin-top:2px">學習中</div>
+      <div class="progress-stat-pill progress-stat-pill--learning">
+        <div class="progress-stat-num">${learning}</div>
+        <div class="progress-stat-label">學習中</div>
       </div>
-      <div style="flex:1;text-align:center;background:#F7F4F0;border-radius:8px;padding:10px 4px">
-        <div style="font-size:1.4rem;font-weight:700;color:#9A8C7A">${notStarted}</div>
-        <div style="font-size:0.68rem;color:#9A8070;margin-top:2px">尚未開始</div>
+      <div class="progress-stat-pill progress-stat-pill--notstarted">
+        <div class="progress-stat-num">${notStarted}</div>
+        <div class="progress-stat-label">尚未開始</div>
       </div>
     </div>
-    <div style="height:5px;border-radius:3px;background:#EDE5D8;overflow:hidden;margin-top:10px;display:flex">
-      <div style="width:${pct(mastered)}%;background:#9A7250"></div>
-      <div style="width:${pct(learning)}%;background:#C4A050"></div>
-      <div style="width:${pct(notStarted)}%;background:#D4C5B0"></div>
+    <div class="progress-stat-bar">
+      <div class="progress-stat-bar-seg progress-stat-bar-seg--mastered" style="width:${pct(mastered)}%"></div>
+      <div class="progress-stat-bar-seg progress-stat-bar-seg--learning" style="width:${pct(learning)}%"></div>
+      <div class="progress-stat-bar-seg progress-stat-bar-seg--notstarted" style="width:${pct(notStarted)}%"></div>
     </div>`;
 
-  // ── Block 2: 最近 7 天複習折線圖（純 SVG） ──
+  // ── 近 7 天複習趨勢（純 SVG；全零時改顯示文字，避免空圖表佔空間）──
   const buckets = getDailyStats(7);
-  const maxVal  = Math.max(5, ...buckets.map(b => b.reviewed));
-  const W = 240, H = 68, pX = 14, pY = 8;
-  const plotW = W - pX * 2, plotH = H - pY * 2;
-  const stepX = buckets.length > 1 ? plotW / (buckets.length - 1) : plotW;
-  const tx = i => (pX + i * stepX).toFixed(1);
-  const ty = v => (pY + plotH - (v / maxVal) * plotH).toFixed(1);
+  const hasActivity = buckets.some(b => b.reviewed > 0);
 
-  const pts     = buckets.map((b, i) => `${tx(i)},${ty(b.reviewed)}`).join(" ");
-  const grids   = [0, 0.5, 1].map(r => {
-    const y = (pY + r * plotH).toFixed(1);
-    return `<line x1="${pX}" y1="${y}" x2="${W - pX}" y2="${y}" stroke="#EDE5D8" stroke-width="1"/>`;
-  }).join("");
-  const circles = buckets.map((b, i) =>
-    `<circle cx="${tx(i)}" cy="${ty(b.reviewed)}" r="3" fill="#7A5C38"><title>${b.key}: ${b.reviewed}次</title></circle>`
-  ).join("");
-  const xLabels = buckets.map((b, i) =>
-    `<text x="${tx(i)}" y="${H + 14}" text-anchor="middle" font-size="9" fill="#B0A090">${b.key.slice(5)}</text>`
-  ).join("");
+  if (!hasActivity) {
+    chartEl.innerHTML = `<div class="progress-chart-empty">近 7 天尚無學習紀錄</div>`;
+  } else {
+    const maxVal  = Math.max(5, ...buckets.map(b => b.reviewed));
+    const W = 240, H = 68, pX = 14, pY = 8;
+    const plotW = W - pX * 2, plotH = H - pY * 2;
+    const stepX = buckets.length > 1 ? plotW / (buckets.length - 1) : plotW;
+    const tx = i => (pX + i * stepX).toFixed(1);
+    const ty = v => (pY + plotH - (v / maxVal) * plotH).toFixed(1);
 
-  chartEl.innerHTML = `
-    <div style="font-size:0.68rem;color:#9A8070;font-weight:600;letter-spacing:.04em;margin-bottom:4px">最近 7 天複習次數</div>
-    <svg viewBox="0 0 ${W} ${H + 18}" style="width:100%;overflow:visible;display:block">
-      ${grids}
-      <polyline points="${pts}" fill="none" stroke="#A07850" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-      ${circles}
-      ${xLabels}
-    </svg>`;
+    const pts     = buckets.map((b, i) => `${tx(i)},${ty(b.reviewed)}`).join(" ");
+    const grids   = [0, 0.5, 1].map(r => {
+      const y = (pY + r * plotH).toFixed(1);
+      return `<line class="progress-chart-grid-line" x1="${pX}" y1="${y}" x2="${W - pX}" y2="${y}" stroke-width="1"/>`;
+    }).join("");
+    const circles = buckets.map((b, i) =>
+      `<circle class="progress-chart-dot" cx="${tx(i)}" cy="${ty(b.reviewed)}" r="3"><title>${b.key}: ${b.reviewed}次</title></circle>`
+    ).join("");
+    const xLabels = buckets.map((b, i) =>
+      `<text class="progress-chart-label" x="${tx(i)}" y="${H + 14}" text-anchor="middle" font-size="9">${b.key.slice(5)}</text>`
+    ).join("");
 
-  // ── Block 3: 依熟悉度分組顯示 ──
-  const groups = [
-    { label: "已掌握（stage 4–5）", words: words.filter(w => (w.stage || 0) >= 4),  color: "#6B5234", bg: "#F5F0E8" },
-    { label: "學習中（stage 1–3）", words: words.filter(w => { const s = w.stage || 0; return s >= 1 && s <= 3; }), color: "#8B6914", bg: "#FDF6EC" },
-    { label: "尚未開始（stage 0）", words: words.filter(w => (w.stage || 0) === 0),  color: "#9A8C7A", bg: "#F7F4F0" },
-  ];
-
-  groupsEl.innerHTML = groups.map(g => `
-    <details style="margin-bottom:6px">
-      <summary style="cursor:pointer;font-size:0.72rem;font-weight:600;color:${g.color};padding:3px 0;list-style:none;display:flex;align-items:center;gap:6px">
-        <span style="background:${g.bg};border-radius:10px;padding:2px 9px">${g.label}</span>
-        <span style="font-weight:400;color:#B0A090">${g.words.length}</span>
-      </summary>
-      <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;padding-left:4px">
-        ${g.words.length === 0
-          ? `<span style="font-size:0.72rem;color:#C0B4A4">（無）</span>`
-          : g.words.map(w =>
-              `<span style="font-size:0.72rem;background:${g.bg};color:${g.color};border-radius:12px;padding:2px 10px" title="${(w.definition || '').replace(/"/g, '&quot;')}">${w.word}</span>`
-            ).join("")}
-      </div>
-    </details>`).join("");
+    chartEl.innerHTML = `
+      <div class="progress-chart-title">最近 7 天複習次數</div>
+      <svg viewBox="0 0 ${W} ${H + 18}" style="width:100%;overflow:visible;display:block">
+        ${grids}
+        <polyline class="progress-chart-line" points="${pts}" fill="none" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+        ${circles}
+        ${xLabels}
+      </svg>`;
+  }
 
   // ── 展開/收合 toggle（只綁一次） ──
   const hdr  = document.getElementById("progressCardHeader");
