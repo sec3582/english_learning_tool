@@ -1088,6 +1088,47 @@
     opacity: 1 !important;
   }
 
+  /* 修正輪 7：「下一題」按鈕仍是暖色，追查發現 §7 原表把 #quizNext 標記
+     「已修好」是誤判——wc.css:1462-1477「7c. Next — dark ink stamp」的
+     選擇器是 `.quiz-btn-next, #quizNext, #grammarQuizNext { ... }`，
+     #quizNext 元素同時符合 .quiz-btn-next（class）跟 #quizNext（id）兩個
+     選擇器，cascade 比較特異性時 ID 那條路徑 (1,0,0) 會贏過上面
+     body.scene-cold .quiz-btn-next 的 class 特異性，不管疊幾層 class 都
+     一樣，跟 #quizSubmit/#qsStart 當初的病灶完全同源，只是這次沒被抓到。
+     這裡直接點名 ID，公式跟 .quiz-btn-next 一致（base/hover/active/
+     focus-visible 四態＋box-shadow:none，理由同上一輪 #quizSubmit）。 */
+  body.scene-cold #quizNext,
+  body.scene-cold #grammarQuizNext {
+    background: var(--cold-wash) !important;
+    color: var(--cold-parchment) !important;
+    border: 1px solid var(--cold-accent) !important;
+    box-shadow: none !important;
+  }
+
+  body.scene-cold #quizNext:hover:not(:disabled),
+  body.scene-cold #grammarQuizNext:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--cold-wash) 92%, var(--cold-parchment) 8%) !important;
+    border-color: color-mix(in srgb, var(--cold-accent) 85%, white 15%) !important;
+    box-shadow: none !important;
+  }
+
+  body.scene-cold #quizNext:active:not(:disabled),
+  body.scene-cold #grammarQuizNext:active:not(:disabled) {
+    background: color-mix(in srgb, var(--cold-wash) 70%, black 30%) !important;
+  }
+
+  body.scene-cold #quizNext:focus-visible,
+  body.scene-cold #grammarQuizNext:focus-visible {
+    outline: none !important;
+    box-shadow: 0 0 0 3px var(--cold-accent-ring) !important;
+  }
+
+  body.scene-cold #quizNext *,
+  body.scene-cold #grammarQuizNext * {
+    color: inherit !important;
+    opacity: 1 !important;
+  }
+
   /* ═══════════════════════════════════════════════════════════════════════
      P0 Commit 3 — 拆 docs/VISUAL_QA_5E.md §7 的 7 顆「壞—ID 攔截」按鈕
      根因：這 7 顆背後各自躲著 ID 選擇器把字面 hex 寫死在 background/color
@@ -2208,7 +2249,7 @@
       <div class="flex gap-2">
         <button id="quizSubmit" class="px-4 py-2 quiz-btn-primary rounded" type="button">提交</button>
         <button id="quizIDK" class="px-4 py-2 bg-gray-200 rounded" type="button">不會</button>
-        <button id="quizNext" class="px-4 py-2 quiz-btn-next rounded hidden" type="button">下一題（Enter）</button>
+        <button id="quizNext" class="px-4 py-2 quiz-btn-next rounded hidden" type="button">下一題</button>
       </div>
       <div id="quizFeedback" class="text-sm"></div>
     </div>
