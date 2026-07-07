@@ -1055,12 +1055,18 @@
 
   /* P0 Commit 3：hover 公式改成「底提亮 8%」（color-mix wash→parchment），
      取代修正輪 1 的 wash→accent 版本——避免 hover 態疊加 accent 之後，
-     跟「邊框本來就是 accent」混在一起，明度變化不夠乾淨。 */
+     跟「邊框本來就是 accent」混在一起，明度變化不夠乾淨。
+     修正輪 6：補上 box-shadow: none——wc.css/day.css 的 :hover 規則本身
+     帶了一圈琥珀色光暈（0 4px 12px rgba(200,149,42,.35) 或
+     inset 0 1px 0 rgba(255,220,140,.38)），base 態雖然已經鎖 box-shadow:
+     none，但 :hover 是另一條獨立規則、特異性更高，base 的 none 蓋不到
+     hover 態，這裡要在 hover 規則裡重新宣告一次 none 才會真的消掉光暈。 */
   body.scene-cold .btn-primary-m:hover:not(:disabled),
   body.scene-cold .quiz-btn-primary:hover:not(:disabled),
   body.scene-cold .quiz-btn-next:hover:not(:disabled) {
     background: color-mix(in srgb, var(--cold-wash) 92%, var(--cold-parchment) 8%) !important;
     border-color: color-mix(in srgb, var(--cold-accent) 85%, white 15%) !important;
+    box-shadow: none !important;
   }
 
   body.scene-cold .btn-primary-m:active:not(:disabled),
@@ -1124,6 +1130,10 @@
     box-shadow: none !important;
   }
 
+  /* 修正輪 6：同一批 box-shadow: none 補強——day.css:735「belt-and-
+     suspenders」群組的 :hover 帶 inset 高光 + 琥珀陰影，wc.css qz-accent
+     群組的 :hover 帶 0 4px 12px rgba(200,149,42,.35) 光暈（使用者具體回報
+     的「提交按鈕暖黃光暈」就是 #quizSubmit 吃到這條）。 */
   body.scene-cold #analyzeBtn:hover:not(:disabled),
   body.scene-cold #saveBtn:hover:not(:disabled),
   body.scene-cold #customAnalyzeBtn:hover:not(:disabled),
@@ -1135,6 +1145,7 @@
   body.scene-cold #startQuizBtn.btn-primary-m:hover:not(:disabled) {
     background: color-mix(in srgb, var(--cold-wash) 92%, var(--cold-parchment) 8%) !important;
     border-color: color-mix(in srgb, var(--cold-accent) 85%, white 15%) !important;
+    box-shadow: none !important;
   }
 
   /* #qsStart／#grammarQuizSubmit 的 active 態：wc.css qz-accent 群組本身
@@ -1340,6 +1351,15 @@
   body.scene-cold .text-gray-800,
   body.scene-cold .text-gray-900 {
     color: var(--cold-parchment) !important;
+  }
+
+  /* 修正輪 6：quiz modal「翻譯：」「提示：」文字（js/ui.js:1131,1152，
+     class="text-sm text-amber-700"）——這是唯一沒被上面 Tailwind gray 系列
+     掃到的暖色文字 class，是使用者回報「中文翻譯是橘色」的根因。維持
+     「次要文字」語意，比照 text-gray-600/700 一樣映射到 --cold-dim，
+     不新增強調色。 */
+  body.scene-cold .text-amber-700 {
+    color: var(--cold-dim) !important;
   }
 
   /* 保險絲：.sidebar-title 目前分散在至少 3 套不同的 color token 底下
