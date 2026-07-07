@@ -799,6 +799,20 @@
     color: var(--cold-parchment) !important;
   }
 
+  /* 修正輪 8：「已熟悉」「待複習」「本月估算：NT$」這幾個純文字 span
+     （沒有 .chip class）實際吃到的是 theme-perfume-wc.css:477
+     `.header-gradient span:not(.chip) { color: rgba(240,221,184,.82)
+     !important; }`——這條選擇器的特異性跟上面的 body.scene-cold
+     .header-gradient * 剛好完全打平（都是 2 class + 1 element：wc.css
+     那條的 :not(.chip) 算 1 個 class），打平時理論上看 source order（本
+     檔案的 <style> 排在 <link> 之後應該贏），但這種平手完全靠 cascade
+     細節、任何一次改動都可能翻盤，太脆弱。這裡直接照抄 wc.css 的選擇器
+     結構再疊一層 body.scene-cold 前綴，刻意拉高特異性，不靠平手，一次性
+     解決「已熟悉/待複習/本月估算文字仍是暖黃」。 */
+  body.scene-cold .header-gradient span:not(.chip) {
+    color: var(--cold-parchment) !important;
+  }
+
   /* 修正輪 4：首列 summary bar（已熟悉／待複習／本月估算／深色模式切換）
      的數字 badge、usage 按鈕、moon icon 按鈕都是 ID 選擇器（wc.css:482-511
      「Stat chips / Usage button / Dark mode toggle」），全部硬編碼琥珀色
