@@ -872,7 +872,9 @@
     border: 1px solid var(--glass-cold-border) !important;
     backdrop-filter: blur(20px) saturate(120%);
     -webkit-backdrop-filter: blur(20px) saturate(120%);
-    box-shadow: 0 20px 60px var(--cold-shadow) !important;
+    /* Phase 5g P1：疊加 inset 高光，補上材質層次評審裡確認缺失的
+       玻璃邊緣反光線索，不動外陰影本身。 */
+    box-shadow: 0 20px 60px var(--cold-shadow), 0 1px 0 var(--glass-cold-highlight-inset) inset !important;
     color: var(--cold-parchment) !important;
     --text: var(--cold-parchment);
     --muted: var(--cold-dim);
@@ -894,7 +896,8 @@
     border: 1px solid var(--glass-cold-border) !important;
     backdrop-filter: blur(16px) saturate(115%);
     -webkit-backdrop-filter: blur(16px) saturate(115%);
-    box-shadow: 0 16px 48px var(--cold-shadow) !important;
+    /* Phase 5g P1：疊加 inset 高光（材質層次評審）。 */
+    box-shadow: 0 16px 48px var(--cold-shadow), 0 1px 0 var(--glass-cold-highlight-inset) inset !important;
     color: var(--cold-parchment) !important;
     --text: var(--cold-parchment);
     --muted: var(--cold-dim);
@@ -939,7 +942,8 @@
     border: 1px solid var(--glass-cold-border) !important;
     backdrop-filter: blur(16px) saturate(115%);
     -webkit-backdrop-filter: blur(16px) saturate(115%);
-    box-shadow: 0 16px 48px var(--cold-shadow) !important;
+    /* Phase 5g P1：疊加 inset 高光（材質層次評審）。 */
+    box-shadow: 0 16px 48px var(--cold-shadow), 0 1px 0 var(--glass-cold-highlight-inset) inset !important;
     color: var(--cold-parchment) !important;
     --text: var(--cold-parchment);
     --muted: var(--cold-dim);
@@ -995,7 +999,9 @@
   html body.scene-cold #sidebarAllList .wc-card {
     background: var(--glass-cold-fill-secondary) !important;
     border: 1px solid var(--glass-cold-border) !important;
-    box-shadow: none !important;
+    /* Phase 5g P1：原本 none，改成只有 inset 高光，不加外陰影──維持
+       扁平清單項目的角色，只補材質層次評審裡確認缺失的高光線索。 */
+    box-shadow: 0 1px 0 var(--glass-cold-highlight-inset) inset !important;
     color: var(--cold-parchment) !important;
     --text: var(--cold-parchment);
     --muted: var(--cold-dim);

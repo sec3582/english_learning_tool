@@ -61,6 +61,15 @@
      透明度變化」，沒有引入新色相） */
   --cold-accent-ring:   rgba(92, 118, 134, 0.35);
   --cold-shadow:        rgba(8, 10, 12, 0.45);
+  /* Phase 5g P1（Liquid Glass material cue 評審）：目前線上實際套用的
+     scene-cold 卡片（#articleInputSection／.wc-card／sidebar 4 卡）完全
+     沒有 inset 高光，只讀成「霧面半透明面板」而不是「玻璃」。.glass-card
+     元件本身雖然有 0 1px 0 rgba(255,255,255,0.04) inset 這條高光，但這個
+     元件從未實際掛載到 index.html，所以線上畫面從頭到尾就沒有這層材質
+     線索。這裡新增一個獨立 token，數值比 .glass-card 原本的 0.04 略明顯
+     （0.07），供 index.html 既有 box-shadow 規則疊加使用，不動 fill／
+     border／backdrop-filter。 */
+  --glass-cold-highlight-inset: rgba(214, 219, 224, 0.07);
 
   /* 場景別名 ── 給 .glass-card / .word-card 這類內容容器使用 */
   --scene-void:         var(--cold-void);
