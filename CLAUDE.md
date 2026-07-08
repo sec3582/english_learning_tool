@@ -88,10 +88,12 @@ Deleted words must be excluded from quiz selection — check `storage.js` filter
 
 1. **Article Analysis** — user pastes/scrapes text; Gemini extracts 8–15 vocabulary cards (word, CEFR level, Traditional Chinese definition, two example sentences with translations, synonyms/antonyms)
 2. **Spaced Repetition** — 6-stage schedule (0→1→3→7→14→30 days); `dueAt` governs when words surface for review
-3. **Quiz Modes** — typing (fill-in-blank), choice EN→ZH, choice ZH→EN, dictation (audio → type); graded A/B/C
-4. **Grammar Practice** — Gemini extracts grammar points; quiz generator produces rewriting exercises; AI grades responses
+3. **Quiz Modes** — typing (fill-in-blank), choice EN→ZH, choice ZH→EN, dictation (audio → type); graded A/B/C. **Current state (2026-07, Phase 5g review): only typing has a wired-up entry point.** `openQuizModePicker()`/`startQuizFlowWithMode()` (`js/ui.js`) implement choice/dictation but no button ever calls them — verify before assuming these modes are user-reachable.
+4. **Grammar Practice** — Gemini extracts grammar points; quiz generator produces rewriting exercises; AI grades responses. **Current state (2026-07, Phase 5g review): extraction/storage works, but the quiz UI is unmounted.** `openGrammarQuiz()` (`js/ui.js`) targets `#grammarQuizModal`, which doesn't exist in `index.html`.
 5. **Pixel Pet** — leveling system tied to words added and reviews completed
 6. **Google Sheets Sync** — optional; bootstraps word list from Sheets on startup, pushes additions back
+
+**Also unmounted (2026-07, Phase 5g review):** the Library/Reader Mode (`_renderLibraryPage_()`/`showReaderMode()` in `js/ui.js`) has no DOM entry point in `index.html` — collected articles have no in-app way to be browsed or reread. Treat all three of the above as "built but not shipped" until wired up or formally dropped.
 
 ## Design System
 
