@@ -1695,6 +1695,22 @@
     color: var(--cold-void) !important;
   }
 
+  /* Phase 5g P0：.result-tab-panel／aside 的自訂 scrollbar 冷色版本，
+     直接沿用剛提高過對比的 --glass-cold-border（3.25:1），不重新推導
+     新色值，跟卡片/按鈕邊框視覺一致。 */
+  body.scene-cold .result-tab-panel,
+  body.scene-cold aside {
+    scrollbar-color: var(--glass-cold-border) transparent !important;
+  }
+  body.scene-cold .result-tab-panel::-webkit-scrollbar-thumb,
+  body.scene-cold aside::-webkit-scrollbar-thumb {
+    background: var(--glass-cold-border) !important;
+  }
+  body.scene-cold .result-tab-panel::-webkit-scrollbar-thumb:hover,
+  body.scene-cold aside::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in srgb, var(--cold-dim) 85%, transparent) !important;
+  }
+
   body.scene-cold .word-suggestion-card {
     background: var(--glass-cold-fill) !important;
     border: 1px solid var(--glass-cold-border) !important;

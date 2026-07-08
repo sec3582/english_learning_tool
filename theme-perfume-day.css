@@ -1606,6 +1606,32 @@ grammar-tag.active {
   overflow-y: auto;
 }
 
+/* Phase 5g P0：.result-tab-panel／aside 各自獨立 overflow-y:auto，
+   兩層都吃瀏覽器預設 scrollbar，跟暖色系統無關也彼此不一致。這裡補
+   細窄、跟隨主題色的自訂 scrollbar，不移除任何 overflow 設定，只換皮。 */
+.result-tab-panel,
+aside {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--color-ink-2) 50%, transparent) transparent;
+}
+.result-tab-panel::-webkit-scrollbar,
+aside::-webkit-scrollbar {
+  width: 8px;
+}
+.result-tab-panel::-webkit-scrollbar-track,
+aside::-webkit-scrollbar-track {
+  background: transparent;
+}
+.result-tab-panel::-webkit-scrollbar-thumb,
+aside::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--color-ink-2) 50%, transparent);
+  border-radius: 999px;
+}
+.result-tab-panel::-webkit-scrollbar-thumb:hover,
+aside::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--color-ink-2) 70%, transparent);
+}
+
 /* ─── 摺疊帶：消除 Tailwind space-y-6 的錯誤邊距 ───────────────────────────
    Tailwind 的 space-y-6 選擇器為 > :not([hidden]) ~ :not([hidden])，
    其中 [hidden] 對應 HTML attribute，而非 CSS class。
