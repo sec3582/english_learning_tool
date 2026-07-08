@@ -1504,16 +1504,16 @@
     cursor: not-allowed !important;
   }
 
+  /* Phase 5g P0 補件：active 併回 hover 同一條規則，數值統一成 0.10，
+     跟 .btn-outline-m 的 scene-cold hover/active 公式（index.html:1454-1459）
+     逐字一致，不再是「另一套獨立公式」。 */
   body.scene-cold #ocrPickBtn:hover:not(:disabled),
-  body.scene-cold #usageReset:hover:not(:disabled) {
+  body.scene-cold #usageReset:hover:not(:disabled),
+  body.scene-cold #ocrPickBtn:active:not(:disabled),
+  body.scene-cold #usageReset:active:not(:disabled) {
     background: rgba(92, 118, 134, 0.10) !important;
     border-color: color-mix(in srgb, var(--cold-accent) 60%, transparent) !important;
     color: var(--cold-parchment) !important;
-  }
-
-  body.scene-cold #ocrPickBtn:active:not(:disabled),
-  body.scene-cold #usageReset:active:not(:disabled) {
-    background: rgba(92, 118, 134, 0.16) !important;
   }
 
   body.scene-cold #ocrPickBtn:focus-visible,
@@ -1597,9 +1597,12 @@
      token（低優先殘留），但 :hover 是硬編碼 rgba(200,149,42,.12) 琥珀色
      ＋rgba(200,149,42,.45) 邊框——這才是使用者回報「測驗設定/不會按鈕
      hover 仍暖黃」的實際根因，三顆要一次補齊，不只修 qsCancel。 */
+  /* Phase 5g P0 補件：#syncClose（同步 modal「關閉」文字按鈕，跟 qsCancel
+     同屬「取消/關閉」文字按鈕角色）併入同一組，不再各自為政。 */
   body.scene-cold #qsCancel,
   body.scene-cold #quizIDK,
-  body.scene-cold #grammarQuizShowHint {
+  body.scene-cold #grammarQuizShowHint,
+  body.scene-cold #syncClose {
     background: transparent !important;
     border: 1px solid var(--glass-cold-border) !important;
     color: var(--cold-parchment) !important;
@@ -1607,21 +1610,69 @@
 
   body.scene-cold #qsCancel:hover:not(:disabled),
   body.scene-cold #quizIDK:hover:not(:disabled),
-  body.scene-cold #grammarQuizShowHint:hover:not(:disabled) {
+  body.scene-cold #grammarQuizShowHint:hover:not(:disabled),
+  body.scene-cold #syncClose:hover:not(:disabled),
+  body.scene-cold #qsCancel:active:not(:disabled),
+  body.scene-cold #quizIDK:active:not(:disabled),
+  body.scene-cold #grammarQuizShowHint:active:not(:disabled),
+  body.scene-cold #syncClose:active:not(:disabled) {
     background: rgba(92, 118, 134, 0.10) !important;
     border-color: color-mix(in srgb, var(--cold-accent) 60%, transparent) !important;
     color: var(--cold-parchment) !important;
   }
 
-  body.scene-cold #qsCancel:active:not(:disabled),
-  body.scene-cold #quizIDK:active:not(:disabled),
-  body.scene-cold #grammarQuizShowHint:active:not(:disabled) {
-    background: rgba(92, 118, 134, 0.16) !important;
-  }
-
   body.scene-cold #qsCancel:focus-visible,
   body.scene-cold #quizIDK:focus-visible,
-  body.scene-cold #grammarQuizShowHint:focus-visible {
+  body.scene-cold #grammarQuizShowHint:focus-visible,
+  body.scene-cold #syncClose:focus-visible {
+    outline: none !important;
+    box-shadow: 0 0 0 3px var(--cold-accent-ring) !important;
+  }
+
+  /* Phase 5g P0 補件：三個彈窗的「✕/×」圖示型關閉鈕（quizModal/usageModal/
+     mnemonicModal）原本各自只有裸 Tailwind gray class 或讀 ocean.css 專屬
+     的 --muted/--text（.mnemonic-close），沒有共同的 ghost/icon 角色公式，
+     hover 也沒有實際視覺回饋。統一成同一組，跟其他 ghost 按鈕的
+     rgba(92,118,134,0.10) hover 公式一致。 */
+  body.scene-cold #quizClose,
+  body.scene-cold #usageClose,
+  body.scene-cold .mnemonic-close {
+    color: var(--cold-dim) !important;
+  }
+
+  body.scene-cold #quizClose:hover,
+  body.scene-cold #usageClose:hover,
+  body.scene-cold .mnemonic-close:hover {
+    background: rgba(92, 118, 134, 0.10) !important;
+    color: var(--cold-parchment) !important;
+    border-radius: 6px !important;
+  }
+
+  body.scene-cold #quizClose:focus-visible,
+  body.scene-cold #usageClose:focus-visible,
+  body.scene-cold .mnemonic-close:focus-visible {
+    outline: none !important;
+    box-shadow: 0 0 0 3px var(--cold-accent-ring) !important;
+  }
+
+  /* Phase 5g P0 補件：「幫助複習」（.wc-ai-help，複習頁籤唯一操作按鈕）
+     base/hover 都是硬編碼 rgba(200,149,42,*) 琥珀色（theme-perfume-wc.css:
+     325-343），從未有 scene-cold 覆寫。歸類為輔助操作，比照 .btn-outline-m
+     公式改冷色，不使用 class 疊加（避免與 wc.css 同層 !important 的疊加
+     順序疑慮），直接用 ID/class 覆寫達到相同視覺結果。 */
+  body.scene-cold .wc-ai-help {
+    background: transparent !important;
+    border: 1px solid var(--glass-cold-border) !important;
+    color: var(--cold-parchment) !important;
+  }
+
+  body.scene-cold .wc-ai-help:hover {
+    background: rgba(92, 118, 134, 0.10) !important;
+    border-color: color-mix(in srgb, var(--cold-accent) 60%, transparent) !important;
+    color: var(--cold-parchment) !important;
+  }
+
+  body.scene-cold .wc-ai-help:focus-visible {
     outline: none !important;
     box-shadow: 0 0 0 3px var(--cold-accent-ring) !important;
   }
@@ -2404,7 +2455,7 @@
         <button id="usageSaveBudget" class="col-span-1 px-3 py-2 text-sm font-semibold text-white rounded-lg" style="background:#A3B18A;" onmouseover="this.style.background='#8d9b76'" onmouseout="this.style.background='#A3B18A'">儲存預算</button>
       </div>
       <div class="flex justify-between items-center pt-1">
-        <button id="usageReset" class="px-3 py-2 text-sm rounded-lg border border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700 bg-transparent">重置本月估算</button>
+        <button id="usageReset" class="btn-outline-m">重置本月估算</button>
         <button id="usageClose2" class="px-4 py-2 text-sm font-semibold text-white rounded-lg usage-close2-btn">關閉</button>
       </div>
     </div>
