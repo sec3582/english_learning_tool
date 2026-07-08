@@ -1560,7 +1560,7 @@ grammar-tag.active {
   padding: .5rem 1rem;
   font-size: .875rem;
   font-weight: 500;
-  color: var(--muted);
+  color: var(--color-ink-2);
   border-bottom: 2px solid transparent;
   margin-bottom: -1px;
   transition: color .15s, border-color .15s;
@@ -1571,15 +1571,15 @@ grammar-tag.active {
   cursor: pointer;
   white-space: nowrap;
 }
-.result-tab:hover { color: var(--text); }
+.result-tab:hover { color: var(--color-ink-1); }
 .result-tab--active {
-  color: var(--primary);
-  border-bottom-color: var(--primary);
+  color: var(--color-ink-1);
+  border-bottom-color: var(--color-accent);
   font-weight: 600;
 }
 .result-tab-badge {
   display: inline-block;
-  background: var(--primary);
+  background: var(--color-accent);
   color: #fff;
   font-size: .6875rem;
   font-weight: 700;

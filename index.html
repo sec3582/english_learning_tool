@@ -1650,6 +1650,28 @@
     box-shadow: 0 16px 48px var(--cold-shadow) !important;
   }
 
+  /* 4.2b 結果分頁按鈕（.result-tab／.result-tab--active／.result-tab-badge，
+     Phase 5g P0-1）：day.css base rule 原本讀 ocean.css 的 --muted/--primary，
+     scene-cold 下從未被覆寫過，分頁文字與底線維持暖色。比照
+     .input-tab--active 的公式：parchment 文字 + cold-accent 底線。 */
+  body.scene-cold .result-tab {
+    color: var(--cold-dim) !important;
+  }
+
+  body.scene-cold .result-tab:hover {
+    color: var(--cold-parchment) !important;
+  }
+
+  body.scene-cold .result-tab--active {
+    color: var(--cold-parchment) !important;
+    border-bottom-color: var(--cold-accent) !important;
+  }
+
+  body.scene-cold .result-tab-badge {
+    background: var(--cold-accent) !important;
+    color: var(--cold-void) !important;
+  }
+
   body.scene-cold .word-suggestion-card {
     background: var(--glass-cold-fill) !important;
     border: 1px solid var(--glass-cold-border) !important;
