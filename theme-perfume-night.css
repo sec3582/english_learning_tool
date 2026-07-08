@@ -41,7 +41,12 @@
   --cold-dim:           #838d96;  /* 次要文字、說明文字 */
   --cold-accent:        #5c7686;  /* 唯一允許的冷調強調色 ── 禁止提高飽和度 */
   --glass-cold-fill:    rgba(214, 219, 224, 0.05);  /* 冷調 Liquid Glass 卡片填色 */
-  --glass-cold-border:  rgba(92, 118, 134, 0.20);   /* 冷調 Liquid Glass 卡片邊緣 */
+  /* Phase 5g P0：原 rgba(92,118,134,0.20) 對 --cold-void 只有 ~1.24:1
+     non-text contrast，不合 WCAG 1.4.11（需 ≥3:1）。純提高同色相 alpha
+     要到 0.90+ 才夠（92,118,134 solid 上限僅 3.76:1），會讓邊界從「玻璃
+     邊緣」變成近乎實色描邊。改用同色系但較亮的既有 token --cold-dim
+     （不引入新色相），alpha 0.70 實測 3.25:1，邊界仍維持半透明玻璃感。 */
+  --glass-cold-border:  color-mix(in srgb, var(--cold-dim) 70%, transparent);
 
   /* 衍生 token（非 VISUAL_SPEC 原表列出，僅為實作方便從 --cold-accent 算出的
      透明度變體，供 focus ring / 陰影使用；仍然只是「同一個顏色的亮度或
