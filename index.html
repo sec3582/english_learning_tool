@@ -1243,11 +1243,11 @@
     opacity: 1 !important;
   }
 
-  /* #usageSaveBudget 額外有 inline onmouseover/onmouseout 寫死 #8d9b76 的
-     hover 色（見 index.html 的 button 標籤本身），CSS :hover 規則的
-     !important 會贏過 JS 直接寫的 inline style（inline style 沒有
-     !important），這裡不需要改 HTML/JS，上面的 CSS hover 規則已經足夠蓋過，
-     維持「不動 JS」的原則。 */
+  /* Phase 5g 補件：#usageSaveBudget 原本 inline style="background:#A3B18A"
+     + onmouseover/onmouseout 寫死 #8d9b76 的舊 Morandi green 已在 index.html
+     移除，並補上 .btn-primary-m class 收編為 primary save action。上面的
+     body.scene-cold #usageSaveBudget ID 規則維持不動（仍是 scene-cold 場景
+     下贏過 .btn-primary-m 的必要覆寫）。 */
 
   /* 輸入來源 tabs（手動輸入／上傳圖片）：未選取態原本吃 --muted →
      --cold-dim，實測太淡難以辨識是「這裡還有一個頁籤」。提高到介於
@@ -2445,7 +2445,7 @@
       <div class="grid grid-cols-3 gap-2 items-center">
         <label for="usageBudgetInput" class="col-span-1 text-sm text-gray-600">每月預算（TWD）</label>
         <input id="usageBudgetInput" type="number" step="1" class="col-span-1 p-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-gray-300" placeholder="例如 300">
-        <button id="usageSaveBudget" class="col-span-1 px-3 py-2 text-sm font-semibold text-white rounded-lg" style="background:#A3B18A;" onmouseover="this.style.background='#8d9b76'" onmouseout="this.style.background='#A3B18A'">儲存預算</button>
+        <button id="usageSaveBudget" class="col-span-1 btn-primary-m px-3 py-2 text-sm font-semibold">儲存預算</button>
       </div>
       <div class="flex justify-between items-center pt-1">
         <button id="usageReset" class="btn-outline-m">重置本月估算</button>
