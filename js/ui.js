@@ -449,6 +449,9 @@ function renderListToday(){
 
   const start = (todayPage - 1) * TODAY_PAGE_SIZE;
   arr.slice(start, start + TODAY_PAGE_SIZE).forEach(w => ul.appendChild(makeListItem(w)));
+  if (!arr.length) {
+    ul.innerHTML = `<li class="list-empty-state">今天還沒有新單字。貼上一篇文章分析後，會出現在這裡。</li>`;
+  }
 
   const pager = document.getElementById("todayPager");
   const info  = document.getElementById("todayPageInfo");
@@ -476,6 +479,9 @@ function renderListDue(){
 
   const start = (duePage - 1) * DUE_PAGE_SIZE;
   arr.slice(start, start + DUE_PAGE_SIZE).forEach(w => ul.appendChild(makeListItem(w, { reviewMode: true })));
+  if (!arr.length) {
+    ul.innerHTML = `<li class="list-empty-state">目前沒有待複習單字。</li>`;
+  }
 
   const pager = document.getElementById("duePager");
   const info  = document.getElementById("duePageInfo");
@@ -494,6 +500,7 @@ function renderListDue(){
 function renderListAll(){
   const ul = document.getElementById("sidebarAllList"); if (!ul) return; ul.innerHTML = "";
   const { q, pos, level, sort } = readAllFilters(); let arr = getAllWords();
+  const hadAnyWords = arr.length > 0;
   if (q){ const qq = q.toLowerCase(); arr = arr.filter(w => (w.word||"").toLowerCase().includes(qq) || (w.definition||"").toLowerCase().includes(qq)); }
   if (pos) arr = arr.filter(w => (w.pos||"").toLowerCase() === pos.toLowerCase());
   if (level) arr = arr.filter(w => (w.level||"").toUpperCase() === level.toUpperCase());
@@ -506,6 +513,11 @@ function renderListAll(){
   if (allPage > totalPages) allPage = totalPages;
   const start = (allPage-1) * ALL_PAGE_SIZE;
   arr.slice(start, start + ALL_PAGE_SIZE).forEach(w => ul.appendChild(makeListItem(w)));
+  if (!arr.length) {
+    ul.innerHTML = hadAnyWords
+      ? `<li class="list-empty-state">找不到符合條件的單字。</li>`
+      : `<li class="list-empty-state">目前還沒有單字。貼上一篇文章分析後，會建立你的單字清單。</li>`;
+  }
   const pager = document.getElementById("allPager"); const info = document.getElementById("allPageInfo");
   if (pager && info){ const onAll = !document.getElementById("sidebarAllList").classList.contains("hidden"); pager.classList.toggle("hidden", !onAll); info.textContent = `第 ${allPage} / ${totalPages} 頁`; const prev = document.getElementById("allPrev"), next = document.getElementById("allNext"); if (prev) prev.disabled = allPage <= 1; if (next) next.disabled = allPage >= totalPages; }
 }

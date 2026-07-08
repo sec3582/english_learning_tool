@@ -256,6 +256,16 @@ main {
   border-bottom-color: var(--wc-accent) !important;
 }
 
+/* ── 單字清單 empty state（Phase 5g P1-4）：今日／複習／全部三個分頁
+   0 筆時顯示的提示文字，讀 day.css 既有的 placeholder/disabled 語意色，
+   不引入新顏色。 ── */
+.list-empty-state {
+  padding: .75rem .25rem;
+  font-size: .875rem;
+  color: var(--color-ink-3);
+  list-style: none;
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    Component Overrides — Row Divider System (compiled-spec.md §3.3a)
    Scheme A: Today / Due — breathing space + ledger bottom line

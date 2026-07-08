@@ -998,6 +998,11 @@
     --muted: var(--cold-dim);
   }
 
+  /* Phase 5g P1-4：單字清單 empty state 文字。 */
+  body.scene-cold .list-empty-state {
+    color: var(--cold-dim) !important;
+  }
+
   /* 2) 卡片標題（.section-h，「匯入文章」「自訂新增單字」共用同一個
      class）與其 icon。day.css 的 .section-h 直接寫死
      `color: var(--color-ink-1) !important`，不是讀 --text，重新定義
