@@ -823,10 +823,18 @@
      「Stat chips / Usage button / Dark mode toggle」），全部硬編碼琥珀色
      background/color/border，特異性贏過上面的 .header-gradient * 通用
      覆寫（ID 一定贏 class，不管 class 疊了幾層），需要逐一點名 ID 蓋過。 */
-  body.scene-cold #masteredBadge,
+  /* Phase 5g P1-2：已熟悉／待複習改讀專屬語意色 token（night.css 早已定義
+     --cold-badge-mastered-*／--cold-badge-due-*，先前兩者共用中性
+     --color-chip-navbar，視覺上完全無法區分）。 */
+  body.scene-cold #masteredBadge {
+    background: var(--cold-badge-mastered-bg) !important;
+    color: var(--cold-badge-mastered-fg) !important;
+    border: 1px solid var(--glass-cold-border) !important;
+  }
+
   body.scene-cold #dueCountBadge {
-    background: var(--color-chip-navbar) !important;
-    color: var(--cold-parchment) !important;
+    background: var(--cold-badge-due-bg) !important;
+    color: var(--cold-badge-due-fg) !important;
     border: 1px solid var(--glass-cold-border) !important;
   }
 
