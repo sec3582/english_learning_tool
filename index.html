@@ -1494,6 +1494,16 @@
     border: 1px solid var(--glass-cold-border) !important;
   }
 
+  /* Phase 5g P0：這兩顆按鈕原本沒有定義 disabled 態，會直接落回上面的
+     default 樣式，等於「可點」跟「不可點」視覺相同。default 邊框對比已
+     隨 --glass-cold-border 提升到 3.25:1，這裡用 opacity 壓低整體存在感，
+     讓 disabled 明確比 default 更淡，不動 hover/active 語意。 */
+  body.scene-cold #ocrPickBtn:disabled,
+  body.scene-cold #usageReset:disabled {
+    opacity: 0.4 !important;
+    cursor: not-allowed !important;
+  }
+
   body.scene-cold #ocrPickBtn:hover:not(:disabled),
   body.scene-cold #usageReset:hover:not(:disabled) {
     background: rgba(92, 118, 134, 0.10) !important;
