@@ -155,9 +155,13 @@
         targetDriftX: 0,
         targetDriftY: 0,
         // 每滴墨獨立的外觀／行為參數，避免多滴墨看起來像同一組圓整齊呼吸
-        // alphaPeak 區間依使用者回饋整體壓低（原 0.4–0.75），讓墨點感覺
-        // 更像「水中的光」而不是「塗上去的色塊」（2026-07 修訂）
-        alphaPeak: p.random(0.28, 0.55),
+        // alphaPeak 區間依使用者回饋整體壓低過（原 0.4–0.75 → 0.28–0.55），
+        // 讓墨點感覺更像「水中的光」而不是「塗上去的色塊」（2026-07 修訂）。
+        // Phase 5g P1（背景與玻璃可感知度評審）：0.28–0.55 在實際頁面
+        // （卡片林立、視線被卡片吸走）幾乎不可見，微幅回調到 0.35–0.65 ──
+        // 不回到最初的 0.4–0.75，只是把上一輪的下修拉回一半，色相/去飽和/
+        // blur 都不動，只調亮度。
+        alphaPeak: p.random(0.35, 0.65),
         edgeAmp: p.random(20, 50),
         edgeFreq: p.random(0.2, 0.45),
         driftSpeedMul: p.random(0.7, 1.3),
@@ -205,9 +209,14 @@
       // 0% 中心不再是最亮的 0.85，降到 0.35–0.45 這個量級；45% 中段降到
       // 0.10 量級；讓最後 40–50% 半徑都落在接近透明的漸變區間，而不是
       // 在邊緣才急速消退，讓墨暈讀起來像光暈／水中暈開，而不是硬邊剪影。
+      //
+      // Phase 5g P1（背景與玻璃可感知度評審）：中心係數 0.4→0.55 微幅提高
+      // 可見度；45% 中段係數只跟著微調 0.1→0.12（刻意保持克制，不按同比例
+      // 放大到 ~0.14），維持中心到中段的平滑斜率，避免拉開差距後邊緣重新
+      // 讀出清晰輪廓／同心圓。
       const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius * 1.15);
-      grad.addColorStop(0, `rgba(${rr},${gg},${bb},${(alphaNow * 0.4).toFixed(3)})`);
-      grad.addColorStop(0.45, `rgba(${rr},${gg},${bb},${(alphaNow * 0.1).toFixed(3)})`);
+      grad.addColorStop(0, `rgba(${rr},${gg},${bb},${(alphaNow * 0.55).toFixed(3)})`);
+      grad.addColorStop(0.45, `rgba(${rr},${gg},${bb},${(alphaNow * 0.12).toFixed(3)})`);
       grad.addColorStop(1, `rgba(${rr},${gg},${bb},0)`);
 
       ctx.beginPath();
