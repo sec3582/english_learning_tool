@@ -239,11 +239,6 @@
     font-size:.72rem; font-weight:700; white-space:nowrap;
   }
 
-  /* 用量估算 modal「關閉」按鈕（原本是 inline style + onmouseover/onmouseout
-     寫死 #8A9BA8/#7a8d9a，scene-cold 完全碰不到，改掛 class）。 */
-  .usage-close2-btn{ background:#8A9BA8; }
-  .usage-close2-btn:hover{ background:#7a8d9a; }
-
   /* 學習進度卡片（修正輪 4：原本整段是 js/ui.js renderProgressCard() 的
      inline style innerHTML，沒有任何 class，scene-cold 完全碰不到——這裡
      把顏色搬進 class，數值/百分比等動態內容仍由 JS 產生）。 */
@@ -1579,19 +1574,6 @@
     background: var(--cold-overlay) !important;
   }
 
-  /* #usageClose2「關閉」按鈕：原本 inline style="background:#8A9BA8"
-     （藍灰色，使用者形容的「淺藍」）+ onmouseover/onmouseout 寫死
-     #7a8d9a，已在 HTML 改掛 .usage-close2-btn class，這裡覆寫冷色。 */
-  body.scene-cold .usage-close2-btn {
-    background: var(--cold-wash) !important;
-    color: var(--cold-parchment) !important;
-    border: 1px solid var(--cold-accent) !important;
-  }
-
-  body.scene-cold .usage-close2-btn:hover {
-    background: color-mix(in srgb, var(--cold-wash) 92%, var(--cold-parchment) 8%) !important;
-  }
-
   /* #qsCancel／#quizIDK／#grammarQuizShowHint 是 wc.css「7b. Secondary」
      同一組（wc.css:1444-1459）：base 的 rgba(61,43,31,.08) 底色本身不是
      token（低優先殘留），但 :hover 是硬編碼 rgba(200,149,42,.12) 琥珀色
@@ -1599,10 +1581,18 @@
      hover 仍暖黃」的實際根因，三顆要一次補齊，不只修 qsCancel。 */
   /* Phase 5g P0 補件：#syncClose（同步 modal「關閉」文字按鈕，跟 qsCancel
      同屬「取消/關閉」文字按鈕角色）併入同一組，不再各自為政。 */
+  /* Phase 5g P0 補件2：#usageClose2（用量估算 modal footer 的文字型
+     「關閉」鈕，跟右上角 icon 型 #usageClose 是兩顆不同按鈕）上一輪誤判
+     成獨立角色，用了實色填底（Day: #8A9BA8／scene-cold: --cold-wash 實色）
+     ——這是「幫另一套角色補顏色」而不是「歸類到正確角色」，跟 #qsCancel
+     這類文字型次要按鈕的通用 ghost 形狀完全不同。HTML class 已改成跟
+     #quizIDK／#syncClose 逐字相同（px-4 py-2 bg-gray-200 rounded），
+     這裡併入同一組，不再單獨維護一份公式。 */
   body.scene-cold #qsCancel,
   body.scene-cold #quizIDK,
   body.scene-cold #grammarQuizShowHint,
-  body.scene-cold #syncClose {
+  body.scene-cold #syncClose,
+  body.scene-cold #usageClose2 {
     background: transparent !important;
     border: 1px solid var(--glass-cold-border) !important;
     color: var(--cold-parchment) !important;
@@ -1612,10 +1602,12 @@
   body.scene-cold #quizIDK:hover:not(:disabled),
   body.scene-cold #grammarQuizShowHint:hover:not(:disabled),
   body.scene-cold #syncClose:hover:not(:disabled),
+  body.scene-cold #usageClose2:hover:not(:disabled),
   body.scene-cold #qsCancel:active:not(:disabled),
   body.scene-cold #quizIDK:active:not(:disabled),
   body.scene-cold #grammarQuizShowHint:active:not(:disabled),
-  body.scene-cold #syncClose:active:not(:disabled) {
+  body.scene-cold #syncClose:active:not(:disabled),
+  body.scene-cold #usageClose2:active:not(:disabled) {
     background: rgba(92, 118, 134, 0.10) !important;
     border-color: color-mix(in srgb, var(--cold-accent) 60%, transparent) !important;
     color: var(--cold-parchment) !important;
@@ -1624,7 +1616,8 @@
   body.scene-cold #qsCancel:focus-visible,
   body.scene-cold #quizIDK:focus-visible,
   body.scene-cold #grammarQuizShowHint:focus-visible,
-  body.scene-cold #syncClose:focus-visible {
+  body.scene-cold #syncClose:focus-visible,
+  body.scene-cold #usageClose2:focus-visible {
     outline: none !important;
     box-shadow: 0 0 0 3px var(--cold-accent-ring) !important;
   }
@@ -2456,7 +2449,7 @@
       </div>
       <div class="flex justify-between items-center pt-1">
         <button id="usageReset" class="btn-outline-m">重置本月估算</button>
-        <button id="usageClose2" class="px-4 py-2 text-sm font-semibold text-white rounded-lg usage-close2-btn">關閉</button>
+        <button id="usageClose2" class="px-4 py-2 bg-gray-200 rounded">關閉</button>
       </div>
     </div>
   </div>
