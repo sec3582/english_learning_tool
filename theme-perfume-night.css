@@ -40,7 +40,15 @@
   --cold-parchment:     #d6dbe0;  /* 主要文字（冷灰白，非純白） */
   --cold-dim:           #838d96;  /* 次要文字、說明文字 */
   --cold-accent:        #5c7686;  /* 唯一允許的冷調強調色 ── 禁止提高飽和度 */
-  --glass-cold-fill:    rgba(214, 219, 224, 0.05);  /* 冷調 Liquid Glass 卡片填色 */
+  /* Phase 5g P1（背景與玻璃可感知度評審後）：--glass-cold-fill 原本
+     0.05 alpha，等同於卡片直接看穿到墨流／body 底色，玻璃卡片在畫面上
+     幾乎「不存在」，是使用者反映「第一眼像純黑背景」的主因之一。這裡
+     提高到 0.10 作為基礎值，並新增兩個衍生 token 拉出主內容／sidebar
+     的層級差異（原本兩者共用同一個 token，沒有主次之分）。三者色相/
+     色板完全相同，只有 alpha 不同，不引入新色相。 */
+  --glass-cold-fill:            rgba(214, 219, 224, 0.10);  /* 冷調 Liquid Glass 卡片填色（基礎值） */
+  --glass-cold-fill-primary:    rgba(214, 219, 224, 0.12);  /* 主內容卡片（如 #articleInputSection）用，略比 sidebar 明顯 */
+  --glass-cold-fill-secondary:  rgba(214, 219, 224, 0.09);  /* sidebar 卡片與單字清單項目卡用，略低於主內容 */
   /* Phase 5g P0：原 rgba(92,118,134,0.20) 對 --cold-void 只有 ~1.24:1
      non-text contrast，不合 WCAG 1.4.11（需 ≥3:1）。純提高同色相 alpha
      要到 0.90+ 才夠（92,118,134 solid 上限僅 3.76:1），會讓邊界從「玻璃

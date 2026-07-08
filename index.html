@@ -865,8 +865,10 @@
      （見「1. Scoped base-color cascade」），background/border 雖然目前
      沒有其他 !important 規則競爭，但為了和其他三個區塊維持一致、避免將來
      任何規則改動就整組失效，這裡統一補上 !important。 */
+  /* Phase 5g P1：主內容卡片吃 --glass-cold-fill-primary（比 sidebar 明顯），
+     建立主次視覺層級（見背景/玻璃可感知度評審）。 */
   body.scene-cold #articleInputSection {
-    background: var(--glass-cold-fill) !important;
+    background: var(--glass-cold-fill-primary) !important;
     border: 1px solid var(--glass-cold-border) !important;
     backdrop-filter: blur(20px) saturate(120%);
     -webkit-backdrop-filter: blur(20px) saturate(120%);
@@ -885,8 +887,10 @@
      inline <style>」，background/border/border-radius/box-shadow 全部
      都是 !important（就是為了蓋掉這個檔案本來的樣式），不加 !important
      這裡的冷調玻璃樣式完全生效不了，卡片會維持 Day Mode 的暖色羊皮紙。 */
+  /* Phase 5g P1：.wc-card 只用於右側 sidebar 清單項目（js/ui.js
+     makeListItem()），吃 --glass-cold-fill-secondary，比主內容卡片略低。 */
   body.scene-cold .wc-card {
-    background: var(--glass-cold-fill) !important;
+    background: var(--glass-cold-fill-secondary) !important;
     border: 1px solid var(--glass-cold-border) !important;
     backdrop-filter: blur(16px) saturate(115%);
     -webkit-backdrop-filter: blur(16px) saturate(115%);
@@ -925,11 +929,13 @@
      規則（皆為 !important）；#progressCard 沒有專屬規則，暖色其實是
      theme-ocean.css 的 .bg-white.rounded-xl.shadow.p-6 類別選擇器，
      但為求四張卡片行為一致，這裡統一用同一組 !important 規則覆蓋。 */
+  /* Phase 5g P1：sidebar 四張頂層卡片吃 --glass-cold-fill-secondary，
+     比主內容卡片略低，建立主次視覺層級。 */
   body.scene-cold #progressCard,
   body.scene-cold #wordListCard,
   body.scene-cold #pixelPetCard,
   body.scene-cold #backupCard {
-    background: var(--glass-cold-fill) !important;
+    background: var(--glass-cold-fill-secondary) !important;
     border: 1px solid var(--glass-cold-border) !important;
     backdrop-filter: blur(16px) saturate(115%);
     -webkit-backdrop-filter: blur(16px) saturate(115%);
@@ -982,10 +988,12 @@
      #sidebarAllList li:nth-child(odd/even) .wc-card 也是同量級。
      這裡多繞一層 html 前綴，把 type 數量拉高到明確贏過對方，不必賭
      source order。 */
+  /* Phase 5g P1：這條特異性較高的覆寫也要跟著改，否則會贏過上面剛調整的
+     .wc-card 通用規則，讓 sidebar 清單卡片維持舊的 0.05 alpha。 */
   html body.scene-cold #sidebarTodayList .wc-card,
   html body.scene-cold #sidebarDueList .wc-card,
   html body.scene-cold #sidebarAllList .wc-card {
-    background: var(--glass-cold-fill) !important;
+    background: var(--glass-cold-fill-secondary) !important;
     border: 1px solid var(--glass-cold-border) !important;
     box-shadow: none !important;
     color: var(--cold-parchment) !important;
