@@ -610,15 +610,15 @@ select {
 }
 
 /* ── Night-mode guard: revert overlay + container to dark variables ── */
-[data-theme="dark"] #quizModal,
-[data-theme="dark"] #quizSettings,
-[data-theme="dark"] #grammarQuizModal {
+[data-theme="dark"] body:not(.scene-cold) #quizModal,
+[data-theme="dark"] body:not(.scene-cold) #quizSettings,
+[data-theme="dark"] body:not(.scene-cold) #grammarQuizModal {
   background: rgba(0, 0, 0, 0.65) !important;
 }
 
-[data-theme="dark"] #quizModal > div,
-[data-theme="dark"] #quizSettings > div,
-[data-theme="dark"] #grammarQuizModal > div {
+[data-theme="dark"] body:not(.scene-cold) #quizModal > div,
+[data-theme="dark"] body:not(.scene-cold) #quizSettings > div,
+[data-theme="dark"] body:not(.scene-cold) #grammarQuizModal > div {
   background: var(--wc-card, #1e2433) !important;
   box-shadow: 3px 8px 28px rgba(0, 0, 0, 0.40) !important;
 }
