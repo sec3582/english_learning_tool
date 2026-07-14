@@ -124,8 +124,12 @@ body.scene-cold {
 
   --color-rim-card:       rgba(214, 219, 224, 0.06);
   --color-rim-panel:      rgba(214, 219, 224, 0.08);
-  --color-rim-modal-top:  rgba(214, 219, 224, 0.07);
-  --color-rim-modal-left: rgba(214, 219, 224, 0.04);
+  /* 修正輪 4（perfume-art-director 提案）：0.07/0.04 太淡，玻璃邊緣的
+     水面張力反光幾乎感覺不到——rim light 是玻璃感最主要的視覺線索，
+     不是底色本身，加倍以上讓邊緣讀得出來。維持 top > left 比例，延續
+     CLAUDE.md 既有「光源來自左上 30-40°」的日夜共用光源方向。 */
+  --color-rim-modal-top:  rgba(214, 219, 224, 0.16);
+  --color-rim-modal-left: rgba(214, 219, 224, 0.09);
 
   --color-input-border:     var(--glass-cold-border);
   --color-card-separator:   var(--glass-cold-border);
@@ -150,8 +154,12 @@ body.scene-cold {
      --glass-cold-fill 只有 5% alpha，套在卡片上是刻意的輕玻璃感，但套在
      modal 面板（操作/閱讀區）上會讓使用者看穿到後方畫面、干擾閱讀。
      比照 .header-gradient 已驗證過的做法（見 header 那條規則的註解）：
-     modal 面板要用夠不透明的實色，不能只靠 5% alpha 玻璃感露出背後內容。 */
-  --cold-modal-fill: rgba(20, 23, 26, 0.92);
+     modal 面板要用夠不透明的實色，不能只靠 5% alpha 玻璃感露出背後內容。
+     修正輪 4（perfume-art-director 提案）：0.92 幾乎不透光，backdrop-filter
+     的 blur 等於在模糊看不見的東西，玻璃感歸零。降到 0.60，改靠搭配的
+     backdrop-filter brightness(0.55) 壓暗任何穿透光來守住文字對比，
+     不再需要用高 alpha 硬擋（見 index.html #quizModal > div 等規則）。 */
+  --cold-modal-fill: rgba(20, 23, 26, 0.60);
 
   /* ── 語意色：正確／錯誤（docs/VISUAL_QA_5E.md §9.3 提案，這輪正式寫入） ── */
   --cold-correct: color-mix(in srgb, var(--cold-accent) 70%, var(--cold-parchment) 30%);

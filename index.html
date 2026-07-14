@@ -911,13 +911,39 @@
      exam sheet material」），一樣要跟著補 !important 才會生效。
      修正輪 3：background 從 --glass-cold-fill（5% alpha）換成
      --cold-modal-fill（92% alpha）——modal 是操作/閱讀區，使用者回報
-     能看穿到後方畫面、干擾閱讀，不應該只用卡片等級的輕玻璃感。 */
+     能看穿到後方畫面、干擾閱讀，不應該只用卡片等級的輕玻璃感。
+     修正輪 4（perfume-art-director 提案）：0.92 幾乎不透光，blur 等於
+     在模糊看不見的東西，玻璃感歸零。--cold-modal-fill 降到 0.60（見
+     theme-perfume-night.css:154），backdrop-filter 加大 blur 並補上
+     brightness(0.55) 當濾光片——不靠拉高 alpha 守住可讀性，靠先壓暗
+     任何穿透玻璃的光（含 index.html:778-784 記錄過的墨滴亮部突波）。
+     box-shadow 改接 --color-rim-modal-top/-left（見
+     theme-perfume-night.css:127-128，0.16/0.09，取代原本只有 0.07 的
+     --glass-cold-highlight-inset）——rim light 是玻璃感最主要的視覺
+     線索，這兩個 token 本來就是為 modal 設計的，之前一直沒被接上。 */
   body.scene-cold #quizModal > div {
     background: var(--cold-modal-fill) !important;
     border: 1px solid var(--glass-cold-border) !important;
-    backdrop-filter: blur(24px) saturate(120%);
-    -webkit-backdrop-filter: blur(24px) saturate(120%);
-    box-shadow: 0 20px 60px var(--cold-shadow) !important;
+    backdrop-filter: blur(32px) saturate(110%) brightness(0.55);
+    -webkit-backdrop-filter: blur(32px) saturate(110%) brightness(0.55);
+    box-shadow: 0 20px 60px var(--cold-shadow), inset 0 1px 0 var(--color-rim-modal-top), inset 1px 0 0 var(--color-rim-modal-left) !important;
+    color: var(--cold-parchment) !important;
+    --text: var(--cold-parchment);
+    --muted: var(--cold-dim);
+    --navy: var(--cold-parchment);
+  }
+
+  /* 缺口補件（perfume-art-director 提案追加）：#grammarQuizModal 之前只有
+     overlay 被 body.scene-cold 覆寫（見下方 --qz-* token 重新宣告區塊），
+     內層容器完全沒有對應規則，會落回 theme-perfume-wc.css 的 day 版或
+     [data-theme="dark"] 版（跟本輪冷調玻璃規格無關）。這裡比照 #quizModal
+     > div 補上同一組數值，兩者是同一個「考卷」材質家族。 */
+  body.scene-cold #grammarQuizModal > div {
+    background: var(--cold-modal-fill) !important;
+    border: 1px solid var(--glass-cold-border) !important;
+    backdrop-filter: blur(32px) saturate(110%) brightness(0.55);
+    -webkit-backdrop-filter: blur(32px) saturate(110%) brightness(0.55);
+    box-shadow: 0 20px 60px var(--cold-shadow), inset 0 1px 0 var(--color-rim-modal-top), inset 1px 0 0 var(--color-rim-modal-left) !important;
     color: var(--cold-parchment) !important;
     --text: var(--cold-parchment);
     --muted: var(--cold-dim);
@@ -1555,13 +1581,15 @@
   /* 4.1「測驗設定」modal（#quizSettings，跟已修好的 #quizModal 是不同 ID，
      之前完全沒被白名單覆蓋到）。
      修正輪 3：background 換成 --cold-modal-fill（見 #quizModal > div 同一輪
-     註解），理由相同。 */
+     註解），理由相同。
+     修正輪 4（perfume-art-director 提案）：backdrop-filter／box-shadow
+     比照 #quizModal > div 同步更新，理由同上，不重複貼註解。 */
   body.scene-cold #quizSettings > div {
     background: var(--cold-modal-fill) !important;
     border: 1px solid var(--glass-cold-border) !important;
-    backdrop-filter: blur(24px) saturate(120%);
-    -webkit-backdrop-filter: blur(24px) saturate(120%);
-    box-shadow: 0 20px 60px var(--cold-shadow) !important;
+    backdrop-filter: blur(32px) saturate(110%) brightness(0.55);
+    -webkit-backdrop-filter: blur(32px) saturate(110%) brightness(0.55);
+    box-shadow: 0 20px 60px var(--cold-shadow), inset 0 1px 0 var(--color-rim-modal-top), inset 1px 0 0 var(--color-rim-modal-left) !important;
     color: var(--cold-parchment) !important;
     --text: var(--cold-parchment);
     --muted: var(--cold-dim);
@@ -1572,14 +1600,16 @@
      目前只吃到 body.scene-cold .bg-white 的全站 sweep（--glass-cold-fill，
      5% alpha），同樣有「看穿到後方畫面」的問題，比照上面兩個 modal 補
      --cold-modal-fill 版本，selector 用 #usageModal > div／#syncModal > div
-     直接點名，特異性比 .bg-white 的 class sweep 更高，不會互相打架。 */
+     直接點名，特異性比 .bg-white 的 class sweep 更高，不會互相打架。
+     修正輪 4（perfume-art-director 提案）：backdrop-filter／box-shadow
+     比照 #quizModal > div 同步更新，理由同上，不重複貼註解。 */
   body.scene-cold #usageModal > div,
   body.scene-cold #syncModal > div {
     background: var(--cold-modal-fill) !important;
     border: 1px solid var(--glass-cold-border) !important;
-    backdrop-filter: blur(24px) saturate(120%);
-    -webkit-backdrop-filter: blur(24px) saturate(120%);
-    box-shadow: 0 20px 60px var(--cold-shadow) !important;
+    backdrop-filter: blur(32px) saturate(110%) brightness(0.55);
+    -webkit-backdrop-filter: blur(32px) saturate(110%) brightness(0.55);
+    box-shadow: 0 20px 60px var(--cold-shadow), inset 0 1px 0 var(--color-rim-modal-top), inset 1px 0 0 var(--color-rim-modal-left) !important;
     color: var(--cold-parchment) !important;
   }
 
