@@ -8,7 +8,6 @@
 
 :root {
   --wc-surface:    #F5EDDA;
-  --wc-ai-bg:      #EAD9BC;
   --wc-word-color: #1C1208;
   --wc-muted:      #7A6045;
   --wc-accent:     #C8952A;
@@ -24,7 +23,6 @@
 
 [data-theme="dark"] {
   --wc-surface:    #231609;   /* raised: 3-tier depth — clearly above container #150F08 */
-  --wc-ai-bg:      #0C0704;   /* deepened: clearly below card surface */
   --wc-word-color: #EFE1C0;
   --wc-muted:      #956F42;
   --wc-accent:     #C8782A;
@@ -218,7 +216,7 @@
    simulates the cellar recess or the shadow inside a desk drawer.         */
 
 .wc-ai {
-  background: var(--wc-ai-bg);
+  background: var(--cold-void);
   border-radius: 8px;
   padding: 14px 16px;
   display: flex;
