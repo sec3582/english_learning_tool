@@ -308,16 +308,6 @@
 
 ---
 
-## 2026-07-15 Modal 顏色 token 不套用設計稿佔位值
-
-**背景**：`@perfume-art-director` 設計稿中 `.modal-panel` 的 background 使用了暖色 rgba 值（rgba(20,18,16,...)），與現行 scene-cold 冷調系統不一致。
-**決策**：不套用設計稿的暖色 rgba 佔位值，維持現有冷調 token（`--cold-overlay`、`--cold-modal-fill`）。
-**理由**：`@perfume-game-director` 規格書明確要求 Modal scrim 為「灰藍色（cool gray-blue）」，設計稿的暖色數值是佔位參考，不是最終定案的顏色方向。遊戲導演規格書為顏色方向的最高依據。
-**影響檔案**：`theme-perfume-night.css`（`--cold-overlay`、`--cold-modal-fill` 維持現行冷調數值）
-**相關 commit**：2452bd4
-
----
-
 ## 2026-07-15 全專案文件棄用聲明清理
 
 **背景**：全站視覺方向於 2026-07-15 從《香水》電影美學轉為小說世界觀後，進行全專案文件審計（唯讀），確認仍殘留舊世界觀描述的檔案清單，並於同日執行棄用聲明插入。
@@ -364,3 +354,5 @@
 **決策**：不套用 @perfume-art-director 設計稿中的暖色 rgba 佔位值（如 rgba(28,32,36,0.80)）。
 **理由**：@perfume-game-director 規格明確要求灰藍色（cool gray-blue）scrim，現有 --cold-* token 方向正確，以導演規格為最高依據。
 **影響**：Modal overlay 與 panel 維持現有冷調 token，不引入暖色調。
+**相關 commit**：2452bd4
+**影響檔案**：`theme-perfume-night.css`（`--cold-overlay: color-mix(in srgb, color-mix(in srgb, var(--cold-wash) 88%, var(--cold-dim) 12%) 86%, transparent)`；`--cold-modal-fill: color-mix(in srgb, color-mix(in srgb, var(--cold-dim) 25%, var(--cold-wash) 75%) 88%, transparent)`）
