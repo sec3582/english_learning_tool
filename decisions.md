@@ -334,3 +334,25 @@
 - 所有棄用聲明為純插入，未修改任何 CSS 規則或功能程式碼
 - --cold-* / --story-* token 整合列入技術債務，Phase 5 完成後處理
 - VISUAL_SPEC.md 採「加棄用聲明」而非「重寫」，降低當前風險
+
+---
+
+## 2026-07-15 文件清理任務完成
+
+**執行內容**：全專案文件審計後，針對所有殘留《香水》電影舊世界觀描述的檔案執行棄用標注。
+
+**Commit 5630c81**（棄用聲明插入）：
+- theme-perfume-day.css / night.css / wc.css：CSS 檔頭電影敘述換成棄用聲明，結構索引保留
+- index.html 第 2750 行：#ambient-candle-glow 區塊前插入舊世界觀警示
+- storyboard.md / docs/VISUAL_SPEC.md / decision-5f-upload-pet.md：頂部插入棄用橫幅，本文不動
+
+**Commit 91c26d0**（token 文件凍結）：
+- docs/UI_COMPONENTS.md / VISUAL_QA_5E.md / COLOR_TOKEN_MIGRATION.md：頂部插入凍結聲明，待 --cold-* / --story-* 整合決策後再處理
+
+**Commit 582f6ae**（decisions.md 補齊）：
+- 本 session 所有未 commit 的 decisions.md 變更一次補齊
+
+**決策**：
+- 所有修改為純插入，未動任何 CSS 規則或功能程式碼
+- VISUAL_SPEC.md 採「加棄用聲明」不重寫，降低當前風險
+- --cold-* / --story-* token 整合列入技術債務，Phase 5 完成後處理
