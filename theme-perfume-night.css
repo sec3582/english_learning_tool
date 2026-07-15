@@ -142,7 +142,13 @@ body.scene-cold {
 
   /* ── 遮罩（沿用修正輪 1 已在 #quizModal 系列驗證過的數值，正式收編成
      token，供 .mnemonic-overlay 等其他還沒修過的遮罩共用） ── */
-  --cold-overlay:  rgba(20, 23, 26, 0.82);  /* 2026-07-15：原 0.65 → 0.82，遠距離監視的濃霧感加深 */
+  /* 2026-07-15（亮度階梯修正）：原 rgba(20,23,26,0.82) 的 RGB 跟 --cold-void
+     完全同色，疊上去只是同色調更暗，跟背景之間沒有可辨識的第二層次——這是
+     使用者回報「scene-cold 三層層次不夠」的根因之一。改用 color-mix() 從
+     --cold-wash（次層墨色）與 --cold-dim（次要文字色，帶一點藍灰）衍生，
+     不引入新色相，疊在 --cold-void 背景之上合成約 rgb(37,41,46)，比背景亮
+     15-20 階，讀作「起霧」的中介過渡層，定位在背景與 modal 面板之間。 */
+  --cold-overlay:  color-mix(in srgb, color-mix(in srgb, var(--cold-wash) 88%, var(--cold-dim) 12%) 86%, transparent);
   --color-overlay: var(--cold-overlay);
 
   /* ── Modal 面板實底（修正輪 3，docs/VISUAL_QA_5E.md §12 後續回報 #2）──
@@ -160,8 +166,13 @@ body.scene-cold {
      反而讀不出「浮在光源上方」的層次。
      2026-07-15：0.45 → 0.80，面板改用 backdrop-filter: blur(18px)
      saturate(110%) brightness(0.90) 搭配夠不透明的實底，不再依賴低 alpha
-     透出環境光暈。 */
-  --cold-modal-fill: rgba(28, 32, 36, 0.80);
+     透出環境光暈。
+     2026-07-15（亮度階梯修正）：0.80 alpha 的 rgba(28,32,36,...) 跟背景/
+     遮罩幾乎同色（只比 --cold-void 高 8-10 階），三層實質上疊成同一塊。
+     改用 color-mix() 從 --cold-dim 與 --cold-wash 衍生（同樣不引入新色
+     相），RGB 明顯高於 --cold-overlay，疊在遮罩之上合成約 rgb(51,56,62)，
+     比遮罩再亮 14-16 階，讓「離觀者最近、被光源照到的物件」這層讀得出來。 */
+  --cold-modal-fill: color-mix(in srgb, color-mix(in srgb, var(--cold-dim) 25%, var(--cold-wash) 75%) 88%, transparent);
 
   /* ── 語意色：正確／錯誤（docs/VISUAL_QA_5E.md §9.3 提案，這輪正式寫入） ── */
   --cold-correct: color-mix(in srgb, var(--cold-accent) 70%, var(--cold-parchment) 30%);
