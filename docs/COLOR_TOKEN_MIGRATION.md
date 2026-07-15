@@ -1,3 +1,5 @@
+<!--  注意（2026-07-15）：本文件規格來源 docs/VISUAL_SPEC.md 已棄用。
+--cold- / --story- token 整合方向待後續決策，本文件內容暫時凍結，請勿依此執行新修改。-->
 # COLOR_TOKEN_MIGRATION.md — `--color-*` 家族治本修法預稽核
 
 **角色**：perfume-art-director
