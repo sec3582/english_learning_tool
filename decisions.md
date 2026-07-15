@@ -356,3 +356,21 @@
 **影響**：Modal overlay 與 panel 維持現有冷調 token，不引入暖色調。
 **相關 commit**：2452bd4
 **影響檔案**：`theme-perfume-night.css`（`--cold-overlay: color-mix(in srgb, color-mix(in srgb, var(--cold-wash) 88%, var(--cold-dim) 12%) 86%, transparent)`；`--cold-modal-fill: color-mix(in srgb, color-mix(in srgb, var(--cold-dim) 25%, var(--cold-wash) 75%) 88%, transparent)`）
+
+---
+
+## 2026-07-15 decisions.md 重複條目合併
+
+**決策**：合併兩條近重複的 Modal 顏色記錄，保留「遊戲導演規格優先於設計稿」標題，刪除舊條目「Modal 顏色 token 不套用設計稿佔位值」。
+**理由**：兩條說的是同一件事，舊條目的影響檔案數值（rgba 佔位值）已在 commit 48f4247 後過時，合併時以讀取 CSS 實際值為準。
+**相關 commit**：a71f232
+**影響檔案**：decisions.md（刪一條、補入 commit 與影響檔案欄位）
+
+---
+
+## 2026-07-15 story/world.md 納入版控
+
+**決策**：將 story/world.md 從 untracked 狀態納入 git 版控。
+**理由**：story/world.md 是整個新視覺方向的根基文件，角色檔案、CSS token、材質語言均以它為準，需要版控保護。
+**相關 commit**：df9aa50
+**影響檔案**：story/world.md（新增追蹤）
