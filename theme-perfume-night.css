@@ -528,8 +528,8 @@ body.scene-cold {
   inset: 0;
   z-index: 60;
   background: var(--cold-overlay);
-  backdrop-filter:         blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter:         blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   opacity: 0;
   pointer-events: none;
   transition: opacity var(--anim-modal);
@@ -549,10 +549,8 @@ body.scene-cold {
   gap: var(--space-md);
 
   background: var(--cold-modal-fill);
-  backdrop-filter:         blur(18px) saturate(110%) brightness(0.90);
-  -webkit-backdrop-filter: blur(18px) saturate(110%) brightness(0.90);
   border: 1px solid var(--glass-cold-border);
-  border-radius: 16px;
+  border-radius: 4px 5px 4px 4px;
   box-shadow: 0 20px 60px var(--cold-shadow);
 
   color: var(--cold-parchment);
