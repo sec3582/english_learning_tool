@@ -307,50 +307,75 @@ body.scene-cold {
 .word-card {
   position: relative;
   width: min(100%, 480px);
-  padding: clamp(24px, 3.5vw, 36px);
+  padding: var(--space-lg) var(--space-xl);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-sm);
 
-  background:      var(--scene-glass-fill, var(--glass-cold-fill));
-  border:          1px solid var(--scene-glass-border, var(--glass-cold-border));
-  border-radius:   16px;
-  backdrop-filter:         blur(16px) saturate(115%);
-  -webkit-backdrop-filter: blur(16px) saturate(115%);
-  box-shadow: 0 16px 48px var(--scene-shadow, var(--cold-shadow));
+  background: linear-gradient(155deg, var(--story-fog) 0%, var(--story-breath) 100%);
+  background-color: var(--story-fog);
 
-  color: var(--scene-parchment, var(--cold-parchment));
-  transition:
-    transform     var(--night-duration-card) var(--night-ease),
-    box-shadow    var(--night-duration-card) var(--night-ease),
-    border-color  var(--night-duration-card) var(--night-ease);
+  border: none;
+  border-radius: 3px 4px 3px 5px;
+
+  box-shadow:
+    inset 0  1px 0   color-mix(in srgb, var(--story-breath) 65%, transparent),
+    inset 1px 0 0    color-mix(in srgb, var(--story-breath) 45%, transparent),
+    inset 0 -2px 5px color-mix(in srgb, var(--story-mud)    35%, transparent),
+    2px 6px 20px     color-mix(in srgb, var(--story-mud)    55%, transparent);
+
+  color: var(--story-mud);
+  font-family: var(--font-base);
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-base);
+
+  transition: transform var(--anim-hover), box-shadow var(--anim-hover);
+}
+
+.word-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 28% 22%,
+    color-mix(in srgb, var(--story-mud) 10%, transparent) 0%, transparent 60%);
+  mix-blend-mode: multiply;
 }
 
 .word-card__word {
-  font-family: "EB Garamond", "Cormorant Garamond", Georgia, serif;
-  font-size: 1.75rem;
-  font-weight: 500;             /* 全站不使用 Bold，見 VISUAL_SPEC §4 */
-  letter-spacing: 0.02em;
-  color: var(--scene-parchment, var(--cold-parchment));
+  font-family: var(--font-base);
+  font-size: var(--font-size-heading);
+  font-weight: 500;
+  letter-spacing: var(--letter-spacing-wide);
+  color: var(--story-mud);
 }
 
 .word-card__meta,
 .word-card__definition {
   font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
-  line-height: 1.8;
-  color: var(--scene-dim, var(--cold-dim));
+  font-size: var(--font-size-label);
+  line-height: var(--line-height-base);
+  color: color-mix(in srgb, var(--story-mud) 70%, var(--story-fog) 30%);
 }
 
-/* Hover：極緩慢浮起 1–2px，邊框略為提亮 ── 唯一允許的互動色只有
-   --cold-accent（見下方按鈕／輸入框的硬性限制說明，同一條規則適用於
-   所有互動元件，.word-card 也不例外） */
 .word-card:hover,
 .word-card:focus-within {
-  transform:    translateY(-2px);
-  border-color: color-mix(in srgb, var(--cold-accent) 55%, transparent);
+  transform: translateY(-2px);
   box-shadow:
-    0 20px 56px var(--scene-shadow, var(--cold-shadow)),
-    0 0 0 1px color-mix(in srgb, var(--cold-accent) 18%, transparent);
+    inset 0  1px 0   color-mix(in srgb, var(--story-breath) 65%, transparent),
+    inset 1px 0 0    color-mix(in srgb, var(--story-breath) 45%, transparent),
+    inset 0 -2px 5px color-mix(in srgb, var(--story-mud)    35%, transparent),
+    3px 10px 26px    color-mix(in srgb, var(--story-mud)    60%, transparent);
+}
+
+.word-card[data-stage="5"] {
+  box-shadow:
+    inset 0 0 0 1px  color-mix(in srgb, var(--story-amber)  45%, transparent),
+    inset 0  1px 0   color-mix(in srgb, var(--story-breath) 65%, transparent),
+    inset 1px 0 0    color-mix(in srgb, var(--story-breath) 45%, transparent),
+    inset 0 -2px 5px color-mix(in srgb, var(--story-mud)    35%, transparent),
+    2px 6px 20px     color-mix(in srgb, var(--story-mud)    55%, transparent);
 }
 
 /* 永久疤痕預留位：Day 14 事件之後，該卡片會被加上這個 class（見 Step 4），
