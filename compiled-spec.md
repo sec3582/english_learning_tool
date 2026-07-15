@@ -1,3 +1,9 @@
+## ⚠️ 版本說明
+本文件 2026-07-15 之前的內容基於《香水》電影美學，已棄用。
+現行規格請參考 .claude/agents/perfume-game-director.md。
+
+---
+
 # compiled-spec.md — Day Mode Full Application
 **Film**: Perfume: The Story of a Murderer (2006) — Dir. Tom Tykwer, DP Frank Griebe
 **Date**: 2026-04-09
@@ -731,5 +737,60 @@ input:focus {
 
 1. **§3.2 Section Cards** — change the `Border` column from `none` to the new groove border token, and add a sentence classifying the border as a groove-edge (CG-13 special rule, same semantic as input borders) rather than a UI border.
 2. **CG-2 in `storyboard.md`** — update the "唯一例外" rule to include the new border type, and re-run the "remove box-shadow" verification to confirm the card still passes.
+
+---
+
+## 6. 現行視覺規格（2026-07-15）
+
+> 以下內容摘自 `.claude/agents/perfume-game-director.md`（現行來源）。本節之上的所有內容基於《香水》電影美學，已棄用，僅供歷史參考。視覺語言的根來自小說本身，故事全文見 `story/world.md`。
+
+### 6.1 主色盤（情感弧線四色）
+
+色盤順序即故事弧線本身：
+
+| Token 名稱 | Hex | 對應故事時刻 | 使用規則 |
+|---|---|---|---|
+| `--story-fog` | `#8A8378` | 第1段「末日的常態」，主角麻木底色 | 全站基礎中性色，大面積使用 |
+| `--story-mud` | `#5C4A3A` | 第2段「復仇」，第3段「最後一餐」前半 | 警示/答錯/逾期，情緒轉折點浮現，不做主色 |
+| `--story-amber` | `#C08A3E` | 第3段儀式感，第6段記憶浮現 | 全站唯一溫暖亮點，正向回饋專用（背熟、複習達成） |
+| `--story-breath` | `#EDE6DA` | 第8段「結局留白」 | 完成頁/最終狀態，讀作「終於能喘氣的白」 |
+
+日常操作活在霧灰（`--story-fog`）與琥珀（`--story-amber`）之間。極端兩端（mud、breath）只在情緒高點浮現。
+
+### 6.2 卡片材質語言
+
+單字卡不是「卡片」，是你在整理媽媽舊書時翻到的那張教會門票——薄、微捲邊、紙纖維感，邊緣有輕微磨損陰影，不是乾淨的 drop-shadow。
+
+**材質實作方向：**
+- 紙纖維背景紋理（CSS noise 或輕量紋理圖）
+- 不對稱 `border-radius`（如 `3px 4px 3px 5px`），避免制式圓角
+- 邊緣磨損：inset shadow，不用外部 drop-shadow
+- 油墨微暈痕跡：呼應 Suminagashi 墨流，可用極淡的 `background-image` 漸層模擬
+
+使用者複習到 stage 5 才算「讀懂」這張紙片——材質語言要讓每次翻卡都有一點「發現遺物」的手感。
+
+### 6.3 Modal 場景意象
+
+Modal 出現時，像插頁 C 裡兜坐著等待的那個瞬間——遠距離監視、灰藍色、克制。
+
+**互動規格：**
+- 出現方式：`opacity 0 → 1`，`transition: 0.4s ease-out`，禁止 scale/彈跳
+- 遮罩層：`backdrop-filter: blur(8px)`，讀作薄霧，不是玻璃
+- 按鈕回饋：輕微 `opacity` 變化，禁止 `transform: scale` 或跳躍式 `box-shadow`
+- 整體讀感：「有人站在你面前，等你回應」，不是「彈出視窗」
+
+### 6.4 禁止清單（絕對不能出現）
+
+1. **鮮豔飽和色** — 尤其純紅色警示、螢光色成就特效。這個世界連復仇都是安靜的。
+2. **Glassmorphism（玻璃擬態）** — `CLAUDE.md` 明訂禁止。故事裡沒有角色活在透明介面裡。
+3. **Material Design 3 圓角卡片陰影** — 同上，讀作科技感，破壞場景感。
+4. **慶祝式動畫** — 彩帶特效、彈跳動畫、誇張音效。每個「成功」時刻都該安靜。
+5. **純黑或純白** — 這個世界沒有絕對的答案，只有霧灰到琥珀之間的漸層。
+6. **銳利直角科技感邊框** — 終端機/儀表板風格的高對比網格線，會讓工具讀成「監控系統」。
+
+### 6.5 2026-07-15 後續更新
+
+- **卡片材質**：已從 backdrop-filter Liquid Glass 改為 gradient + inset 光影（詳見本日 decisions.md「.word-card 材質方向變更」）
+- **場景 class 架構**：--story-* 維持全域 :root，不進場景互斥系統（詳見本日 decisions.md「不新建 .scene-story 場景 class」）
 
 Keeping both documents in sync prevents the spec from drifting into contradiction between the storyboard constraint and the compiled implementation.

@@ -356,3 +356,11 @@
 - 所有修改為純插入，未動任何 CSS 規則或功能程式碼
 - VISUAL_SPEC.md 採「加棄用聲明」不重寫，降低當前風險
 - --cold-* / --story-* token 整合列入技術債務，Phase 5 完成後處理
+
+---
+
+## 2026-07-15 Modal 顏色方向：遊戲導演規格優先於設計稿
+
+**決策**：不套用 @perfume-art-director 設計稿中的暖色 rgba 佔位值（如 rgba(28,32,36,0.80)）。
+**理由**：@perfume-game-director 規格明確要求灰藍色（cool gray-blue）scrim，現有 --cold-* token 方向正確，以導演規格為最高依據。
+**影響**：Modal overlay 與 panel 維持現有冷調 token，不引入暖色調。

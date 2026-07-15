@@ -97,21 +97,22 @@ Deleted words must be excluded from quiz selection — check `storage.js` filter
 
 ## Design System
 
-The UI uses a **Morandi/apothecary aesthetic** inspired by the film *Perfume: The Story of a Murderer* (2006). Key constraints:
+**視覺基礎已從《香水》電影美學（2026-04-09 至 2026-07-14）改為小說世界觀本身（2026-07-15 起）。** 故事背景與情感弧線見 `story/world.md`；現行視覺語言（色盤、卡片材質、Modal 規格）見 `.claude/agents/perfume-game-director.md`。`decisions.md` 與 `compiled-spec.md` 的舊內容保留作歷史參考，不再作為執行依據。
 
-- **Never** use pure black or pure white — always warm brown/parchment tones
-- Color hue range: 36–44° (warm yellows/browns); desaturated Morandi palette
-- Shadows must be warm brown (not cold grey); simulated light from upper-left at 30–40°
-- No glass morphism, no Material Design 3
-- Parchment texture on all surfaces
+**禁止清單（絕對不能出現）：**
+- 禁止 glassmorphism（玻璃擬態）
+- 禁止純黑（`#000000`）或純白（`#ffffff`）
+- 禁止慶祝式彈跳動畫與彩帶特效
+- 禁止鮮豔飽和色
+- 禁止銳利直角科技感邊框
 
 CSS theme files:
 - `theme-perfume-day.css` — Day Mode (primary, ~40KB)
 - `theme-perfume-wc.css` — Word card component styles (~71KB)
-- `compiled-spec.md` — Full Day Mode specification (color tokens, shadow ladder, typography, spacing, motion)
-- `decisions.md` — Design rationale and visual North Star
+- `compiled-spec.md` — Day Mode 舊規格（色彩、陰影、字體、間距、動效），2026-07-15 前基礎已棄用
+- `decisions.md` — 舊決策記錄與視覺 North Star，2026-07-15 前基礎已棄用
 
-Always read `compiled-spec.md` before making CSS changes to ensure new styles conform to the established token system.
+修改 CSS 前，先讀 `.claude/agents/perfume-game-director.md` 確認現行規格，再視需要參考 `compiled-spec.md` 的舊 token 系統是否仍適用。
 
 ## Language Conventions
 
