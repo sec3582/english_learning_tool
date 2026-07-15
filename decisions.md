@@ -1,3 +1,9 @@
+> ⚠️ 2026-07-15 之前的決策記錄基於《香水》電影美學（已棄用）。
+> 2026-07-15 起視覺基礎改為小說世界觀本身。
+> 舊記錄保留作歷史參考，不再作為執行依據。
+
+---
+
 # decisions.md — Day Mode Full Application
 **Film**: Perfume: The Story of a Murderer (2006) — Dir. Tom Tykwer, DP Frank Griebe
 **Scope**: Day Mode only — full application shell (not wc-card component only)
@@ -248,3 +254,83 @@
 | 10 | **英文單字標題在卡片中是唯一的「最大字」** | 展開任一 wc-card，英文單字字體尺寸目測明顯大於同卡片內所有其他文字 |
 | 11 | **陰影沒有冷黑色** | 截圖後，選取任何陰影深色區域，確認 RGB 中 R 值大於 G 和 B（暖棕，非 `rgba(0,0,0,x)`） |
 | 12 | **移除所有顏色和字型後，頁面不像之前的 Morandi SaaS 版本** | 將截圖轉為灰階，確認整體佈局與深淺關係（重與輕）和舊版不同——新版卡片深度更強，層次更多 |
+
+---
+
+## 2026-07-15 視覺參考基礎轉向
+
+**決策**：放棄《香水》電影作為視覺參考，改以小說世界觀本身定義視覺語言
+**理由**：小說內容與香水電影無關；工具真實意義是「主角確認自己還活著的工具」，視覺語言應從此出發
+**放棄的選項**：繼續沿用電影美學做微調
+**影響範圍**：`compiled-spec.md`、所有角色的視覺規格、CSS token 色盤
+
+---
+
+## 2026-07-15 subagent 架構建立
+
+**決策**：首次建立 `.claude/agents/` 目錄，新增 6 個角色檔案（perfume-game-director、perfume-art-director、ui-designer、frontend-developer、backend-architect、technical-writer）
+**理由**：專案進入 Phase 5 視覺重設計階段，需要多角色協作；同時視覺方向已從《香水》電影改為小說世界觀，趁此機會以新規格從零建立
+**放棄的選項**：以單一 prompt 處理所有角色職責
+**影響範圍**：所有 `@角色` 呼叫、視覺規格執行流
+
+---
+
+## 2026-07-15 CSS Story Token 新增
+
+**決策**：在 theme-perfume-day.css 的 :root 新增四個區段（§2G–§2J）
+**內容**：
+- §2G：--story-fog / --story-mud / --story-amber / --story-breath（四色弧線）
+- §2H：--anim-* 動畫 token（5 個）
+- §2I：--font-* 字體 token（7 個）
+- §2J：--space-* 間距 token（5 個）
+**原則**：與 theme-perfume-night.css 的 --cold-* 並存，暫不替換
+**影響範圍**：theme-perfume-day.css（第 109–139 行）
+
+---
+
+## 2026-07-15 .word-card 材質方向變更
+
+**決策**：放棄 backdrop-filter Liquid Glass 作為主要材質來源，改用 gradient fill + 多層 inset box-shadow 表達卡片材質
+**理由**：backdrop-filter 在純色深底（--cold-void #14171a）上無法取樣，等於空轉，卡片讀成平面深色板。新方案以「教會門票舊紙」為意象（story/world.md 第6段），用 linear-gradient(155deg, --story-fog, --story-breath) + inset 高光/陰影疊加表達紙感
+**影響範圍**：theme-perfume-night.css 第 311–358 行（.word-card，Commit 1 待執行）
+
+---
+
+## 2026-07-15 不新建 .scene-story 場景 class
+
+**決策**：--story-* token 維持在全域 :root，不新建 .scene-story 互斥場景 class
+**理由**：
+1. .scene-cold／.scene-warm 是互斥的環境重貼皮，--story-* 是跨故事弧線的情緒推進，語意不同，強行納入互斥模型會破壞現有狀態機邏輯
+2. .word-card 是主角隨身物件，應維持同一種紙的觸感，不隨場景重新上色，直讀 :root 才符合敘事事實
+3. 維護成本過高，無對應場景需求支撐
+**放棄的選項**：新建 .scene-story，比照 .scene-warm 複製一整套 token
+**影響範圍**：無新增檔案；theme-perfume-night.css 的 .scene-cold / .scene-warm 互斥架構維持不動。未來若需畫面隨故事段落漸變，改用 data-story-phase="1".."8" + color-mix/crossfade 插值機制
+
+---
+
+## 2026-07-15 Modal 顏色 token 不套用設計稿佔位值
+
+**背景**：`@perfume-art-director` 設計稿中 `.modal-panel` 的 background 使用了暖色 rgba 值（rgba(20,18,16,...)），與現行 scene-cold 冷調系統不一致。
+**決策**：不套用設計稿的暖色 rgba 佔位值，維持現有冷調 token（`--cold-overlay`、`--cold-modal-fill`）。
+**理由**：`@perfume-game-director` 規格書明確要求 Modal scrim 為「灰藍色（cool gray-blue）」，設計稿的暖色數值是佔位參考，不是最終定案的顏色方向。遊戲導演規格書為顏色方向的最高依據。
+**影響檔案**：`theme-perfume-night.css`（`--cold-overlay`、`--cold-modal-fill` 維持現行冷調數值）
+**相關 commit**：2452bd4
+
+---
+
+## 2026-07-15 全專案文件棄用聲明清理
+
+**背景**：全站視覺方向於 2026-07-15 從《香水》電影美學轉為小說世界觀後，進行全專案文件審計（唯讀），確認仍殘留舊世界觀描述的檔案清單，並於同日執行棄用聲明插入。
+
+**執行內容（commit 5630c81）**：
+- theme-perfume-day.css / night.css / wc.css：CSS 檔頭電影敘述換成棄用聲明，結構索引保留
+- index.html：#ambient-candle-glow 區塊前插入舊世界觀警示
+- storyboard.md / docs/VISUAL_SPEC.md / decision-5f-upload-pet.md：頂部插入棄用橫幅，本文不動
+
+**凍結處理（token 整合待決策）**：
+- docs/UI_COMPONENTS.md / VISUAL_QA_5E.md / COLOR_TOKEN_MIGRATION.md：頂部插入「凍結中，待 --cold-* / --story-* 整合決策」注意事項
+
+**決策**：
+- 所有棄用聲明為純插入，未修改任何 CSS 規則或功能程式碼
+- --cold-* / --story-* token 整合列入技術債務，Phase 5 完成後處理
+- VISUAL_SPEC.md 採「加棄用聲明」而非「重寫」，降低當前風險
