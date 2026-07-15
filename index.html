@@ -2747,6 +2747,26 @@
 
 <div id="petPenalty" style="display:none"></div>
 
+  <!--  以下敘事理由為舊世界觀（香水電影，2026-07-15 已棄用），功能程式碼仍有效 -->
+  <!-- ═══ Phase 6 補件（perfume-game-director 提案）：工坊環境光暈 ═══
+       這輪只測光源，不加微塵（微塵已在下方 #dust-container 獨立實作）。
+       緣由：玻璃 modal 需要背景有光才能折射，純冷調墨流太稀疏太暗，
+       glass 讀不出來——不是調參數能解的，是場景裡缺一個「這裡有熱源」
+       的敘事前提（調香師工坊燭光/蒸餾熱源）。
+       色相沿用電子雞燭火，不新增色相：#F5A623 取自 js/pixel_pet.js
+       FLAME_RAMPS.F2 的亮端（琥珀色），電子雞依然是最近最亮的那盞，
+       這裡只是它的光暈延伸到遠處牆面的暗示，不是第二個焦點。
+       位置刻意偏右下角（80% 90%）不置中：置中會讀成「這裡有個發光體」，
+       偏角落才讀成「光是從畫面外滲進來的」，不會搶電子雞的注意力。
+       z-index -2：要低於 #ink-layer 的 -1（見 index.html:735-738 的
+       fixed 修正），確保墨流蓋在光暈之上，光暈是光暈不是圖層裝飾——
+       原始需求寫的是 z-index:0，但那樣會疊在墨流 canvas 之上而不是
+       之下，跟「在墨流 canvas 之下」的目標矛盾，這裡改用能達成該目標
+       的實際數值，理由見對話回覆。
+       alpha 0.10（修正輪 5 從 0.04 提高，讓光暈有實際可感知的效果），
+       純 CSS 靜態層，不加 JS、不碰 ink-suminagashi.js、不改 --cold-void。 -->
+  <div id="ambient-candle-glow" style="position:fixed;inset:0;pointer-events:none;z-index:-2;background:radial-gradient(circle 45vw at 80% 90%, rgba(245, 166, 35, 0.10) 0%, transparent 70%);"></div>
+
   <!-- ═══ Phase 6: 微塵容器 Dust Motes Container ═══ -->
   <div id="dust-container"></div>
 

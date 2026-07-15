@@ -1,12 +1,7 @@
-/*
- * theme-perfume-night.css
- * Perfume (2006) — Night Mode / 沉浸式文本小說 冷調視覺系統
- * Film: Perfume: The Story of a Murderer, Dir. Tom Tykwer, DP Frank Griebe
- * Source of truth: docs/VISUAL_SPEC.md
- *
- * 與 theme-perfume-day.css 並列的獨立主題檔案 ── 不共用、不繼承 Day Mode 的
- * 任何暖色 token（--color-*、--wc-*）。此檔案尚未在 index.html 掛載 <link>，
- * 僅作為 v2「沉浸式文本小說」功能的獨立視覺系統草稿。
+/*  此檔頭敘述已棄用（2026-07-15）
+    視覺方向已從《香水》電影美學轉為小說世界觀。
+    現行規格來源：story/world.md、perfume-game-director.md、compiled-spec.md §6
+    注意：此檔仍為現行掛載的深色模式主檔，CSS 規則本身持續有效。
  *
  * 檔案結構：
  *   Step 0 — 場景色彩 tokens（.scene-cold / .scene-warm，VISUAL_SPEC §2.1–2.4）

@@ -1,3 +1,9 @@
+> ⚠️ 此文件已棄用（2026-07-15）。
+> 本文件內容以《香水》電影美學為基礎，該美學框架已於 2026-07-15 全面放棄。
+> 現行視覺方向請參閱：`story/world.md`、`.claude/agents/perfume-game-director.md`、`compiled-spec.md` §6。
+
+---
+
 # storyboard.md — Day Mode Full Application
 **Film**: Perfume: The Story of a Murderer (2006) — Dir. Tom Tykwer, DP Frank Griebe
 **Scope**: Day Mode only — all 8 components-in-scope from decisions.md

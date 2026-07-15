@@ -1,3 +1,9 @@
+> ⚠️ 此文件已棄用（2026-07-15）。
+> 本文件內容以《香水》電影美學為基礎，該美學框架已於 2026-07-15 全面放棄。
+> 現行視覺方向請參閱：`story/world.md`、`.claude/agents/perfume-game-director.md`、`compiled-spec.md` §6。
+
+---
+
 # decision-5f-upload-pet.md — 兩項玩家體驗決策
 **角色**：perfume-game-director
 **對應階段**：Phase 5e 之後、後續實作之前

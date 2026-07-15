@@ -1,8 +1,6 @@
-/*
- * theme-perfume-day.css
- * Perfume (2006) — Day Mode
- * Film: Perfume: The Story of a Murderer, Dir. Tom Tykwer, DP Frank Griebe
- * Source of truth: compiled-spec.md
+/*  此檔頭敘述已棄用（2026-07-15）
+    視覺方向已從《香水》電影美學轉為小說世界觀。
+    現行規格來源：story/world.md、perfume-game-director.md、compiled-spec.md §6
  *
  * Step 0 — Global Tokens (§2A–2G)
  * Step 1 — Page background + M-1 texture + vignette (§3.1)
@@ -101,6 +99,40 @@
   --motion-focus:       120ms ease-out;   /* focus ring appear */
   --motion-entrance:    160ms ease-out;   /* list item entrance base */
   --motion-stagger:     40ms;             /* per-item stagger increment */
+
+  /* ── 2G. Story Palette（新增，2026-07-15；與 --cold-* 並存，暫不替換） ──── */
+  /* 來源：.claude/agents/perfume-game-director.md — 情感弧線四色 */
+
+  --story-fog:    #8A8378;   /* 霧灰曬白：全站基礎中性底色 */
+  --story-mud:    #5C4A3A;   /* 污泥棕：警示/答錯/逾期 */
+  --story-amber:  #C08A3E;   /* 燭光琥珀：唯一正向回饋亮點 */
+  --story-breath: #EDE6DA;   /* 極淡霧白：完成頁/結局留白 */
+
+  /* ── 2H. Animation Tokens（新增，2026-07-15） ─────────────────────────── */
+
+  --anim-appear:  0.35s ease-out;
+  --anim-dismiss: 0.25s ease-in;
+  --anim-hover:   0.2s ease;
+  --anim-modal:   0.4s ease-out;
+  --anim-flip:    0.5s ease-in-out;
+
+  /* ── 2I. Font Tokens（新增，2026-07-15） ──────────────────────────────── */
+
+  --font-base:           'Georgia', serif;
+  --font-mono:           'Courier New', monospace;
+  --font-size-body:      16px;
+  --font-size-label:     13px;
+  --font-size-heading:   22px;
+  --line-height-base:    1.7;
+  --letter-spacing-wide: 0.04em;
+
+  /* ── 2J. Spacing Tokens（新增，2026-07-15） ───────────────────────────── */
+
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 40px;
 
 }
 
