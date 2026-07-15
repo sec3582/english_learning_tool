@@ -147,7 +147,7 @@ body.scene-cold {
 
   /* ── 遮罩（沿用修正輪 1 已在 #quizModal 系列驗證過的數值，正式收編成
      token，供 .mnemonic-overlay 等其他還沒修過的遮罩共用） ── */
-  --cold-overlay:  rgba(20, 23, 26, 0.65);
+  --cold-overlay:  rgba(20, 23, 26, 0.82);  /* 2026-07-15：原 0.65 → 0.82，遠距離監視的濃霧感加深 */
   --color-overlay: var(--cold-overlay);
 
   /* ── Modal 面板實底（修正輪 3，docs/VISUAL_QA_5E.md §12 後續回報 #2）──
@@ -158,8 +158,15 @@ body.scene-cold {
      修正輪 4（perfume-art-director 提案）：0.92 幾乎不透光，backdrop-filter
      的 blur 等於在模糊看不見的東西，玻璃感歸零。降到 0.60，改靠搭配的
      backdrop-filter brightness(0.55) 壓暗任何穿透光來守住文字對比，
-     不再需要用高 alpha 硬擋（見 index.html #quizModal > div 等規則）。 */
-  --cold-modal-fill: rgba(20, 23, 26, 0.60);
+     不再需要用高 alpha 硬擋（見 index.html #quizModal > div 等規則）。
+     修正輪 5：0.60 再降到 0.45，讓 backdrop-filter 有更多機會透出
+     #ambient-candle-glow 補上的環境光；RGB 從 20,23,26 微調到
+     28,32,36，避免 alpha 降低後 modal 因為底色比環境光暈本身更暗，
+     反而讀不出「浮在光源上方」的層次。
+     2026-07-15：0.45 → 0.80，面板改用 backdrop-filter: blur(18px)
+     saturate(110%) brightness(0.90) 搭配夠不透明的實底，不再依賴低 alpha
+     透出環境光暈。 */
+  --cold-modal-fill: rgba(28, 32, 36, 0.80);
 
   /* ── 語意色：正確／錯誤（docs/VISUAL_QA_5E.md §9.3 提案，這輪正式寫入） ── */
   --cold-correct: color-mix(in srgb, var(--cold-accent) 70%, var(--cold-parchment) 30%);
@@ -508,6 +515,85 @@ body.scene-cold {
 }
 
 .btn-night--ghost:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--cold-accent-ring);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Modal — 插頁 C「兜坐著等待」的場景意象：遠距離監視、灰藍、克制
+   2026-07-15：perfume-art-director 設計稿，decisions.md「Modal token 更新」
+   ═══════════════════════════════════════════════════════════════════════════ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: var(--cold-overlay);
+  backdrop-filter:         blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--anim-modal);
+}
+.modal-overlay.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal-panel {
+  position: relative;
+  z-index: 61;
+  width: min(100%, 480px);
+  padding: clamp(24px, 4vw, 32px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+
+  background: var(--cold-modal-fill);
+  backdrop-filter:         blur(18px) saturate(110%) brightness(0.90);
+  -webkit-backdrop-filter: blur(18px) saturate(110%) brightness(0.90);
+  border: 1px solid var(--glass-cold-border);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px var(--cold-shadow);
+
+  color: var(--cold-parchment);
+  font-family: var(--font-base);
+
+  opacity: 0;
+  transition: opacity var(--anim-modal);
+}
+.modal-panel.is-open {
+  opacity: 1;
+}
+
+/* ── 例外聲明：以下兩個按鈕變體刻意違反上方「按鈕互動只用 --cold-accent」
+   的硬性限制。理由：這兩顆按鈕是語意反饋（警示／降級），不是功能性
+   chrome。例外範圍僅限這兩個 class，不擴及 .btn-night--primary /
+   .btn-night--ghost。 ── */
+
+/* 「重置」：鏽紅邊框警示，呼應 --cold-wrong 語意色（答錯/逾期） */
+.btn-night--reset {
+  background: transparent;
+  color: var(--cold-wrong);
+  border: 1px solid var(--cold-wrong);
+}
+.btn-night--reset:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--cold-wrong) 12%, transparent);
+}
+.btn-night--reset:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--cold-wrong) 35%, transparent);
+}
+
+/* 「關閉」：降為淡字，不是實色按鈕——讀作「悄悄退場」，不是決策點 */
+.btn-night--close {
+  background: transparent;
+  border: none;
+  color: var(--cold-dim);
+}
+.btn-night--close:hover:not(:disabled) {
+  color: color-mix(in srgb, var(--cold-dim) 85%, var(--cold-parchment) 15%);
+}
+.btn-night--close:focus-visible {
   outline: none;
   box-shadow: 0 0 0 3px var(--cold-accent-ring);
 }
