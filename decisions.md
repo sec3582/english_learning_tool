@@ -388,3 +388,16 @@
 - Phase 5g 完成條件正式達成：`.word-card` 材質 + Modal + 三層亮度差均符合小說世界觀視覺語言
 
 **下一步**：Phase 4.5 前端 UI 實作（三個頁籤 + 自訂單字功能）
+
+---
+
+## 2026-07-17 Phase 4.5 UI 設計決策定案
+
+經 @ui-designer、@perfume-art-director、@perfume-game-director 三方審閱後定案：
+
+- **按鈕層級**：【挑出單字】用 .btn-outline-m；【中文翻譯】【文法重點】降階為 .btn-ghost-m。amber 色保留給間隔重複「已掌握」正向回饋，不用於操作列
+- **#resultActionRow 間距**：與下方 tab bar 保持 16px（折中：有視覺分層，不完全切開）
+- **PDF 說明文字**：加一行敘事語氣說明「這份文件只帶出了字——其他的，靠你自己了。」用 --cold-dim 小字，不加 icon
+- **出現動畫**：opacity 0→1，0.35–0.4s ease-out，無彈跳無慶祝特效
+- **自訂單字功能**：維持現有直接加入單字庫行為（Option B），只修正 PDF session 的 context 來源 bug；sidebar accordion UI 元件略過不實作
+- **PDF 存到 Notion**：只同步單字清單，不抓翻譯和文法重點
