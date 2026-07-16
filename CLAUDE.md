@@ -8,12 +8,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **v2 優化目標（開發分支：`feature/v2-agency-rebuild`）：**
 
-1. 全站視覺重設計（《香水》電影美學，Suminagashi 墨流動畫）
-2. MD 描述文件清理（移除冗長形容詞）
-3. 收藏文章同步到 Notion
-4. 評估並處理文法測驗 bug
-5. 學習進度追蹤（利用現有 WordObject 的 stage/dueAt 欄位補充統計與視覺化）
-6. 沉浸式文本小說（背單字推進劇情，主角是使用者自己，失去嗅覺的調香師學徒）
+- 全站視覺重設計（2026-07-15 起改以小說世界觀為基礎，見 `story/world.md`；Phase 5g 完成）
+- MD 描述文件清理（commit 37c58cb）
+- 收藏文章同步到 Notion（完成）
+- 文法測驗 Bug 修復（commit 848f1a8）
+- 學習進度追蹤（commit 7e38ed7）
+- Phase 4.5：PDF/圖片上傳前端 UI（進行中）
+- Phase 6：沉浸式文本小說（背單字推進劇情，主角就是你；故事設定見 `story/world.md`）
 
 ## Development Commands
 
