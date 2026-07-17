@@ -401,3 +401,13 @@
 - **出現動畫**：opacity 0→1，0.35–0.4s ease-out，無彈跳無慶祝特效
 - **自訂單字功能**：維持現有直接加入單字庫行為（Option B），只修正 PDF session 的 context 來源 bug；sidebar accordion UI 元件略過不實作
 - **PDF 存到 Notion**：只同步單字清單，不抓翻譯和文法重點
+
+---
+
+## Phase 4.5 UX 修正（2026-07-17）
+
+- #resultActionRow 標籤更新：「中文翻譯」→「翻譯這篇」、「文法重點」→「拆解文法」
+- 漸進式隱藏：「翻譯這篇」「拆解文法」在成功 fetch 後 fade-out，失敗時保留供重試
+- 「挑出單字」永遠可見（重跑動作，非一次性觸發）
+- 新增 resetActionButtonsVisible()：同時清除 class 與行內 opacity 樣式，確保重新分析後按鈕正確還原
+- 設計依據：@ux-architect 分析建議方案 3 + 方案 2 非對稱組合
