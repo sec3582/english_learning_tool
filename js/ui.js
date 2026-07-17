@@ -153,31 +153,37 @@ export function startQuizFlowWithMode(mode){
 }
 
 
-/* ===== AI 分析 ===== */
-export async function handleAnalyzeClick() {
-  const btn = document.getElementById("analyzeBtn");
-  const text = document.getElementById("articleInput").value.trim();
-  if (!text) return alert("請先貼上文章");
-  btn.disabled = true;
-  const old = btn.textContent;
-  btn.textContent = "分析中…";
-  document.getElementById("loading").classList.remove("hidden");
+/* ===== AI 分析 =====
+   Phase 4.5：新增可選參數，讓 PDF 分頁能直接傳入記憶體中的文字（不經
+   #articleInput），並指向自己的按鈕／loading 元素（PDF 第一次自動觸發時
+   兩者皆不存在，函式需能在缺這兩個元素時安全執行）。
+   回傳 boolean：是否成功產生單字卡，供呼叫端決定要不要展開後續 UI。 */
+export async function handleAnalyzeClick({ text, btnId = "analyzeBtn", loadingId = "loading" } = {}) {
+  const btn = btnId ? document.getElementById(btnId) : null;
+  const loadingEl = loadingId ? document.getElementById(loadingId) : null;
+  const articleText = (text ?? document.getElementById("articleInput")?.value ?? "").trim();
+  if (!articleText) { alert("請先貼上文章"); return false; }
+
+  let old;
+  if (btn) { btn.disabled = true; old = btn.textContent; btn.textContent = "分析中…"; }
+  loadingEl?.classList.remove("hidden");
   document.getElementById("aiResult")?.classList.add("hidden");
 
   try {
-    const raw = await analyzeArticle(text);
+    const raw = await analyzeArticle(articleText);
     const rawText = (typeof raw === "string") ? raw : JSON.stringify(raw);
     const words = Array.isArray(raw) ? raw : extractJSON(rawText);
 
-    renderWordSelection(words, text);
+    renderWordSelection(words, articleText);
     refreshUsageUI();
+    return true;
   } catch (e) {
     console.error(e);
     alert(e?.message || "AI 解析失敗，請稍後再試");
+    return false;
   } finally {
-    document.getElementById("loading").classList.add("hidden");
-    btn.disabled = false;
-    btn.textContent = old;
+    loadingEl?.classList.add("hidden");
+    if (btn) { btn.disabled = false; btn.textContent = old; }
   }
 }
 
@@ -297,7 +303,7 @@ export function renderWordSelection(words, articleText = "") {
 
 /* ===== 自訂單字：語意辨識並自動填入 ===== */
 export async function handleAnalyzeCustom(){
-  const article = document.getElementById("articleInput")?.value.trim() || "";
+  const article = getArticleContextText();
   const term = document.getElementById("customWordInput")?.value.trim() || "";
   if (!term) return alert("請先輸入要分析的單字或片語");
 
@@ -1788,9 +1794,11 @@ function importJsonFile(file) {
 
 
 
-/* ===== 圖片／PDF 上傳辨識（Phase 5f：接上後端 /extract-image /extract-pdf） ===== */
+/* ===== 圖片上傳辨識（Phase 5f：接上後端 /extract-image；Phase 4.5：PDF 分家，見下方獨立區塊） ===== */
 const EXTRACT_IMAGE_URL = APPS_SCRIPT_URL.replace(/\/api$/, "/extract-image");
 const EXTRACT_PDF_URL   = APPS_SCRIPT_URL.replace(/\/api$/, "/extract-pdf");
+
+const OCR_IMAGE_TYPES = ["image/jpeg", "image/png"];
 
 let _lastOcrFile = null;
 
@@ -1801,6 +1809,10 @@ export function handlePickOcrFile() {
   input.onchange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (!OCR_IMAGE_TYPES.includes(file.type)) {
+      showToast("請至「上傳 PDF」頁籤上傳 PDF 檔案", { type: "warn" });
+      return;
+    }
     _lastOcrFile = file;
     await doOCR(file);
   };
@@ -1808,7 +1820,7 @@ export function handlePickOcrFile() {
 }
 
 export async function handleRunOcr() {
-  if (!_lastOcrFile) return alert("尚未選擇圖片或 PDF");
+  if (!_lastOcrFile) return alert("尚未選擇圖片");
   await doOCR(_lastOcrFile);
 }
 
@@ -1829,6 +1841,10 @@ export function initUploadDropzone() {
   dropzone.addEventListener("drop", (e) => {
     const file = e.dataTransfer?.files?.[0];
     if (!file) return;
+    if (!OCR_IMAGE_TYPES.includes(file.type)) {
+      showToast("請至「上傳 PDF」頁籤上傳 PDF 檔案", { type: "warn" });
+      return;
+    }
     _lastOcrFile = file;
     doOCR(file);
   });
@@ -1875,23 +1891,20 @@ async function doOCR(file) {
   const status    = document.getElementById("ocrStatus");
   const runBtn    = document.getElementById("ocrRunBtn");
 
+  _pdfIsFreshest = false; // 圖片 OCR 動作代表使用者現在的重心在手動／圖片這條路
   dropzone?.classList.add("hidden");
   statusRow?.classList.add("hidden");
   loading?.classList.remove("hidden");
   runBtn?.classList.add("hidden");
 
-  const isPdf      = file.type === "application/pdf";
-  const endpoint   = isPdf ? EXTRACT_PDF_URL : EXTRACT_IMAGE_URL;
-  const fieldName  = isPdf ? "pdf" : "image";
-
   try {
     const form = new FormData();
-    form.append(fieldName, file);
-    const res  = await fetch(endpoint, { method: "POST", body: form });
+    form.append("image", file);
+    const res  = await fetch(EXTRACT_IMAGE_URL, { method: "POST", body: form });
     const data = await res.json();
 
     if (!data.ok) {
-      status.textContent = data.error || (isPdf ? "PDF 解析失敗" : "圖片辨識失敗");
+      status.textContent = data.error || "圖片辨識失敗";
     } else {
       const text = cleanOcrText((data.text || "").trim());
       const ta = document.getElementById("articleInput");
@@ -1912,6 +1925,164 @@ async function doOCR(file) {
     runBtn?.classList.remove("hidden");
   }
 }
+
+/* ===== PDF 上傳解析（Phase 4.5：獨立頁籤，直接送 AI 分析，不經 textarea 校對） =====
+   /extract-pdf 走 pdf-parse，不耗用 Gemini 額度；解析成功後自動串接
+   handleAnalyzeClick，是這個分頁「唯一」的 AI 呼叫，所以自動觸發不會有
+   意外的隱藏花費。文字只存在 _pdfArticleText 這個模組變數裡，
+   全程不寫入 #articleInput（這正是跟圖片分頁的關鍵差異）。 */
+let _lastPdfFile = null;
+let _pdfArticleText = "";
+// PDF 解析文字是否為「最新」來源——避免 #articleInput 裡殘留的舊手動／
+// 圖片文字，在使用者切去 PDF 分頁分析之後，反而搶先被讀成上下文。
+let _pdfIsFreshest = false;
+
+// 供自訂單字查詢／反白分析／Notion 收藏共用：優先採用「最新」的來源——
+// 一般情況讀 #articleInput，但若使用者最近一次動作是 PDF 分析成功，
+// 改讀 PDF 解析文字，即使 textarea 裡還留著更早之前的手動輸入內容。
+export function getArticleContextText() {
+  const ta = document.getElementById("articleInput")?.value.trim() || "";
+  if (_pdfIsFreshest && _pdfArticleText) return _pdfArticleText;
+  return ta || _pdfArticleText || "";
+}
+
+// 把 PDF 面板的 DOM 狀態重置回「尚未選擇檔案」的初始樣子（dropzone 可見、
+// loading／狀態列隱藏）。resetPdfContext() 清掉的是 JS 端的追蹤變數
+// （_lastPdfFile 等），但先前若已經跑過一次 doPdfExtract（不論成功或失敗），
+// dropzone 早就被那次呼叫的開頭隱藏起來、狀態列也留著舊文字——JS 狀態被
+// resetPdfContext() 清空後，這個 DOM 狀態不會自動同步跟著復原，使用者切回
+// PDF 分頁時只會看到卡住的舊狀態列跟消失的 dropzone，完全無法重新選檔。
+function resetPdfPanelUI() {
+  document.getElementById("pdfDropzone")?.classList.remove("hidden");
+  document.getElementById("pdfLoading")?.classList.add("hidden");
+  document.getElementById("pdfStatusRow")?.classList.add("hidden");
+  document.getElementById("pdfRerunBtn")?.classList.add("hidden");
+}
+
+export function resetPdfContext() {
+  _lastPdfFile = null;
+  _pdfArticleText = "";
+  _pdfIsFreshest = false;
+  resetPdfPanelUI();
+}
+
+// 使用者直接在 #articleInput 打字／貼上，代表重心換回手動輸入這條路——
+// 立即讓 PDF 解析文字失去「最新」資格，getArticleContextText() 才會馬上
+// 改讀 textarea 的即時內容，而不是繼續沿用切分頁前殘留的舊 PDF 上下文。
+// 注意：doOCR 的 textarea 回寫也會透過 dispatchEvent(new Event("input", ...))
+// 觸發這個監聽器——這是「正確」的副作用（doOCR 開頭本來就已經自己設一次
+// _pdfIsFreshest = false，這裡只是再次確保，兩者不衝突，純粹雙重保險）。
+function initPdfContextInvalidation() {
+  const ta = document.getElementById("articleInput");
+  if (!ta || ta.dataset.pdfInvalidateInit) return;
+  ta.dataset.pdfInvalidateInit = "1";
+  ta.addEventListener("input", () => {
+    _pdfIsFreshest = false;
+  });
+}
+document.addEventListener("DOMContentLoaded", initPdfContextInvalidation);
+
+// 回傳 boolean：解析＋AI 分析是否雙雙成功，供呼叫端決定要不要展開後續 UI。
+async function doPdfExtract(file) {
+  const dropzone  = document.getElementById("pdfDropzone");
+  const loading   = document.getElementById("pdfLoading");
+  const loadingText = document.getElementById("pdfLoadingText");
+  const statusRow = document.getElementById("pdfStatusRow");
+  const status    = document.getElementById("pdfStatus");
+  const runBtn    = document.getElementById("pdfRerunBtn");
+
+  dropzone?.classList.add("hidden");
+  statusRow?.classList.add("hidden");
+  if (loadingText) loadingText.textContent = "解析中，請稍候…";
+  loading?.classList.remove("hidden");
+  runBtn?.classList.add("hidden");
+
+  try {
+    const form = new FormData();
+    form.append("pdf", file);
+    const res  = await fetch(EXTRACT_PDF_URL, { method: "POST", body: form });
+    const data = await res.json();
+
+    if (!data.ok) {
+      status.textContent = data.error || "PDF 解析失敗";
+      return false;
+    }
+
+    _pdfArticleText = cleanOcrText((data.text || "").trim());
+    _pdfIsFreshest = true;
+    if (loadingText) loadingText.textContent = `解析完成（${_pdfArticleText.length} 字），AI 分析中…`;
+
+    const analyzed = await handleAnalyzeClick({ text: _pdfArticleText, btnId: null, loadingId: null });
+    status.textContent = analyzed
+      ? `解析＋分析完成（${_pdfArticleText.length} 字）。`
+      : "PDF 解析成功，但 AI 分析失敗，請按「重跑」再試一次。";
+    return analyzed;
+  } catch (err) {
+    console.error(err);
+    status.textContent = navigator.onLine
+      ? "解析失敗，請稍後再試。"
+      : "無網路連線，請檢查網路狀態。";
+    return false;
+  } finally {
+    loading?.classList.add("hidden");
+    statusRow?.classList.remove("hidden");
+    runBtn?.classList.remove("hidden");
+  }
+}
+
+export async function handlePickPdfFile() {
+  const input = document.getElementById("pdfFile");
+  if (!input) { alert("找不到 pdfFile 欄位"); return false; }
+  input.value = "";
+  return new Promise((resolve) => {
+    input.onchange = async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) { resolve(false); return; }
+      _lastPdfFile = file;
+      resolve(await doPdfExtract(file));
+    };
+    input.click();
+  });
+}
+
+export async function handleRunPdfExtract() {
+  if (!_lastPdfFile) {
+    // 沒有可重跑的檔案（從沒選過，或狀態已被 resetPdfContext() 清掉）——
+    // 不要靜默地帶著空/過期的檔案去跑一次假的解析，把面板重置回可選檔的
+    // 初始狀態，讓使用者能重新點「選擇檔案」，而不是卡在舊的狀態列畫面。
+    resetPdfPanelUI();
+    alert("尚未選擇 PDF，請重新選擇檔案");
+    return false;
+  }
+  return doPdfExtract(_lastPdfFile);
+}
+
+// 拖放上傳：PDF 分頁自己的 dropzone，跟圖片分頁互不影響
+export function initPdfDropzone() {
+  const dropzone = document.getElementById("pdfDropzone");
+  if (!dropzone || dropzone.dataset.initDone) return;
+  dropzone.dataset.initDone = "1";
+
+  ["dragover", "dragenter"].forEach(evt => dropzone.addEventListener(evt, (e) => {
+    e.preventDefault();
+    dropzone.classList.add("upload-dropzone--active");
+  }));
+  ["dragleave", "drop"].forEach(evt => dropzone.addEventListener(evt, (e) => {
+    e.preventDefault();
+    dropzone.classList.remove("upload-dropzone--active");
+  }));
+  dropzone.addEventListener("drop", (e) => {
+    const file = e.dataTransfer?.files?.[0];
+    if (!file) return;
+    if (file.type !== "application/pdf") {
+      showToast("請上傳 PDF 檔案", { type: "warn" });
+      return;
+    }
+    _lastPdfFile = file;
+    doPdfExtract(file);
+  });
+}
+document.addEventListener("DOMContentLoaded", initPdfDropzone);
 
 function ensureToTopButton() {
   if (document.getElementById("toTopBtn")) return;
@@ -2699,7 +2870,7 @@ export function jumpToWordCard(word) {
 /* ===== 反白選字浮動分析 ===== */
 export async function handleSelectionAnalyze(term, anchorRect = null) {
   if (!term) return;
-  const article = document.getElementById("articleInput")?.value.trim() || "";
+  const article = getArticleContextText();
   showToast("分析中…", { duration: 10000, type: "info" });
   try {
     const obj = await analyzeCustomWordAPI(article, term);

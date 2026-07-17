@@ -662,10 +662,22 @@ app.post("/extract-pdf", handleUpload(uploadPdf.single("pdf")), async (req, res)
   let parser;
   try {
     parser = new PDFParse({ data: req.file.buffer });
-    const result = await parser.getText();
+    // 注意：pdf-parse 內部的 setDefaultParseParameters() 會直接 mutate 傳入的
+    // params 物件（見它原始碼），而 getText() 把同一個 params 物件依序傳給每一
+    // 頁的 getPageText()——所以即使呼叫端完全不傳任何 pageJoiner 選項，第一頁
+    // 處理完就會把預設的 pageJoiner（"\n-- page_number of total_number --"）
+    // 動態寫回那個共用物件，導致 getText() 最後仍然把「-- 1 of 1 --」這種頁碼
+    // 分隔字串接進 result.text。這不只讓短文件很容易被底下的字數門檻誤判成
+    // 「沒有文字層」，也會讓這些雜訊字串滲進送給 AI 分析的正文。明確傳入
+    // pageJoiner: ""（空字串，非 undefined／null，才不會被 ?? 預設值蓋掉）
+    // 澈底關掉這個分隔字串。
+    const result = await parser.getText({ pageJoiner: "" });
     const text = (result.text || "").trim();
 
-    if (text.length < 50) {
+    // 門檻從 50 調降到 20：真正的掃描檔（無文字層）在關掉 pageJoiner 後只會
+    // 剩下寥寥幾個字元甚至空字串，20 字已足夠區分「完全沒有文字層」跟
+    // 「文件很短但確實有可擷取文字」（例如一句話的測試檔）。
+    if (text.length < 20) {
       return res.status(400).json({
         ok: false,
         error: "此 PDF 沒有可擷取的文字層（可能是掃描檔），請改用圖片上傳功能進行辨識。",

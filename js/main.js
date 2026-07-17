@@ -13,6 +13,10 @@ const $ = (id) => document.getElementById(id);
 let _translationHtml = null;
 let _grammarData     = null;
 
+// 當前結果來源："text"（手動輸入／圖片 OCR）或 "pdf"；決定 resultActionRow
+// 裡翻譯／文法按鈕與 rtabTrans／rtabGrammar 分頁要不要顯示（Phase 4.5）
+let _resultSource = null;
+
 const on = (id, evt, fn) => {
   const el = $(id);
   if (el && typeof fn === "function") el.addEventListener(evt, fn);
@@ -23,6 +27,7 @@ function initInputTabs() {
   const tabs = [
     { btn: "inputTabManual", panel: "inputPanelManual" },
     { btn: "inputTabUpload", panel: "inputPanelUpload" },
+    { btn: "inputTabPdf",    panel: "inputPanelPdf" },
   ];
 
   tabs.forEach(({ btn, panel }) => {
@@ -85,7 +90,11 @@ const RESULT_TABS = [
   { btn: "rtabGrammar", panel: "rtabPanelGrammar" },
 ];
 
-async function switchResultTab(activeId) {
+// Phase 4.5：切分頁純粹是「切換顯示」——不再像過去那樣在切到 rtabTrans／
+// rtabGrammar 時順便觸發 fetch。fetch 現在完全由 resultActionRow 的
+// 「中文翻譯」「文法重點」按鈕獨立觸發（見 fetchTranslationAction／
+// fetchGrammarAction）。這裡只在還沒產生內容時顯示提示文字。
+function switchResultTab(activeId) {
   RESULT_TABS.forEach(({ btn, panel }) => {
     const isActive = btn === activeId;
     $(btn)?.classList.toggle("result-tab--active", isActive);
@@ -93,48 +102,168 @@ async function switchResultTab(activeId) {
   });
 
   if (activeId === "rtabTrans" && !_translationHtml) {
-    const text = $("articleInput")?.value.trim();
-    if (!text) return;
     const content = $("translationContent");
-    if (content) content.innerHTML = '<p style="color:var(--muted); font-size:.875rem; padding:12px 0; text-align:center;">翻譯中，請稍後…</p>';
-    try {
-      const res = await fetch("/api", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "translateArticle", text }),
-      });
-      const data = await res.json();
-      if (!data.ok) throw new Error(data.error || "翻譯失敗");
-      _translationHtml = data.content;
-      if (content) content.innerHTML = _translationHtml;
-    } catch (err) {
-      if (content) content.innerHTML = `<p style="color:#C0392B; font-size:.875rem; padding:12px 0;">翻譯失敗：${_esc(err.message)}</p>`;
-    }
+    if (content) content.innerHTML = '<p style="color:var(--muted); font-size:.875rem; padding:12px 0; text-align:center;">尚未產生翻譯，請點擊上方「中文翻譯」按鈕。</p>';
   }
 
   if (activeId === "rtabGrammar" && !_grammarData) {
-    const text = $("articleInput")?.value.trim();
-    if (!text) return;
     const content = $("grammarContent");
-    if (content) content.innerHTML = '<p style="color:var(--muted); font-size:.875rem; padding:12px 0; text-align:center;">文法分析中，請稍後…</p>';
-    try {
-      const res = await fetch("/api", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "analyzeGrammar", text }),
-      });
-      const data = await res.json();
-      if (!data.ok) throw new Error(data.error || "文法分析失敗");
-      const raw = data.content.replace(/```(?:json)?\n?/gi, "").replace(/```\n?/g, "").trim();
-      _grammarData = JSON.parse(raw);
-      _renderGrammarInline(_grammarData.points || []);
-      const count = _grammarData.points?.length ?? 0;
-      const badge = $("rtabGrammarBadge");
-      if (badge) badge.textContent = count > 0 ? String(count) : "";
-    } catch (err) {
-      if (content) content.innerHTML = `<p style="color:#C0392B; font-size:.875rem; padding:12px 0;">文法分析失敗：${_esc(err.message)}</p>`;
-    }
+    if (content) content.innerHTML = '<p style="color:var(--muted); font-size:.875rem; padding:12px 0; text-align:center;">尚未產生文法重點，請點擊上方「文法重點」按鈕。</p>';
   }
+}
+
+// 中文翻譯：resultActionRow 的「中文翻譯」按鈕獨立觸發自己的 AI 呼叫
+async function fetchTranslationAction() {
+  const text = UI.getArticleContextText();
+  if (!text) return;
+  switchResultTab("rtabTrans");
+  const content = $("translationContent");
+  if (content) content.innerHTML = '<p style="color:var(--muted); font-size:.875rem; padding:12px 0; text-align:center;">翻譯中，請稍後…</p>';
+  const btn = $("raTransBtn");
+  if (btn) btn.disabled = true;
+  try {
+    const res = await fetch("/api", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "translateArticle", text }),
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || "翻譯失敗");
+    _translationHtml = data.content;
+    if (content) content.innerHTML = _translationHtml;
+    // 成功後這顆按鈕功成身退——之後改用「翻譯」分頁瀏覽/重看內容，
+    // 失敗時絕不能走到這裡（fetch 失敗會被下面 catch 攔截，按鈕留著讓使用者重試）
+    _fadeOutQuiet(btn);
+  } catch (err) {
+    if (content) content.innerHTML = `<p style="color:#C0392B; font-size:.875rem; padding:12px 0;">翻譯失敗：${_esc(err.message)}</p>`;
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+// 文法重點：resultActionRow 的「文法重點」按鈕獨立觸發自己的 AI 呼叫
+async function fetchGrammarAction() {
+  const text = UI.getArticleContextText();
+  if (!text) return;
+  switchResultTab("rtabGrammar");
+  const content = $("grammarContent");
+  if (content) content.innerHTML = '<p style="color:var(--muted); font-size:.875rem; padding:12px 0; text-align:center;">文法分析中，請稍後…</p>';
+  const btn = $("raGrammarBtn");
+  if (btn) btn.disabled = true;
+  try {
+    const res = await fetch("/api", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "analyzeGrammar", text }),
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || "文法分析失敗");
+    const raw = data.content.replace(/```(?:json)?\n?/gi, "").replace(/```\n?/g, "").trim();
+    _grammarData = JSON.parse(raw);
+    _renderGrammarInline(_grammarData.points || []);
+    const count = _grammarData.points?.length ?? 0;
+    const badge = $("rtabGrammarBadge");
+    if (badge) badge.textContent = count > 0 ? String(count) : "";
+    // 成功後這顆按鈕功成身退——之後改用「文法重點」分頁瀏覽/重看內容，
+    // 失敗時絕不能走到這裡（fetch 失敗會被下面 catch 攔截，按鈕留著讓使用者重試）
+    _fadeOutQuiet(btn);
+  } catch (err) {
+    if (content) content.innerHTML = `<p style="color:#C0392B; font-size:.875rem; padding:12px 0;">文法分析失敗：${_esc(err.message)}</p>`;
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+// 安靜的淡入：只用 opacity，不做 scale/彈跳（遊戲導演規格：分析完成是安靜時刻，不是慶祝）
+function _fadeInQuiet(el) {
+  if (!el) return;
+  el.classList.remove("hidden");
+  if (typeof gsap !== "undefined") {
+    gsap.fromTo(el, { opacity: 0 }, { opacity: 1, duration: 0.38, ease: "power2.out" });
+  } else {
+    el.style.opacity = "0";
+    requestAnimationFrame(() => {
+      el.style.transition = "opacity .38s ease-out";
+      el.style.opacity = "1";
+    });
+  }
+}
+
+// 安靜的淡出：raTransBtn／raGrammarBtn 是「首次觸發」按鈕，成功後功成身退——
+// 之後改用對應的 rtabTrans／rtabGrammar 分頁瀏覽或重看內容，不需要再顯示
+// 這顆按鈕。只做 opacity（跟 _fadeInQuiet 對稱，同樣禁止 scale/彈跳），
+// 動畫結束後才真正加上 hidden class，避免只是視覺透明卻仍佔位置／可被點擊。
+// raWordsBtn 是可重複使用的「重跑」動作，永遠不會呼叫這個函式。
+function _fadeOutQuiet(el) {
+  if (!el || el.classList.contains("hidden")) return;
+  if (typeof gsap !== "undefined") {
+    gsap.to(el, {
+      opacity: 0,
+      duration: 0.38,
+      ease: "power2.out",
+      onComplete: () => el.classList.add("hidden"),
+    });
+  } else {
+    el.style.transition = "opacity .38s ease-out";
+    el.style.opacity = "0";
+    setTimeout(() => el.classList.add("hidden"), 380);
+  }
+}
+
+// 把 raTransBtn／raGrammarBtn 重設成「乾淨可見」狀態：移除 hidden class，
+// 並清掉 _fadeOutQuiet() 可能留下的 inline opacity/transition——否則單靠
+// classList.remove("hidden") 會讓按鈕恢復排版位置，但仍卡在 opacity:0
+// 的殘留 inline style 上，變成「有位置但看不見」的隱形按鈕。
+// 用於每一輪新分析開始時（見 setResultSource／stripReanalyzeBtn），確保
+// 上一篇文章「翻譯這篇／拆解文法」淡出後留下的狀態，不會沿用到新的一輪。
+function resetActionButtonsVisible() {
+  ["raTransBtn", "raGrammarBtn"].forEach((id) => {
+    const el = $(id);
+    if (!el) return;
+    el.classList.remove("hidden");
+    el.style.opacity = "";
+    el.style.transition = "";
+  });
+}
+
+// source 依來源切換 resultActionRow／結果分頁可見的按鈕組合：
+// "text"（手動輸入／圖片 OCR）＝ 三顆按鈕都在；"pdf" ＝ 只留「挑出單字」，
+// 翻譯／文法兩顆按鈕與對應分頁整組隱藏，換成敘事文案一行字。
+function setResultSource(source) {
+  _resultSource = source;
+  const isPdf = source === "pdf";
+  // 先重置成乾淨可見，再依來源決定 pdf 情境要不要重新隱藏——確保每輪新分析
+  // 都拿到跟上一篇文章的淡出狀態無關的乾淨起點。
+  resetActionButtonsVisible();
+  $("raTransBtn")?.classList.toggle("hidden", isPdf);
+  $("raGrammarBtn")?.classList.toggle("hidden", isPdf);
+  $("rtabTrans")?.classList.toggle("hidden", isPdf);
+  $("rtabGrammar")?.classList.toggle("hidden", isPdf);
+  $("pdfNarrativeCopy")?.classList.toggle("hidden", !isPdf);
+}
+
+// 分析成功後的共用收尾：手動輸入／圖片 OCR／PDF 三條路徑都走這裡，
+// 確保摺疊帶、resultActionRow、來源切換的行為完全一致，不各自維護一份。
+function finishAnalysisUI(source) {
+  $("resultTabWrapper")?.classList.remove("hidden");
+  setResultSource(source);
+  switchResultTab("rtabWords");
+
+  const wordCount = $("wordForm")?.children.length ?? 0;
+  const wordBadge = $("rtabWordsBadge");
+  if (wordBadge) wordBadge.textContent = wordCount > 0 ? String(wordCount) : "";
+
+  _fadeInQuiet($("resultActionRow"));
+  if (source === "pdf") _fadeInQuiet($("pdfNarrativeCopy"));
+
+  const text = UI.getArticleContextText();
+  const preview = text.slice(0, 80).replace(/\s+/g, " ").trim();
+  const previewEl = $("inputCollapsedPreview");
+  if (previewEl) previewEl.textContent = preview ? preview + "…" : "(文章已輸入)";
+
+  $("articleInputSection")?.classList.add("hidden");
+  $("inputCollapsedStrip")?.classList.remove("hidden");
+  $("sidebarNotionWrap")?.classList.remove("hidden");
 }
 
 function bindEvents() {
@@ -142,24 +271,11 @@ function bindEvents() {
   on("analyzeBtn", "click", async () => {
     _translationHtml = null;
     _grammarData = null;
+    UI.resetPdfContext(); // 手動／圖片這條路是全新一輪分析，清掉先前 PDF session 殘留的來源文字
 
-    await UI.handleAnalyzeClick();
-
-    const hasResult = ($("wordForm")?.children.length ?? 0) > 0;
-    if (hasResult) {
-      $("resultTabWrapper")?.classList.remove("hidden");
-      switchResultTab("rtabWords");
-      const wordCount = $("wordForm")?.children.length ?? 0;
-      const wordBadge = $("rtabWordsBadge");
-      if (wordBadge) wordBadge.textContent = wordCount > 0 ? String(wordCount) : "";
-      const text = $("articleInput")?.value ?? "";
-      const preview = text.slice(0, 80).replace(/\s+/g, " ").trim();
-      const previewEl = $("inputCollapsedPreview");
-      if (previewEl) previewEl.textContent = preview ? preview + "…" : "(文章已輸入)";
-      $("articleInputSection")?.classList.add("hidden");
-      $("inputCollapsedStrip")?.classList.remove("hidden");
-      $("sidebarNotionWrap")?.classList.remove("hidden");
-    }
+    const ok = await UI.handleAnalyzeClick();
+    const hasResult = ok && (($("wordForm")?.children.length ?? 0) > 0);
+    if (hasResult) finishAnalysisUI("text");
   });
 
   on("saveBtn", "click", UI.handleSaveSelected);
@@ -167,6 +283,35 @@ function bindEvents() {
   on("customAddBtn", "click", UI.handleCustomAdd);
   on("ocrPickBtn", "click", UI.handlePickOcrFile);
   on("ocrRunBtn", "click", UI.handleRunOcr);
+
+  // —— PDF 分頁：解析成功即自動串接 AI 分析（doPdfExtract 內部完成），
+  // 這裡只需要在成功後跑跟手動／圖片一致的收尾 UI ——
+  on("pdfPickBtn", "click", async () => {
+    _translationHtml = null;
+    _grammarData = null;
+    const ok = await UI.handlePickPdfFile();
+    if (ok) finishAnalysisUI("pdf");
+  });
+  on("pdfRerunBtn", "click", async () => {
+    _translationHtml = null;
+    _grammarData = null;
+    const ok = await UI.handleRunPdfExtract();
+    if (ok) finishAnalysisUI("pdf");
+  });
+
+  // —— 結果操作列：挑出單字／中文翻譯／文法重點，各自獨立觸發 ——
+  on("raWordsBtn", "click", async () => {
+    const text = UI.getArticleContextText();
+    const ok = await UI.handleAnalyzeClick({ text, btnId: "raWordsBtn", loadingId: null });
+    if (ok) {
+      switchResultTab("rtabWords");
+      const wordCount = $("wordForm")?.children.length ?? 0;
+      const wordBadge = $("rtabWordsBadge");
+      if (wordBadge) wordBadge.textContent = wordCount > 0 ? String(wordCount) : "";
+    }
+  });
+  on("raTransBtn", "click", fetchTranslationAction);
+  on("raGrammarBtn", "click", fetchGrammarAction);
 
   // 自訂新增單字（sidebar 摺疊，預設收合；比照 #progressCardHeader 的 toggle 邏輯）
   on("customWordHeader", "click", () => {
@@ -255,15 +400,19 @@ function bindEvents() {
   on("saveArticleBtn", "click", async () => {
     const btn = $("saveArticleBtn");
     if (!btn) return;
-    const text = $("articleInput")?.value.trim();
+    const text = UI.getArticleContextText();
     if (!text) return UI.showToast("請先貼上文章內容", { type: "warn" });
 
     btn.disabled = true;
     btn.innerHTML = "儲存中…";
 
     try {
-      // 若翻譯或文法尚未載入，兩者並行補抓
-      const [translationHtml, grammarData] = await Promise.all([
+      // PDF 來源不提供翻譯／文法（跟 UI 上的限制一致：PDF 分頁的結果操作列
+      // 只有「挑出單字」一顆按鈕），Notion 收藏也只同步單字清單，不補抓。
+      // 手動輸入／圖片來源則維持原本行為：若翻譯或文法尚未載入，兩者並行補抓。
+      const [translationHtml, grammarData] = _resultSource === "pdf"
+        ? [null, null]
+        : await Promise.all([
         _translationHtml
           ? Promise.resolve(_translationHtml)
           : fetch("/api", { method: "POST", headers: { "Content-Type": "application/json" },
@@ -477,6 +626,16 @@ function bindEvents() {
     $("sidebarNotionWrap")?.classList.add("hidden");
     _translationHtml = null;
     _grammarData = null;
+    _resultSource = null;
+    UI.resetPdfContext();
+    // resultActionRow／PDF 敘事文案下次分析成功才會重新淡入，這裡先收起來
+    $("resultActionRow")?.classList.add("hidden");
+    $("pdfNarrativeCopy")?.classList.add("hidden");
+    // raTransBtn／raGrammarBtn 可能在上一篇文章成功翻譯／文法分析後已經淡出
+    // 隱藏——新的一輪分析必須重新看得到這兩顆按鈕，不能沿用上一篇的狀態
+    // （下一次 finishAnalysisUI 也會透過 setResultSource 再做一次，這裡先
+    // 顯式重置一次，讓「重新分析」本身的行為就是正確、不依賴後續呼叫鏈）。
+    resetActionButtonsVisible();
   });
 
   // ─── Sidebar Notion 按鈕 → 觸發原按鈕邏輯 ───
