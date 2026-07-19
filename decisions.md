@@ -482,3 +482,14 @@ pixel_pet.js 檔頭已記錄：「只換 sprite 與命名，資料邏輯完全�
 蠟燭重寫列為 Phase 6 前置工作，與故事系統同步規劃，不單獨提前實作。技術方案待 @backend-architect 和 @frontend-developer 評估後確認。
 
 commit: fd3639d
+
+---
+
+## 2026-07-20 v2 正式上線
+
+- 決策：feature/v2-agency-rebuild 合併至 main，正式部署至 Render
+- 合併方式：Fast-forward，無衝突，22 個檔案變更
+- Commit hash：13caadf05bd27f9b65a39dcb29ff1fd0c49cb63c
+- 上線範圍：Phase 4.5（PDF/圖片上傳）+ Phase 5（全站視覺重設計，小說世界觀視覺語言）
+- 未上線範圍：Phase 6 沉浸式文本小說（仍在開發中）
+- 待處理：story/segments/ 資料夾尚未納入版控，需另行 commit
