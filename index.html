@@ -121,49 +121,6 @@
   }
   .section-h svg{ color: var(--primary); flex-shrink:0; }
 
-  /* ─── 閱讀模式 Reader Mode ─── */
-  .reader-body{
-    font-size: 1.05rem; line-height: 1.95; color: var(--text);
-  }
-  .reader-body p{ margin-bottom: 1em; }
-  .reader-word{
-    color: var(--blue); border-bottom: 1.5px solid var(--blue);
-    cursor: pointer; border-radius: 2px; transition: background .15s;
-  }
-  .reader-word:hover{ background: #e0f2fe; }
-
-  /* ─── Reader 單字提示卡 ─── */
-  .reader-tooltip{
-    position: absolute; background: var(--card);
-    border: 1px solid var(--border); border-radius: 10px;
-    padding: 12px 14px;
-    box-shadow: 0 6px 20px rgba(0,0,0,.12);
-    z-index: 200; min-width: 220px; max-width: min(300px, calc(100vw - 16px));
-  }
-
-  /* ─── Enrichment 徽章（圖書館列表） ─── */
-  .enrich-badges{ display:inline-flex; gap:4px; margin-left:4px; flex-shrink:0; }
-  .enrich-badge{
-    display:inline-flex; align-items:center;
-    font-size:.6875rem; font-weight:600; line-height:1;
-    padding:2px 5px; border-radius:4px;
-  }
-  .enrich-badge--tr{ background:#EEF2E8; color:#7a9068; }
-  .enrich-badge--gr{ background:#EAF0FB; color:#5577AA; }
-  /* ─── Reader mode 工具列 ─── */
-  .reader-toolbar{
-    display:flex; gap:8px; flex-wrap:wrap; align-items:center;
-    padding-bottom:12px; border-bottom:1px solid var(--border);
-  }
-  .reader-enrich-status{
-    display:flex; gap:6px; flex-wrap:wrap; align-items:center; flex:1; min-width:0;
-  }
-  .reader-enrich-tag{
-    display:inline-flex; align-items:center; gap:4px;
-    font-size:.8rem; padding:3px 8px; border-radius:6px;
-  }
-  .reader-enrich-tag--tr{ background:#EEF2E8; color:#7a9068; }
-  .reader-enrich-tag--gr{ background:#EAF0FB; color:#5577AA; }
   </style>
   <style>
   /* Color tokens 已集中至 theme-ocean.css :root */
@@ -639,21 +596,6 @@
       padding: 1.75rem;
     }
   }
-  /* ─── 文法重點分析 Modal ─── */
-  grammar-tag {
-    display: inline;
-    background: #dbeafe;
-    color: #1d4ed8;
-    border-radius: 4px;
-    padding: 1px 6px;
-    font-size: 0.875em;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background 0.15s;
-  }
-  grammar-tag:hover { background: #bfdbfe; }
-  grammar-tag.active { background: #93c5fd; color: #1e3a8a; }
-
   .highlight-sentence {
     background: #fef9c3;
     border-radius: 3px;
@@ -668,16 +610,14 @@
     margin-bottom: 1.5em;
   }
   /* 全文翻譯：中英對照 */
-  #translateContent .eng-text,
-  #readerContent .eng-text {
+  #translationContent .eng-text {
     color: var(--text);
     font-size: 1rem;
     line-height: 1.6;
     margin-bottom: 8px;
   }
 
-  #translateContent .cht-text,
-  #readerContent .cht-text {
+  #translationContent .cht-text {
     /* 使用 !important 避免被舊文章資料庫裡殘留的 inline-style 蓋掉 */
     color: var(--text) !important;
     font-size: 0.9rem;

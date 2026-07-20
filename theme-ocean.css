@@ -467,17 +467,6 @@ button[title="播放"]:hover{ background: var(--bg) !important; color: var(--pri
   color: var(--text) !important;
 }
 
-/* ── 13. Reader 返回按鈕 ── */
-[data-theme="dark"] #readerBackBtn {
-  background: var(--card) !important;
-  color: var(--muted) !important;
-  border: 1px solid var(--border);
-}
-[data-theme="dark"] #readerBackBtn:hover {
-  background: var(--hover-bg) !important;
-  color: #f0ebd8 !important;
-}
-
 /* ════════════════════════════════════════════
    ── 14. Hover 狀態：深夜書房互動回饋 ──
    ════════════════════════════════════════════ */
@@ -547,10 +536,6 @@ button[title="播放"]:hover{ background: var(--bg) !important; color: var(--pri
   color: #f0ebd8 !important;
 }
 
-/* Reader 行內字詞 hover */
-[data-theme="dark"] .reader-word:hover {
-  background: var(--hover-bg) !important;
-}
 
 /* 單字卡細節 hover */
 [data-theme="dark"] .wc-card:hover .wc-title strong { color: #9bf6ff !important; }
@@ -600,11 +585,6 @@ button[title="播放"]:hover{ background: var(--bg) !important; color: var(--pri
   border-color: var(--primary) !important;
 }
 
-/* 文法標籤 hover */
-[data-theme="dark"] grammar-tag:hover {
-  background: rgba(116,140,171,.28) !important;
-  color: var(--text) !important;
-}
 
 /* 小喇叭按鈕 hover */
 [data-theme="dark"] .speak-btn:hover {

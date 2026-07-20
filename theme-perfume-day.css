@@ -454,48 +454,6 @@ section.bg-white.rounded-xl.shadow:hover {
   fill: none;                             /* preserve stroke-based icons (not filled) */
 }
 
-/* ── readerSection: title has no .section-h class — explicit D1 treatment ── */
-#readerSection #readerTitle {
-  color:       var(--color-ink-1) !important;
-  font-family: "EB Garamond", "Lora", "Crimson Pro", Georgia, serif !important;
-  font-weight: 600 !important;
-}
-
-/* ── readerSection: back button — ghost-warm, same state machine as pager ── */
-#readerSection button {
-  background:    transparent !important;
-  color:         var(--color-ink-2) !important;
-  border:        1px solid var(--color-input-border) !important;
-  border-radius: var(--radius-btn) !important;
-  box-shadow:    var(--shadow-sh-btn);
-  transition:    color var(--motion-hover), border-color var(--motion-hover) !important;
-}
-
-#readerSection button:hover {
-  background:   transparent !important;
-  color:        var(--color-ink-1) !important;
-  border-color: var(--color-input-border-foc) !important;
-}
-
-#readerSection button:active {
-  box-shadow:
-    inset 0  1px 0 rgba(255, 255, 255, 0.35),
-    inset 0 -1px 0 rgba(42, 35, 22, 0.18) !important;
-}
-
-#readerSection button:focus        { outline: none !important; }
-#readerSection button:focus-visible {
-  outline:        2px solid var(--color-accent-focus) !important;
-  outline-offset: 2px !important;
-  border-color:   var(--color-input-border-foc) !important;
-}
-
-/* ── readerSavedAt: timestamp — ink-3 ghost (not cold text-gray-400) ── */
-#readerSection #readerSavedAt {
-  color:   var(--color-ink-3) !important;
-  opacity: 0.9;
-}
-
 /* ═══════════════════════════════════════════════════════════════════════════
    Step 5 — Inputs / Textarea / Select (compiled-spec.md §3.6)
    CG rules: CG-9, CG-13 (groove edge special rule), CG-14
@@ -1118,11 +1076,8 @@ select {
 
 /* ── §3.8-A  Shared baseline: font + radius + letter-spacing ───────────── */
 .chip,
-.enrich-badge,
-.reader-enrich-tag,
 .wc-rel-chip,
-.mnemonic-chip,
-grammar-tag {
+.mnemonic-chip {
   font-family:          "Jost", "DM Sans", "Source Sans 3", system-ui, sans-serif !important;
   font-variant-numeric: tabular-nums !important;   /* D4: numbers stay equal-width */
   border-radius:        var(--radius-badge, 3px) !important;  /* ≤ 4px; never 9999px */
@@ -1140,45 +1095,6 @@ grammar-tag {
   line-height:   1.4 !important;
   letter-spacing: .05em !important;
   /* border-radius already set by baseline above */
-}
-
-/* ── §3.8-C  .enrich-badge — TR / GR tags in library list ──────────────── */
-.enrich-badge {
-  font-size:     .6875rem !important;
-  font-weight:   600 !important;
-  letter-spacing: .04em !important;
-}
-
-.enrich-badge--tr {
-  background: var(--color-badge-enrich-bg, #E4D5BA) !important;  /* warm tan */
-  color:      var(--color-badge-enrich-fg, #5C3D1A) !important;  /* dark brown */
-  border:     1px solid #C8AE8A !important;
-}
-
-.enrich-badge--gr {
-  background: #DDD0B8 !important;    /* slightly deeper warm tan — GR distinction */
-  color:      #4A3014 !important;
-  border:     1px solid #B89E7A !important;
-}
-
-/* ── §3.8-D  .reader-enrich-tag — reader toolbar TR / GR ───────────────── */
-.reader-enrich-tag {
-  font-size:     .8rem !important;
-  padding:       3px 8px !important;
-  letter-spacing: .03em !important;
-  /* border-radius: already set to 3px by baseline — overrides inline 6px */
-}
-
-.reader-enrich-tag--tr {
-  background: var(--color-badge-enrich-bg, #E4D5BA) !important;
-  color:      var(--color-badge-enrich-fg, #5C3D1A) !important;
-  border:     1px solid #C8AE8A !important;
-}
-
-.reader-enrich-tag--gr {
-  background: #DDD0B8 !important;
-  color:      #4A3014 !important;
-  border:     1px solid #B89E7A !important;
 }
 
 /* ── §3.8-E  .wc-rel-chip — related-word chips ─────────────────────────── */
@@ -1210,22 +1126,6 @@ grammar-tag {
 /* ── §3.8-H  Dark mode toggle — hidden ─────────────────────────────────── */
 #darkModeToggle {
   display: none !important;
-}
-
-/* ── §3.8-G  grammar-tag — reader inline grammar highlight ─────────────── */
-grammar-tag {
-  background:    #E8D9C2 !important;  /* warm parchment — replaces cold #dbeafe */
-  color:         #4A3014 !important;  /* dark warm brown — replaces cold #1d4ed8 */
-  /* border-radius: 3px from baseline (original was 4px — both within ≤4px spec) */
-}
-
-grammar-tag:hover {
-  background: #DECEB4 !important;     /* slightly deeper warm — replaces cold #bfdbfe */
-}
-
-grammar-tag.active {
-  background: #C8A87A !important;     /* amber-tan active — replaces cold #93c5fd */
-  color:      #2E1C08 !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
