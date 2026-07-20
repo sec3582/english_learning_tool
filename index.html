@@ -1256,6 +1256,17 @@
     box-shadow: none !important;
   }
 
+  /* Bug 3 修正：上面這條群組本身沒有設定 color，wc.css:1958
+     html:not([data-theme="dark"]) #startQuizBtn:hover:not(:disabled) 的
+     color: var(--color-surface-card)（scene-cold 下等於 10% alpha 的
+     --glass-cold-fill，近乎透明）反而在 color 這個屬性上贏（3-class 版本
+     vs 這裡的 4-class 版本，這個群組因為沒宣告 color 所以完全不參與比較）
+     ——這是「開始測驗」按鈕 hover 時文字消失的根因。直接補上 color，
+     讓這個已經是全站最高特異性的 selector 也拿下 color 這個屬性。 */
+  body.scene-cold #startQuizBtn.btn-primary-m:hover:not(:disabled) {
+    color: var(--cold-parchment) !important;
+  }
+
   /* #qsStart／#grammarQuizSubmit 的 active 態：wc.css qz-accent 群組本身
      沒有寫 :active，瀏覽器預設會維持 :hover 的樣式，這裡補一條比 hover
      更暗的版本，跟 .btn-primary-m 家族的 active 公式一致。 */
@@ -1371,7 +1382,13 @@
     --qz-parchment: var(--cold-wash);
     --qz-ink:       var(--cold-parchment);
     --qz-line:      var(--glass-cold-border);
-    --qz-muted:     var(--cold-dim);
+    /* Bug 4 修正：--qz-muted 原本直接吃 --cold-dim，跟 --qz-parchment
+       （scene-cold 下等於 --cold-wash，#1b1f23）疊起來實測對比只有
+       3.5–4.9:1 之間，卡在 WCAG AA 邊緣，讀起來偏「太淺看不清」。只調整
+       測驗 Modal 專屬的 --qz-muted（不動全站共用的 --cold-dim 本尊），
+       混入 35% --cold-parchment 提升亮度，同時仍維持比主文字（--qz-ink）
+       更次要的層級感。 */
+    --qz-muted:     color-mix(in srgb, var(--cold-dim) 65%, var(--cold-parchment) 35%);
     --qz-accent:    var(--cold-accent);
     background-color: rgba(20, 23, 26, 0.65) !important;
   }
@@ -1730,9 +1747,13 @@
     color: var(--cold-parchment) !important;
   }
 
+  /* Bug 4 修正：placeholder 原本跟一般次要文字共用 --cold-dim，在深色
+     輸入框（background: var(--glass-cold-fill)）上太淡。混入比例比
+     --qz-muted 再高一點（40% vs 35%），維持「提示文字」該有的存在感但
+     不到跟已輸入文字（--cold-parchment）一樣亮。 */
   body.scene-cold #quizAnswer::placeholder,
   body.scene-cold #grammarQuizAnswer::placeholder {
-    color: var(--cold-dim) !important;
+    color: color-mix(in srgb, var(--cold-dim) 60%, var(--cold-parchment) 40%) !important;
     opacity: 1 !important;
   }
 

@@ -216,7 +216,7 @@
    simulates the cellar recess or the shadow inside a desk drawer.         */
 
 .wc-ai {
-  background: var(--cold-void);
+  background: color-mix(in srgb, var(--story-mud) 75%, var(--story-fog) 25%);
   border-radius: 8px;
   padding: 14px 16px;
   display: flex;
@@ -234,7 +234,7 @@
 
 .wc-ai-text {
   margin: 0;
-  color: var(--wc-word-color);
+  color: color-mix(in srgb, var(--story-breath) 88%, var(--story-mud) 12%);
   font-size: 0.9375rem;
   line-height: 1.7;
   font-weight: 400;
@@ -243,7 +243,7 @@
 .wc-ai-zh {
   margin: 0;
   margin-top: 3px;
-  color: var(--wc-muted);
+  color: color-mix(in srgb, var(--story-breath) 72%, var(--story-mud) 28%);
   font-size: 0.875rem;
   line-height: 1.62;
   font-weight: 400;
@@ -1489,6 +1489,26 @@
 
 #quizFeedback {
   color: var(--qz-ink) !important;
+}
+
+/* Bug 5 修正：「正確！」／「錯誤，答案是…」原本是 js/ui.js 直接注入的
+   Tailwind text-green-600/text-red-600，全站沒有任何一條規則覆蓋它們，
+   是唯一還會出現鮮豔飽和色的測驗文字。js/ui.js 已經改成吃這兩個專屬
+   class，不再需要跟 Tailwind 的預設飽和色搶贏，直接用 --story-*/--cold-*
+   衍生色定義。 */
+#quizFeedback .quiz-fb-correct {
+  /* 暖綠偏琥珀調：以 --story-amber（全站唯一正向回饋亮點）為主，混入
+     --cold-parchment 提亮避免過暗，維持「正向回饋」語意但不落回鮮豔綠。 */
+  color: color-mix(in srgb, var(--story-amber) 80%, var(--cold-parchment) 20%);
+  font-weight: 500;
+}
+
+#quizFeedback .quiz-fb-wrong {
+  /* 暗紅偏棕調：直接沿用既有的 --cold-wrong 語意色 token（本來就是給
+     答錯/逾期用的 color-mix，跟這裡想要的「暗紅偏棕」是同一個設計意圖），
+     不再另外發明一組新的 color-mix。 */
+  color: var(--cold-wrong);
+  font-weight: 500;
 }
 
 /* Correct / scored feedback card */

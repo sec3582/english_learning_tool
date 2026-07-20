@@ -1229,10 +1229,10 @@ export function submitQuizAnswer(asWrong = false) {
     const fb = document.getElementById("quizFeedback");
     if (correct) {
       quizScore++;
-      if (fb) fb.innerHTML = `<span class="text-green-600">正確！</span>`;
+      if (fb) fb.innerHTML = `<span class="quiz-fb-correct">正確！</span>`;
     } else {
       if (fb) fb.innerHTML =
-        `<span class="text-red-600">錯誤，答案是 <strong>${w.word}</strong></span>`;
+        `<span class="quiz-fb-wrong">錯誤，答案是 <strong>${w.word}</strong></span>`;
 
       wrongAnswers.push({
         word: w.word,

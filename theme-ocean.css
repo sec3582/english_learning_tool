@@ -90,11 +90,17 @@ div.inline-flex.rounded-md.overflow-hidden.border > button:last-child{ border-ri
 }
 
 /* Secondary / Ghost buttons */
-#ocrPickBtn,#ocrRunBtn,#allPrev,#allNext,#qsCancel,#usageReset{
+/* Bug 2 修正：#ocrPickBtn（「上傳圖片」分頁的「選擇檔案」按鈕）從這個清單移除。
+   這條規則的 --card（Day 端字面值 #ffffff 純白，違反 CLAUDE.md 禁止清單）
+   曾經蓋過 .btn-outline-m，讓它跟同樣用 .btn-outline-m 的 #pdfPickBtn（「上傳
+   PDF」分頁）長得不一樣。index.html 的 body.scene-cold 已有專屬覆寫可以
+   壓過這裡，但屬於「疊加特異性蓋過根因」的做法，這裡直接把根因拔掉，讓
+   #ocrPickBtn 乾淨地回歸 .btn-outline-m 那一套樣式。 */
+#ocrRunBtn,#allPrev,#allNext,#qsCancel,#usageReset{
   background: var(--card) !important; color: var(--navy) !important; border:1px solid var(--border) !important;
   border-radius:12px; padding:.5rem .9rem; font-weight:600;
 }
-#ocrPickBtn:hover,#ocrRunBtn:hover,#allPrev:hover,#allNext:hover,#qsCancel:hover,#usageReset:hover{
+#ocrRunBtn:hover,#allPrev:hover,#allNext:hover,#qsCancel:hover,#usageReset:hover{
   background: var(--bg) !important;
 }
 
@@ -351,7 +357,6 @@ button[title="播放"]:hover{ background: var(--bg) !important; color: var(--pri
 [data-theme="dark"] .btn-ghost-m,
 [data-theme="dark"] .btn-outline-m,
 [data-theme="dark"] .btn-ghost,
-[data-theme="dark"] #ocrPickBtn,
 [data-theme="dark"] #ocrRunBtn,
 [data-theme="dark"] #allPrev,
 [data-theme="dark"] #allNext,
@@ -490,7 +495,6 @@ button[title="播放"]:hover{ background: var(--bg) !important; color: var(--pri
 [data-theme="dark"] .btn-ghost-m:hover,
 [data-theme="dark"] .btn-outline-m:hover,
 [data-theme="dark"] .btn-ghost:hover,
-[data-theme="dark"] #ocrPickBtn:hover,
 [data-theme="dark"] #ocrRunBtn:hover,
 [data-theme="dark"] #allPrev:hover,
 [data-theme="dark"] #allNext:hover,
