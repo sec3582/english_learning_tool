@@ -1,7 +1,7 @@
 /*
  * js/ink-suminagashi.js
  * 冷調 Suminagashi 墨流背景 — 獨立的 p5.js instance-mode sketch
- * 僅供 night-preview.html 使用，不被 index.html 或任何現有 js/*.js 模組引用。
+ * 供沉浸式文本小說夜模式使用（index.html 已載入）。
  * 規格來源：docs/VISUAL_SPEC.md §3.1（通則）與 §2.1（冷調系統色相）
  *
  * 核心規則：

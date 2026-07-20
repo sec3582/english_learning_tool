@@ -283,32 +283,6 @@ body.scene-cold {
   z-index: 1;
 }
 
-/* ── Liquid Glass 卡片：backdrop-filter 模糊 + 半透明填色／邊框 ── */
-.glass-card {
-  width: min(100%, 560px);
-  padding: clamp(28px, 4vw, 44px);
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-
-  background:      var(--scene-glass-fill, var(--glass-cold-fill));
-  border:          1px solid var(--scene-glass-border, var(--glass-cold-border));
-  border-radius:   18px;
-  backdrop-filter:         blur(20px) saturate(120%);
-  -webkit-backdrop-filter: blur(20px) saturate(120%);
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.04) inset,  /* 極細高光，模擬玻璃邊緣 */
-    0 20px 60px var(--scene-shadow, var(--cold-shadow));
-
-  color: var(--scene-parchment, var(--cold-parchment));
-  transition:
-    box-shadow var(--night-duration-card) var(--night-ease),
-    border-color var(--night-duration-card) var(--night-ease);
-}
-
-/* 首頁不放次要 CTA／裝飾，卡片本身也不需要 hover 位移（沒有其他元素
-   跟它競爭注意力，不需要用動效證明自己「可以互動」） */
-
 /* ═══════════════════════════════════════════════════════════════════════════
    Step 3 — 主要元件
    ═══════════════════════════════════════════════════════════════════════════ */

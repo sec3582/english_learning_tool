@@ -1265,7 +1265,6 @@
 /* ── 1. Modal overlays — dark parchment veil, not flat black ───────────── */
 
 #quizModal,
-#grammarQuizModal,
 #quizSettings {
   background-color: rgba(30, 18, 10, 0.65) !important;  /* warm near-black */
   backdrop-filter: blur(3px);
@@ -1285,28 +1284,16 @@
   color: var(--qz-ink) !important;
 }
 
-#grammarQuizModal > div {
-  background: var(--qz-parchment) !important;
-  border: 1px solid var(--qz-line) !important;
-  border-radius: 10px !important;
-  box-shadow:
-    0 12px 40px rgba(61, 43, 31, 0.25),
-    inset 0 0 60px rgba(200, 149, 42, 0.04) !important;
-  color: var(--qz-ink) !important;
-}
-
 
 /* ── 3. Headers — title + progress text ────────────────────────────────── */
 
 #quizModal .sidebar-title,
-#grammarQuizModal .sidebar-title,
 #quizSettings .sidebar-title {
   color: var(--qz-ink) !important;
 }
 
 /* Progress text — muted classification subtitle, not cold gray */
-#quizProgress,
-#grammarQuizProgress {
+#quizProgress {
   color: var(--qz-muted) !important;
 }
 
@@ -1316,13 +1303,11 @@
 }
 
 /* Close buttons */
-#quizClose,
-#grammarQuizClose {
+#quizClose {
   color: var(--qz-muted) !important;
   transition: color 0.15s ease;
 }
-#quizClose:hover,
-#grammarQuizClose:hover {
+#quizClose:hover {
   color: var(--qz-ink) !important;
 }
 
@@ -1354,58 +1339,20 @@
   line-height: 1.7;
 }
 
-#grammarQuizInstruction {
-  color: var(--qz-ink) !important;
-  line-height: 1.7;
-}
-
-/* Grammar badge — amber instead of indigo */
-#grammarQuizPointName {
-  background: rgba(200, 149, 42, 0.12) !important;
-  color: var(--qz-accent) !important;
-  border: 1px solid rgba(200, 149, 42, 0.28) !important;
-}
-
-/* Original sentence citation box */
-#grammarQuizQuestion .rounded-lg.p-3 {
-  background: rgba(200, 149, 42, 0.06) !important;
-  border-left: 3px solid var(--qz-accent) !important;
-  border-radius: 6px !important;
-  color: var(--qz-ink) !important;
-}
-
-#grammarQuizQuestion .rounded-lg.p-3 .text-gray-400 {
-  color: var(--qz-muted) !important;
-}
-
-/* Hint text */
-#grammarQuizHint {
-  color: var(--qz-muted) !important;
-}
-
-/* Loading indicator */
-#grammarQuizLoading {
-  color: var(--qz-muted) !important;
-}
-
-
 /* ── 6. Answer inputs ──────────────────────────────────────────────────── */
 
-#quizAnswer,
-#grammarQuizAnswer {
+#quizAnswer {
   background:   #FBF5E8 !important;
   border:       1px solid rgba(200, 149, 42, 0.30) !important;
   color:        var(--qz-ink) !important;
   border-radius: 6px !important;
 }
 
-#quizAnswer::placeholder,
-#grammarQuizAnswer::placeholder {
+#quizAnswer::placeholder {
   color: #9A7A52 !important;
 }
 
-#quizAnswer:focus,
-#grammarQuizAnswer:focus {
+#quizAnswer:focus {
   border-color: rgba(200, 149, 42, 0.55) !important;
   box-shadow:   0 0 0 2px rgba(200, 149, 42, 0.18),
                 0 0 14px rgba(200, 149, 42, 0.09) !important;
@@ -1418,7 +1365,6 @@
 /* ── 7a. Primary — amber stamp: Submit / Start Quiz ────────────────────── */
 .quiz-btn-primary,
 #quizSubmit,
-#grammarQuizSubmit,
 #qsStart {
   background:    var(--qz-accent) !important;         /* #C8952A */
   color:         #FDF6E3 !important;
@@ -1430,7 +1376,6 @@
 
 .quiz-btn-primary:hover,
 #quizSubmit:hover,
-#grammarQuizSubmit:hover,
 #qsStart:hover {
   background: #A87820 !important;
   box-shadow: 0 4px 12px rgba(200, 149, 42, 0.35) !important;
@@ -1438,7 +1383,6 @@
 
 /* ── 7b. Secondary — parchment-ink: IDK / ShowHint / Cancel ────────────── */
 #quizIDK,
-#grammarQuizShowHint,
 #qsCancel {
   background:    rgba(61, 43, 31, 0.08) !important;
   color:         var(--qz-ink) !important;
@@ -1448,7 +1392,6 @@
 }
 
 #quizIDK:hover,
-#grammarQuizShowHint:hover,
 #qsCancel:hover {
   background:  rgba(200, 149, 42, 0.12) !important;
   border-color: rgba(200, 149, 42, 0.45) !important;
@@ -1456,8 +1399,7 @@
 
 /* ── 7c. Next — dark ink stamp: Next question ───────────────────────────── */
 .quiz-btn-next,
-#quizNext,
-#grammarQuizNext {
+#quizNext {
   background:    var(--qz-ink) !important;            /* #3D2B1F deep ink */
   color:         var(--qz-parchment) !important;
   border:        1px solid transparent !important;
@@ -1466,22 +1408,9 @@
 }
 
 .quiz-btn-next:hover,
-#quizNext:hover,
-#grammarQuizNext:hover {
+#quizNext:hover {
   background: #5C3D2A !important;
   box-shadow: 0 0 0 1px var(--qz-line) !important;
-}
-
-/* ── 7d. Grammar done button ────────────────────────────────────────────── */
-#grammarQuizDone {
-  background:    var(--qz-accent) !important;
-  color:         #FDF6E3 !important;
-  border:        1px solid rgba(200, 149, 42, 0.40) !important;
-  border-radius: 8px !important;
-}
-#grammarQuizDone:hover {
-  background: #A87820 !important;
-  box-shadow: 0 4px 12px rgba(200, 149, 42, 0.30) !important;
 }
 
 
@@ -1511,50 +1440,6 @@
   font-weight: 500;
 }
 
-/* Correct / scored feedback card */
-#grammarQuizFeedback {
-  background: rgba(200, 149, 42, 0.08) !important;
-  border:     1px solid var(--qz-line) !important;
-  color:      var(--qz-ink) !important;
-}
-
-#grammarQuizFeedbackScore {
-  color: var(--qz-accent) !important;
-}
-
-#grammarQuizFeedbackRef {
-  color: var(--qz-ink) !important;
-}
-
-#grammarQuizFeedbackText {
-  color: var(--qz-ink) !important;
-  opacity: 0.85;
-}
-
-/* Note at foot of feedback — replaces sage-green A3B18A */
-#grammarQuizFeedbackNote {
-  color:       var(--qz-muted) !important;
-  border-top:  1px solid rgba(200, 149, 42, 0.22) !important;
-  padding-top: 6px;
-}
-
-
-/* ── 9. Summary screen ──────────────────────────────────────────────────── */
-
-#grammarQuizSummary {
-  color: var(--qz-ink) !important;
-}
-
-/* Score — amber instead of Morandi sage */
-#grammarQuizSummaryScore {
-  color: var(--qz-accent) !important;
-}
-
-#grammarQuizSummaryText {
-  color: var(--qz-muted) !important;
-}
-
-
 /* ── 10. Quiz settings — radio & checkbox labels ───────────────────────── */
 
 #quizSettings label,
@@ -1572,18 +1457,13 @@
 
 #quizModal .text-gray-400, #quizModal .text-gray-500,
 #quizModal .text-gray-600, #quizModal .text-gray-700,
-#grammarQuizModal .text-gray-400, #grammarQuizModal .text-gray-500,
-#grammarQuizModal .text-gray-600, #grammarQuizModal .text-gray-700,
-#grammarQuizModal .text-gray-800,
 #quizSettings .text-gray-400, #quizSettings .text-gray-500,
 #quizSettings .text-gray-600 {
   color: var(--qz-muted) !important;
 }
 
 #quizModal .text-gray-700, #quizModal .text-gray-800,
-#quizModal .text-gray-900,
-#grammarQuizModal .text-gray-700, #grammarQuizModal .text-gray-800,
-#grammarQuizModal .text-gray-900 {
+#quizModal .text-gray-900 {
   color: var(--qz-ink) !important;
 }
 
@@ -1596,8 +1476,7 @@
 
 /* Card containers — night */
 [data-theme="dark"] #quizModal > div,
-[data-theme="dark"] #quizSettings > div,
-[data-theme="dark"] #grammarQuizModal > div {
+[data-theme="dark"] #quizSettings > div {
   background: var(--qz-parchment) !important;         /* #1E1812 in dark token */
   border: 1px solid rgba(200, 120, 42, 0.22) !important;
   box-shadow:
@@ -1610,26 +1489,22 @@
 
 /* Titles — night */
 [data-theme="dark"] #quizModal .sidebar-title,
-[data-theme="dark"] #grammarQuizModal .sidebar-title,
 [data-theme="dark"] #quizSettings .sidebar-title {
   color: var(--qz-ink) !important;
 }
 
 /* Answer inputs — night */
-[data-theme="dark"] #quizAnswer,
-[data-theme="dark"] #grammarQuizAnswer {
+[data-theme="dark"] #quizAnswer {
   background:  #1A1208 !important;
   border:      1px solid rgba(200, 120, 42, 0.22) !important;
   color:       var(--qz-ink) !important;
 }
 
-[data-theme="dark"] #quizAnswer::placeholder,
-[data-theme="dark"] #grammarQuizAnswer::placeholder {
+[data-theme="dark"] #quizAnswer::placeholder {
   color: #6B5030 !important;
 }
 
-[data-theme="dark"] #quizAnswer:focus,
-[data-theme="dark"] #grammarQuizAnswer:focus {
+[data-theme="dark"] #quizAnswer:focus {
   border-color: rgba(200, 120, 42, 0.50) !important;
   box-shadow:   0 0 0 2px rgba(200, 120, 42, 0.16),
                 0 0 14px rgba(200, 120, 42, 0.08) !important;
@@ -1638,14 +1513,12 @@
 /* Primary buttons — night (warmer amber) */
 [data-theme="dark"] .quiz-btn-primary,
 [data-theme="dark"] #quizSubmit,
-[data-theme="dark"] #grammarQuizSubmit,
 [data-theme="dark"] #qsStart {
   background: var(--qz-accent) !important;
 }
 
 [data-theme="dark"] .quiz-btn-primary:hover,
 [data-theme="dark"] #quizSubmit:hover,
-[data-theme="dark"] #grammarQuizSubmit:hover,
 [data-theme="dark"] #qsStart:hover {
   background: #D98B30 !important;         /* warmer candleflame — night hover */
   box-shadow: 0 4px 12px rgba(200, 120, 42, 0.40) !important;
@@ -1653,7 +1526,6 @@
 
 /* Secondary buttons — night */
 [data-theme="dark"] #quizIDK,
-[data-theme="dark"] #grammarQuizShowHint,
 [data-theme="dark"] #qsCancel {
   background:   rgba(212, 191, 160, 0.08) !important;
   color:        var(--qz-ink) !important;
@@ -1661,7 +1533,6 @@
 }
 
 [data-theme="dark"] #quizIDK:hover,
-[data-theme="dark"] #grammarQuizShowHint:hover,
 [data-theme="dark"] #qsCancel:hover {
   background:   rgba(200, 120, 42, 0.14) !important;
   border-color: rgba(200, 120, 42, 0.40) !important;
@@ -1669,55 +1540,23 @@
 
 /* Next buttons — night */
 [data-theme="dark"] .quiz-btn-next,
-[data-theme="dark"] #quizNext,
-[data-theme="dark"] #grammarQuizNext {
+[data-theme="dark"] #quizNext {
   background: #2E1E0C !important;         /* deeper ink, near-cellar black */
   color:      var(--qz-ink) !important;
 }
 
 [data-theme="dark"] .quiz-btn-next:hover,
-[data-theme="dark"] #quizNext:hover,
-[data-theme="dark"] #grammarQuizNext:hover {
+[data-theme="dark"] #quizNext:hover {
   background: #3E2A10 !important;
   box-shadow: 0 0 0 1px rgba(200, 120, 42, 0.30) !important;
 }
 
-/* Feedback — night */
-[data-theme="dark"] #grammarQuizFeedback {
-  background: rgba(200, 120, 42, 0.07) !important;
-  border:     1px solid rgba(200, 120, 42, 0.20) !important;
-}
-
-[data-theme="dark"] #grammarQuizFeedbackNote {
-  border-top: 1px solid rgba(200, 120, 42, 0.18) !important;
-}
-
-/* Grammar badge — night */
-[data-theme="dark"] #grammarQuizPointName {
-  background: rgba(200, 120, 42, 0.14) !important;
-  color:      var(--wc-accent) !important;
-  border:     1px solid rgba(200, 120, 42, 0.28) !important;
-}
-
-/* Original sentence box — night */
-[data-theme="dark"] #grammarQuizQuestion .rounded-lg.p-3 {
-  background:   rgba(200, 120, 42, 0.05) !important;
-  border-left:  3px solid rgba(200, 120, 42, 0.45) !important;
-}
-
-/* Summary score — night */
-[data-theme="dark"] #grammarQuizSummaryScore {
-  color: var(--wc-accent) !important;
-}
-
 /* Close buttons — night */
-[data-theme="dark"] #quizClose,
-[data-theme="dark"] #grammarQuizClose {
+[data-theme="dark"] #quizClose {
   color: rgba(212, 191, 160, 0.55) !important;
 }
 
-[data-theme="dark"] #quizClose:hover,
-[data-theme="dark"] #grammarQuizClose:hover {
+[data-theme="dark"] #quizClose:hover {
   color: var(--qz-ink) !important;
 }
 
@@ -1732,11 +1571,6 @@
 [data-theme="dark"] #quizModal .text-gray-500,
 [data-theme="dark"] #quizModal .text-gray-600,
 [data-theme="dark"] #quizModal .text-gray-700,
-[data-theme="dark"] #grammarQuizModal .text-gray-400,
-[data-theme="dark"] #grammarQuizModal .text-gray-500,
-[data-theme="dark"] #grammarQuizModal .text-gray-600,
-[data-theme="dark"] #grammarQuizModal .text-gray-700,
-[data-theme="dark"] #grammarQuizModal .text-gray-800,
 [data-theme="dark"] #quizSettings .text-gray-400,
 [data-theme="dark"] #quizSettings .text-gray-500,
 [data-theme="dark"] #quizSettings .text-gray-600 {
@@ -1745,10 +1579,7 @@
 
 [data-theme="dark"] #quizModal .text-gray-700,
 [data-theme="dark"] #quizModal .text-gray-800,
-[data-theme="dark"] #quizModal .text-gray-900,
-[data-theme="dark"] #grammarQuizModal .text-gray-700,
-[data-theme="dark"] #grammarQuizModal .text-gray-800,
-[data-theme="dark"] #grammarQuizModal .text-gray-900 {
+[data-theme="dark"] #quizModal .text-gray-900 {
   color: var(--qz-ink) !important;
 }
 
@@ -1761,10 +1592,8 @@
   .quiz-btn-primary,
   .quiz-btn-next,
   #quizIDK,
-  #grammarQuizShowHint,
   #qsCancel,
-  #quizAnswer,
-  #grammarQuizAnswer {
+  #quizAnswer {
     transition: none !important;
   }
 }

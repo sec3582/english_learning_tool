@@ -483,10 +483,6 @@ button[title="播放"]:hover{ background: var(--bg) !important; color: var(--pri
    ════════════════════════════════════════════ */
 
 /* 列表 / 單字卡 */
-[data-theme="dark"] .library-item:hover {
-  background: var(--hover-bg) !important;
-  box-shadow: 0 2px 10px rgba(13,19,33,.30) !important;
-}
 [data-theme="dark"] .wc-card:hover {
   background: var(--hover-bg) !important;
 }

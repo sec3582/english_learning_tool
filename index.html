@@ -141,34 +141,6 @@
     z-index: 200; min-width: 220px; max-width: min(300px, calc(100vw - 16px));
   }
 
-  /* ─── 圖書館文章列表項 ─── */
-  .library-item{
-    display: flex; align-items: flex-start; gap: 10px;
-    padding: 12px 14px; border-radius: 12px;
-    border: none; background: var(--card);
-    box-shadow: 0 1px 4px rgba(29,53,87,.06);
-    cursor: pointer; transition: background .18s, box-shadow .18s;
-  }
-  .library-item:hover{ background: var(--bg); box-shadow: 0 2px 10px rgba(29,53,87,.10); }
-  .lib-delete{
-    opacity: 0; transition: opacity .15s; flex-shrink: 0;
-    color: var(--muted); font-size: 15px; line-height: 1;
-    padding: 0 3px; background: none; border: none; cursor: pointer;
-  }
-  .library-item:hover .lib-delete{ opacity: 1; }
-  .lib-delete:hover{ color: var(--error); }
-  .lib-pencil{
-    opacity: 0; transition: opacity .15s; flex-shrink: 0;
-    color: var(--muted); background: none; border: none; cursor: pointer;
-    padding: 1px 2px; display: flex; align-items: center;
-  }
-  .library-item:hover .lib-pencil{ opacity: 1; }
-  .lib-pencil:hover{ color: var(--text); }
-  .lib-title-input{
-    flex: 1; min-width: 0; font-size: 0.875rem; font-weight: 500;
-    color: #1f2937; border: none; border-bottom: 1.5px solid #A3B18A;
-    background: transparent; outline: none; padding: 0 2px;
-  }
   /* ─── Enrichment 徽章（圖書館列表） ─── */
   .enrich-badges{ display:inline-flex; gap:4px; margin-left:4px; flex-shrink:0; }
   .enrich-badge{
@@ -933,23 +905,6 @@
     --navy: var(--cold-parchment);
   }
 
-  /* 缺口補件（perfume-art-director 提案追加）：#grammarQuizModal 之前只有
-     overlay 被 body.scene-cold 覆寫（見下方 --qz-* token 重新宣告區塊），
-     內層容器完全沒有對應規則，會落回 theme-perfume-wc.css 的 day 版或
-     [data-theme="dark"] 版（跟本輪冷調玻璃規格無關）。這裡比照 #quizModal
-     > div 補上同一組數值，兩者是同一個「考卷」材質家族。 */
-  body.scene-cold #grammarQuizModal > div {
-    background: var(--cold-modal-fill) !important;
-    border: 1px solid var(--glass-cold-border) !important;
-    backdrop-filter: blur(32px) saturate(110%) brightness(0.55);
-    -webkit-backdrop-filter: blur(32px) saturate(110%) brightness(0.55);
-    box-shadow: 0 20px 60px var(--cold-shadow), inset 0 1px 0 var(--color-rim-modal-top), inset 1px 0 0 var(--color-rim-modal-left) !important;
-    color: var(--cold-parchment) !important;
-    --text: var(--cold-parchment);
-    --muted: var(--cold-dim);
-    --navy: var(--cold-parchment);
-  }
-
   /* 全站夜模式擴大範圍（2026-07 追加）：右側四張側欄卡片
      （學習進度／單字清單／作坊燭火／資料管理；#pixelPetCard 這個 ID
      是舊名殘留，Phase 5f 只換皮不動 ID，避免無謂牽動 JS/CSS 依賴）。
@@ -1164,34 +1119,29 @@
      一樣，跟 #quizSubmit/#qsStart 當初的病灶完全同源，只是這次沒被抓到。
      這裡直接點名 ID，公式跟 .quiz-btn-next 一致（base/hover/active/
      focus-visible 四態＋box-shadow:none，理由同上一輪 #quizSubmit）。 */
-  body.scene-cold #quizNext,
-  body.scene-cold #grammarQuizNext {
+  body.scene-cold #quizNext {
     background: var(--cold-wash) !important;
     color: var(--cold-parchment) !important;
     border: 1px solid var(--cold-accent) !important;
     box-shadow: none !important;
   }
 
-  body.scene-cold #quizNext:hover:not(:disabled),
-  body.scene-cold #grammarQuizNext:hover:not(:disabled) {
+  body.scene-cold #quizNext:hover:not(:disabled) {
     background: color-mix(in srgb, var(--cold-wash) 92%, var(--cold-parchment) 8%) !important;
     border-color: color-mix(in srgb, var(--cold-accent) 85%, white 15%) !important;
     box-shadow: none !important;
   }
 
-  body.scene-cold #quizNext:active:not(:disabled),
-  body.scene-cold #grammarQuizNext:active:not(:disabled) {
+  body.scene-cold #quizNext:active:not(:disabled) {
     background: color-mix(in srgb, var(--cold-wash) 70%, black 30%) !important;
   }
 
-  body.scene-cold #quizNext:focus-visible,
-  body.scene-cold #grammarQuizNext:focus-visible {
+  body.scene-cold #quizNext:focus-visible {
     outline: none !important;
     box-shadow: 0 0 0 3px var(--cold-accent-ring) !important;
   }
 
-  body.scene-cold #quizNext *,
-  body.scene-cold #grammarQuizNext * {
+  body.scene-cold #quizNext * {
     color: inherit !important;
     opacity: 1 !important;
   }
@@ -1220,8 +1170,7 @@
   body.scene-cold #customAddBtn,
   body.scene-cold #usageSaveBudget,
   body.scene-cold #quizSubmit,
-  body.scene-cold #qsStart,
-  body.scene-cold #grammarQuizSubmit {
+  body.scene-cold #qsStart {
     background: var(--cold-wash) !important;
     color: var(--cold-parchment) !important;
     border: 1px solid var(--cold-accent) !important;
@@ -1249,7 +1198,6 @@
   body.scene-cold #usageSaveBudget:hover:not(:disabled),
   body.scene-cold #quizSubmit:hover:not(:disabled),
   body.scene-cold #qsStart:hover:not(:disabled),
-  body.scene-cold #grammarQuizSubmit:hover:not(:disabled),
   body.scene-cold #startQuizBtn.btn-primary-m:hover:not(:disabled) {
     background: color-mix(in srgb, var(--cold-wash) 92%, var(--cold-parchment) 8%) !important;
     border-color: color-mix(in srgb, var(--cold-accent) 85%, white 15%) !important;
@@ -1270,13 +1218,11 @@
   /* #qsStart／#grammarQuizSubmit 的 active 態：wc.css qz-accent 群組本身
      沒有寫 :active，瀏覽器預設會維持 :hover 的樣式，這裡補一條比 hover
      更暗的版本，跟 .btn-primary-m 家族的 active 公式一致。 */
-  body.scene-cold #qsStart:active:not(:disabled),
-  body.scene-cold #grammarQuizSubmit:active:not(:disabled) {
+  body.scene-cold #qsStart:active:not(:disabled) {
     background: color-mix(in srgb, var(--cold-wash) 70%, black 30%) !important;
   }
 
-  body.scene-cold #qsStart:focus-visible,
-  body.scene-cold #grammarQuizSubmit:focus-visible {
+  body.scene-cold #qsStart:focus-visible {
     outline: none !important;
     box-shadow: 0 0 0 3px var(--cold-accent-ring) !important;
   }
@@ -1288,7 +1234,6 @@
   body.scene-cold #usageSaveBudget *,
   body.scene-cold #quizSubmit *,
   body.scene-cold #qsStart *,
-  body.scene-cold #grammarQuizSubmit *,
   body.scene-cold #startQuizBtn.btn-primary-m * {
     color: inherit !important;
     opacity: 1 !important;
@@ -1377,7 +1322,6 @@
      全部 ~40 條規則，不用逐條改。順便把外層遮罩從暖色霧翳
      rgba(30,18,10,.65) 換成冷色，避免暖色滲進冷調頁面。 */
   body.scene-cold #quizModal,
-  body.scene-cold #grammarQuizModal,
   body.scene-cold #quizSettings {
     --qz-parchment: var(--cold-wash);
     --qz-ink:       var(--cold-parchment);
@@ -1650,7 +1594,6 @@
      這裡併入同一組，不再單獨維護一份公式。 */
   body.scene-cold #qsCancel,
   body.scene-cold #quizIDK,
-  body.scene-cold #grammarQuizShowHint,
   body.scene-cold #syncClose,
   body.scene-cold #usageClose2 {
     background: transparent !important;
@@ -1660,12 +1603,10 @@
 
   body.scene-cold #qsCancel:hover:not(:disabled),
   body.scene-cold #quizIDK:hover:not(:disabled),
-  body.scene-cold #grammarQuizShowHint:hover:not(:disabled),
   body.scene-cold #syncClose:hover:not(:disabled),
   body.scene-cold #usageClose2:hover:not(:disabled),
   body.scene-cold #qsCancel:active:not(:disabled),
   body.scene-cold #quizIDK:active:not(:disabled),
-  body.scene-cold #grammarQuizShowHint:active:not(:disabled),
   body.scene-cold #syncClose:active:not(:disabled),
   body.scene-cold #usageClose2:active:not(:disabled) {
     background: rgba(92, 118, 134, 0.10) !important;
@@ -1675,7 +1616,6 @@
 
   body.scene-cold #qsCancel:focus-visible,
   body.scene-cold #quizIDK:focus-visible,
-  body.scene-cold #grammarQuizShowHint:focus-visible,
   body.scene-cold #syncClose:focus-visible,
   body.scene-cold #usageClose2:focus-visible {
     outline: none !important;
@@ -1740,8 +1680,7 @@
      ID 專屬規則，background/color 是硬編碼 #FBF5E8/var(--qz-ink)，:focus
      另外硬編碼 rgba(200,149,42,...) 琥珀色 focus ring——這兩條都是 ID
      選擇器，body.scene-cold input[type="text"] 贏不了，需要直接點名 ID。 */
-  body.scene-cold #quizAnswer,
-  body.scene-cold #grammarQuizAnswer {
+  body.scene-cold #quizAnswer {
     background: var(--glass-cold-fill) !important;
     border: 1px solid var(--glass-cold-border) !important;
     color: var(--cold-parchment) !important;
@@ -1751,14 +1690,12 @@
      輸入框（background: var(--glass-cold-fill)）上太淡。混入比例比
      --qz-muted 再高一點（40% vs 35%），維持「提示文字」該有的存在感但
      不到跟已輸入文字（--cold-parchment）一樣亮。 */
-  body.scene-cold #quizAnswer::placeholder,
-  body.scene-cold #grammarQuizAnswer::placeholder {
+  body.scene-cold #quizAnswer::placeholder {
     color: color-mix(in srgb, var(--cold-dim) 60%, var(--cold-parchment) 40%) !important;
     opacity: 1 !important;
   }
 
-  body.scene-cold #quizAnswer:focus,
-  body.scene-cold #grammarQuizAnswer:focus {
+  body.scene-cold #quizAnswer:focus {
     outline: none !important;
     border-color: var(--cold-accent) !important;
     box-shadow: 0 0 0 3px var(--cold-accent-ring) !important;

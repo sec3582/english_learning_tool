@@ -578,22 +578,20 @@ select {
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Step 6 — Modals (compiled-spec.md §3.4)
-   Targets: #quizModal, #quizSettings, #grammarQuizModal
+   Targets: #quizModal, #quizSettings
    CG rules: CG-1, CG-2, CG-3, CG-5, CG-9, CG-10, CG-13
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ── Overlay: warm brown air (replaces Tailwind bg-black/50) ── */
 /* Alpha 0.55 preserves parchment texture visibility behind veil (§3.4 air check) */
 #quizModal,
-#quizSettings,
-#grammarQuizModal {
+#quizSettings {
   background: var(--color-overlay) !important;  /* rgba(40,25,8,0.55) warm brown */
 }
 
 /* ── Modal container: paper held up — surface-modal + SH-3 + rim top/left ── */
 #quizModal > div,
-#quizSettings > div,
-#grammarQuizModal > div {
+#quizSettings > div {
   background:    var(--color-surface-modal) !important;  /* #F3ECDF — 2-3% lighter than card */
   border:        none !important;                        /* CG-2: depth from shadow, not border */
   border-radius: var(--radius-modal) !important;         /* 8px — not 16px (CG-10) */
@@ -611,15 +609,13 @@ select {
 }
 
 #quizModal:not(.hidden) > div,
-#quizSettings:not(.hidden) > div,
-#grammarQuizModal:not(.hidden) > div {
+#quizSettings:not(.hidden) > div {
   animation: modal-in var(--motion-modal-in);  /* 230ms ease-out */
 }
 
 /* ── Modal title row: D1 serif + ledger divider below ── */
 #quizModal h3.sidebar-title,
-#quizSettings h3.sidebar-title,
-#grammarQuizModal h3.sidebar-title {
+#quizSettings h3.sidebar-title {
   color:         var(--color-ink-1) !important;
   font-family:   "EB Garamond", "Lora", "Crimson Pro", Georgia, serif !important;
   font-weight:   600 !important;
@@ -628,29 +624,25 @@ select {
 }
 
 /* ── Close buttons: ink-2 base → ink-1 hover, no chrome ── */
-#quizClose,
-#grammarQuizClose {
+#quizClose {
   background:    none !important;
   border:        none !important;
   color:         var(--color-ink-2) !important;
   transition:    color var(--motion-hover) !important;  /* 150ms ease-out */
 }
 
-#quizClose:hover,
-#grammarQuizClose:hover {
+#quizClose:hover {
   color: var(--color-ink-1) !important;
 }
 
 /* ── Night-mode guard: revert overlay + container to dark variables ── */
 [data-theme="dark"] body:not(.scene-cold) #quizModal,
-[data-theme="dark"] body:not(.scene-cold) #quizSettings,
-[data-theme="dark"] body:not(.scene-cold) #grammarQuizModal {
+[data-theme="dark"] body:not(.scene-cold) #quizSettings {
   background: rgba(0, 0, 0, 0.65) !important;
 }
 
 [data-theme="dark"] body:not(.scene-cold) #quizModal > div,
-[data-theme="dark"] body:not(.scene-cold) #quizSettings > div,
-[data-theme="dark"] body:not(.scene-cold) #grammarQuizModal > div {
+[data-theme="dark"] body:not(.scene-cold) #quizSettings > div {
   background: var(--wc-card, #1e2433) !important;
   box-shadow: 3px 8px 28px rgba(0, 0, 0, 0.40) !important;
 }

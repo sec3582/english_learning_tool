@@ -90,11 +90,11 @@ Deleted words must be excluded from quiz selection — check `storage.js` filter
 1. **Article Analysis** — user pastes/scrapes text; Gemini extracts 8–15 vocabulary cards (word, CEFR level, Traditional Chinese definition, two example sentences with translations, synonyms/antonyms)
 2. **Spaced Repetition** — 6-stage schedule (0→1→3→7→14→30 days); `dueAt` governs when words surface for review
 3. **Quiz Modes** — typing (fill-in-blank), choice EN→ZH, choice ZH→EN, dictation (audio → type); graded A/B/C. **Current state (2026-07, Phase 5g review): only typing has a wired-up entry point.** `openQuizModePicker()`/`startQuizFlowWithMode()` (`js/ui.js`) implement choice/dictation but no button ever calls them — verify before assuming these modes are user-reachable.
-4. **Grammar Practice** — Gemini extracts grammar points; quiz generator produces rewriting exercises; AI grades responses. **Current state (2026-07, Phase 5g review): extraction/storage works, but the quiz UI is unmounted.** `openGrammarQuiz()` (`js/ui.js`) targets `#grammarQuizModal`, which doesn't exist in `index.html`.
+4. **Grammar Practice** — Gemini extracts grammar points; quiz generator produces rewriting exercises; AI grades responses. **Current state (2026-07-21 cleanup): the quiz UI (`openGrammarQuiz()` and its `#grammarQuizModal`-targeting siblings) was removed as dead code — it never had a DOM entry point.** Extraction/storage (`grammarStorage.js`, "加入文法練習" flow) still works.
 5. **Pixel Pet** — leveling system tied to words added and reviews completed
 6. **Google Sheets Sync** — optional; bootstraps word list from Sheets on startup, pushes additions back
 
-**Also unmounted (2026-07, Phase 5g review):** the Library/Reader Mode (`_renderLibraryPage_()`/`showReaderMode()` in `js/ui.js`) has no DOM entry point in `index.html` — collected articles have no in-app way to be browsed or reread. Treat all three of the above as "built but not shipped" until wired up or formally dropped.
+**Removed as dead code (2026-07-21 cleanup):** the Library/Reader Mode (`_renderLibraryPage_()`/`showReaderMode()` and ~20 related functions spanning `js/ui.js:2143-2867` — enrichment storage, reader tooltip, known-word highlighting) had zero callers from `index.html`/`main.js` and was deleted, along with its `.library-item`/`.lib-delete`/`.lib-pencil`/`.lib-title-input` CSS. Collected articles still have no in-app way to be browsed or reread — if this feature is wanted again, recover it from the `archive/library-feature` git branch (created 2026-07-21, before deletion) rather than rebuilding from scratch.
 
 ## Design System
 
@@ -110,6 +110,8 @@ Deleted words must be excluded from quiz selection — check `storage.js` filter
 CSS theme files:
 - `theme-perfume-day.css` — Day Mode (primary, ~40KB)
 - `theme-perfume-wc.css` — Word card component styles (~71KB)
+- `theme-perfume-night.css` — Night Mode / 沉浸式文本小說場景 (~36KB)
+- `theme-ocean.css` — 基礎色票（`--bg`/`--primary`/`--text` 等無前綴 token），index.html 自帶 inline `<style>` 仍在消費 (~21KB)
 - `compiled-spec.md` — Day Mode 舊規格（色彩、陰影、字體、間距、動效），2026-07-15 前基礎已棄用
 - `decisions.md` — 舊決策記錄與視覺 North Star，2026-07-15 前基礎已棄用
 
