@@ -14,11 +14,11 @@
     }
   </script>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="theme-ocean.css">
-  <link rel="stylesheet" href="theme-perfume-day.css">
-  <link rel="stylesheet" href="theme-perfume-wc.css">
+  <link rel="stylesheet" href="theme-ocean.css?v=20260723a">
+  <link rel="stylesheet" href="theme-perfume-day.css?v=20260723a">
+  <link rel="stylesheet" href="theme-perfume-wc.css?v=20260723a">
   <!-- 沉浸式文本小說·夜模式（.scene-cold 冷調視覺系統 + Suminagashi 墨流背景） -->
-  <link rel="stylesheet" href="theme-perfume-night.css">
+  <link rel="stylesheet" href="theme-perfume-night.css?v=20260723a">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
   <!-- GSAP for cinematic opening animation -->
   <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
@@ -1943,7 +1943,7 @@
   </style>
 
 </head>
-<body class="bg-gray-100 text-gray-800 scene-cold">
+<body>
 
   <!-- 真正的 header 隱形根因（用 Playwright 實測找到，不是 CSS specificity
        問題）：js/ink-suminagashi.js 沒呼叫 canvas.parent(...) 時，p5.js
@@ -2696,7 +2696,8 @@
         });
       });
     }
-    initDustMotes();
+    // 2026-07-22（使用者裁決）：切回淺色 Day Mode 配色後關閉微塵特效，避免深色粒子疊在淺底上。
+    // initDustMotes();
   });
   </script>
 
@@ -2721,7 +2722,9 @@
        的實際數值，理由見對話回覆。
        alpha 0.10（修正輪 5 從 0.04 提高，讓光暈有實際可感知的效果），
        純 CSS 靜態層，不加 JS、不碰 ink-suminagashi.js、不改 --cold-void。 -->
+  <!-- 2026-07-22（使用者裁決）：切回淺色 Day Mode 配色後關閉光暈特效
   <div id="ambient-candle-glow" style="position:fixed;inset:0;pointer-events:none;z-index:-2;background:radial-gradient(circle 45vw at 80% 90%, rgba(40, 75, 99, 0.10) 0%, transparent 70%);"></div>
+  -->
 
   <!-- ═══ Phase 6: 微塵容器 Dust Motes Container ═══ -->
   <div id="dust-container"></div>
@@ -2760,7 +2763,9 @@
        僅依 #ink-layer 這個 id 掛載樣式；index.html 沒有 #night-stage 容器，
        sketch 會照原本邏輯 fallback 成預設掛在 document.body，不影響其他
        DOM 結構） -->
+  <!-- 2026-07-22（使用者裁決）：切回淺色 Day Mode 配色後關閉墨流深色背景動畫
   <script src="js/ink-suminagashi.js"></script>
+  -->
 
 </body>
 </html>

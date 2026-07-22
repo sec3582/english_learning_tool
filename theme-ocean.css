@@ -82,13 +82,13 @@ div.inline-flex.rounded-md.overflow-hidden.border > button:last-child{ border-ri
   border-color: transparent !important;
 }
 
-/* Primary action buttons */
+/* Primary action buttons — 2026-07-23 使用者裁決：改用墨綠 #3c6e71，不再讀 --primary（深藍，全站主色，範圍太廣不能整體改） */
 #analyzeBtn,#saveBtn,#customAnalyzeBtn,#customAddBtn,#qsStart,#startQuizBtn,#usageSaveBudget{
-  background: var(--primary) !important; color:#fff !important; border-radius:12px;
+  background: #3c6e71 !important; color:#fff !important; border-radius:12px;
   padding:.6rem 1rem; font-weight:600; box-shadow:0 3px 8px rgba(40,75,99,.22);
 }
 #analyzeBtn:hover,#saveBtn:hover,#customAnalyzeBtn:hover,#customAddBtn:hover,#qsStart:hover,#startQuizBtn:hover,#usageSaveBudget:hover{
-  background: var(--primary-hover) !important;
+  background: color-mix(in srgb, #3c6e71 90%, #fff 10%) !important;
 }
 
 /* Secondary / Ghost buttons */

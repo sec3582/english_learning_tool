@@ -11,10 +11,10 @@
   /* ── 2A. Color Tokens ─────────────────────────────────────────────────── */
 
   /* Background & Surface — 冷色五色票（2026-07-22 覆蓋，docs/COLOR_SPEC_NEW.md） */
-  --color-bg:               #d9d9d9;   /* page floor; C4 淺灰，刻意不用純白（見規格書 R-3） */
+  --color-bg:               #353535;   /* page floor; C1 近黑深灰（2026-07-23 修正：使用者目標圖是深底＋淺卡片對比，不是淺底） */
   --color-surface-card:     #ffffff;   /* section card; C3 純白（使用者授權例外） */
   --color-surface-panel:    #C0C0C0;   /* word list panel; Panel-Mid（C4 85% + C1 15%） */
-  --color-surface-recessed: #353535;   /* AI block, input bg, modal inner; C1 近黑深灰 */
+  --color-surface-recessed: #d9d9d9;   /* AI block, input bg, modal inner; C4 淺灰（2026-07-22 修正：所有消費端都搭配深色 ink 文字，C1 深底會讓文字看不見） */
   --color-surface-modal:    #ffffff;   /* modal container; C3 純白 */
   --color-surface-panel-alt:#D1D1D1;   /* color-mix(C4 95%, C1 5%) 預先算好的交錯底色 */
 
@@ -162,8 +162,31 @@ body {
   color: var(--color-ink-1) !important;    /* replaces cold text-gray-800 */
 }
 
+/* 2026-07-23（使用者裁決）：主視窗捲軸沒有樣式，一直吃瀏覽器預設的淺灰軌道，
+   在深色頁面底色上看起來像殘留的一條灰邊。這裡補上跟 .result-tab-panel/aside
+   同一套「跟隨主題色」的捲軸樣式，讓主視窗捲軸也吃 --color-bg 當底色。 */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--color-ink-2) 50%, transparent) var(--color-bg);
+}
+html::-webkit-scrollbar {
+  width: 10px;
+}
+html::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+html::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--color-ink-2) 50%, transparent);
+  border-radius: 999px;
+}
+html::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--color-ink-2) 70%, transparent);
+}
+
 /* ── M-1: Ground texture (fine powder grain) ── */
 /* SVG feTurbulence fractalNoise, seed locked → non-random on each load (CG-8) */
+/* 2026-07-22（使用者裁決）：切回淺色 Day Mode 配色後關閉顆粒紋理，屬舊版
+   compiled-spec.md 規格（已於 CLAUDE.md 標註棄用），與目標圖的乾淨平面淺色不符。
 body::before {
   content: "";
   position: fixed;
@@ -176,10 +199,10 @@ body::before {
   opacity: 0.025;
   mix-blend-mode: overlay;
 }
+*/
 
 /* ── Vignette: corners darker than center (CG-4) ── */
-/* Inner transparent zone: 40% (was 55%) — closer crop so mid-zone already fades */
-/* Edge alpha: 0.25 (was 0.12) — corners visibly darker than center              */
+/* 2026-07-22（使用者裁決）：同上，關閉舊規格暈影效果。
 body::after {
   content: "";
   position: fixed;
@@ -188,6 +211,7 @@ body::after {
   z-index: 1;
   background: radial-gradient(ellipse at center, transparent 40%, rgba(53, 53, 53, 0.25) 100%);
 }
+*/
 
 /* ── Content layer: above texture + vignette ── */
 /* Modals are siblings of <main>, not children — they are NOT affected by this stacking context */
@@ -377,7 +401,7 @@ main {
 /* ── Panel base: surface-panel + SH-2 + rim-panel ── */
 /* Deliberately heavier than section cards: darker bg, larger shadow, stronger rim */
 #wordListCard {
-  background:    var(--color-surface-panel) !important;  /* #C0C0C0 — 3–5% darker than card */
+  background:    var(--color-surface-card) !important;  /* #ffffff（2026-07-23 使用者裁決：跟其他側欄卡片一致） */
   border:        none !important;                        /* CG-2: depth from shadow only */
   border-radius: var(--radius-container) !important;     /* 8px */
   padding:       var(--pad-panel) !important;            /* 18px 20px */
@@ -663,9 +687,9 @@ select {
 #qsStart,
 #startQuizBtn,
 #usageSaveBudget {
-  background-color: #353535 !important;  /* (A) explicit hex — no var() resolution gap */
-  background:       #353535 !important;
-  color:            #ffffff !important;  /* parchment cream on dark ink */
+  background-color: #3c6e71 !important;  /* (A) explicit hex — C2 墨綠（2026-07-23 使用者裁決） */
+  background:       #3c6e71 !important;
+  color:            #ffffff !important;  /* white text on teal */
   border:           none !important;
   border-radius:    var(--radius-btn) !important;
   box-shadow:
@@ -723,8 +747,8 @@ select {
 #qsStart:hover:not(:disabled),
 #startQuizBtn:hover:not(:disabled),
 #usageSaveBudget:hover:not(:disabled) {
-  background-color: #454545 !important;
-  background: color-mix(in srgb, #353535 92%, #fff 8%) !important;
+  background-color: #467579 !important;
+  background: color-mix(in srgb, #3c6e71 90%, #fff 10%) !important;
   color:      #ffffff !important;
   box-shadow:
     1px 3px 8px rgba(53, 53, 53, 0.24),
@@ -740,8 +764,8 @@ select {
 #qsStart:active:not(:disabled),
 #startQuizBtn:active:not(:disabled),
 #usageSaveBudget:active:not(:disabled) {
-  background-color: #323232 !important;
-  background: color-mix(in srgb, #353535 95%, black 5%) !important;
+  background-color: #30585a !important;
+  background: color-mix(in srgb, #3c6e71 80%, black 20%) !important;
   color:      #ffffff !important;
   box-shadow:
     inset 0 1px 3px rgba(53, 53, 53, 0.22),
@@ -758,8 +782,8 @@ select {
 #qsStart:disabled,
 #startQuizBtn:disabled,
 #usageSaveBudget:disabled {
-  background-color: #353535 !important;  /* keep dark base, opacity does the fade */
-  background:       #353535 !important;
+  background-color: #3c6e71 !important;  /* keep teal base, opacity does the fade */
+  background:       #3c6e71 !important;
   color:            #ffffff !important;
   opacity:          0.4 !important;      /* 40% → clearly faded, still readable */
   box-shadow:       none !important;
@@ -821,11 +845,11 @@ select {
   opacity: 0.4 !important;
 }
 
-/* ── Primary: dark ink body + top rim — NEVER amber fill (CG-11) ── */
+/* ── Primary: C2 墨綠底 + top rim（2026-07-23 使用者裁決：改用墨綠取代深黑 ink，跟目標圖一致）── */
 .btn-primary-m,
 .quiz-btn-primary {
-  background:    var(--color-ink-1) !important;             /* #353535 — dried brown-black ink */
-  color:         var(--color-surface-card) !important;      /* cream text on dark body */
+  background:    #3c6e71 !important;                        /* C2 墨綠／深藍綠 */
+  color:         var(--color-surface-card) !important;      /* white text on teal body */
   border:        none !important;
   border-radius: var(--radius-btn) !important;              /* 6px — not 16px */
   box-shadow:
@@ -836,21 +860,21 @@ select {
     box-shadow  var(--motion-hover) !important;
 }
 
-/* Hover: 8% lighter, stays warm dark; rim brightens slightly */
+/* Hover: lighter teal; rim brightens slightly */
 .btn-primary-m:hover:not(:disabled),
 .quiz-btn-primary:hover:not(:disabled) {
-  background: #454545 !important;  /* fallback: color-mix(ink-1 92%, white 8%) pre-computed */
-  background: color-mix(in srgb, var(--color-ink-1) 92%, #fff 8%) !important;
+  background: #467579 !important;  /* fallback: color-mix(C2 90%, white 10%) pre-computed */
+  background: color-mix(in srgb, #3c6e71 90%, #fff 10%) !important;
   box-shadow:
     1px 3px 8px rgba(53, 53, 53, 0.24),                     /* SH-btn + 1px deeper */
     inset 0 1px 0 var(--color-rim-hover) !important;        /* rim brightens: 0.38 */
 }
 
-/* Active/Press: 5% darker + inset groove (tactile press feel); rim dims */
+/* Active/Press: darker teal + inset groove (tactile press feel); rim dims */
 .btn-primary-m:active:not(:disabled),
 .quiz-btn-primary:active:not(:disabled) {
-  background: #323232 !important;  /* fallback: color-mix(ink-1 95%, black 5%) pre-computed */
-  background: color-mix(in srgb, var(--color-ink-1) 95%, black 5%) !important;
+  background: #30585a !important;  /* fallback: color-mix(C2 80%, black 20%) pre-computed — Teal-Hover token */
+  background: color-mix(in srgb, #3c6e71 80%, black 20%) !important;
   box-shadow:
     inset 0 1px 3px rgba(53, 53, 53, 0.22),                 /* SH-groove replaces SH-btn */
     inset 0 1px 0 rgba(255, 255, 255, 0.10) !important;     /* rim dims on press */
@@ -983,11 +1007,11 @@ select {
    definitive override regardless of what is winning above.
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* Base: dark ink background + parchment text, fully opaque */
+/* Base: C2 墨綠 background + white text, fully opaque（2026-07-23 使用者裁決） */
 #analyzeBtn,
 #urlFetchBtn {
-  background-color: #353535 !important;
-  background:       #353535 !important;
+  background-color: #3c6e71 !important;
+  background:       #3c6e71 !important;
   color:            #ffffff !important;
   opacity:          1 !important;
 }
@@ -1014,11 +1038,11 @@ select {
   opacity: 1 !important;
 }
 
-/* Hover: slightly lighter dark bg, same cream text — NOT transparent→colour */
+/* Hover: slightly lighter teal, same white text — NOT transparent→colour */
 #analyzeBtn:hover:not(:disabled),
 #urlFetchBtn:hover:not(:disabled) {
-  background-color: #454545 !important;
-  background:       #454545 !important;
+  background-color: #467579 !important;
+  background:       #467579 !important;
   color:            #ffffff !important;
 }
 
