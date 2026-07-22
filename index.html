@@ -100,9 +100,9 @@
 
   /* Starred 狀態：霧霾藍淡底 */
   .btn-ghost-m--starred{
-    background:#E8EEF2; color:#7C96AB;
+    background:#DFE4E8; color:#284b63;
   }
-  .btn-ghost-m--starred:hover{ background:#dce5ec; color:#5f7d92; }
+  .btn-ghost-m--starred:hover{ background:#D0D7DD; color:#203C4F; }
 
   /* Small utility 按鈕（OCR 等） */
   .btn-sm-m{
@@ -139,7 +139,7 @@
   .header-gradient{
     background: linear-gradient(135deg, var(--primary-dark), var(--primary));
     color:#fff;
-    box-shadow: 0 4px 16px rgba(120,144,104,.25);
+    box-shadow: 0 4px 16px rgba(40,75,99,.25);
   }
 
   /* 卡片：圓角 16、柔霧邊框、輕陰影 */
@@ -160,11 +160,11 @@
   /* AI 建議卡片「已存在／已加入」標記（原本是 js/ui.js 的 markRowAsAdded()
      inline style.cssText，沒有任何 class 可掛，scene-cold 完全碰不到，
      這裡把顏色搬進 class，JS 只負責掛 class 名稱）。 */
-  .ai-card-marked{ background:#F0F0F0; opacity:0.55; }
+  .ai-card-marked{ background:#d9d9d9; opacity:0.55; }
   .ai-mark-tip{
     display:inline-flex; align-items:center; gap:3px;
     margin-left:8px; padding:2px 9px; border-radius:999px;
-    background:#A3B18A; color:#fff;
+    background:#284b63; color:#fff;
     font-size:.72rem; font-weight:700; white-space:nowrap;
   }
 
@@ -172,44 +172,44 @@
      inline style innerHTML，沒有任何 class，scene-cold 完全碰不到——這裡
      把顏色搬進 class，數值/百分比等動態內容仍由 JS 產生）。 */
   .progress-card-summary{
-    display:block; font-size:.72rem; color:#B0A090; margin-top:2px;
+    display:block; font-size:.72rem; color:#3A5D5F; margin-top:2px;
   }
   .progress-card-chevron{
-    font-size:.85rem; color:#B0A090; transform:rotate(-90deg);
+    font-size:.85rem; color:#3A5D5F; transform:rotate(-90deg);
     transition:transform .2s; display:inline-block;
   }
-  .progress-divider{ height:1px; background:#EDE5D8; margin:12px 0 16px; }
+  .progress-divider{ height:1px; background:#d9d9d9; margin:12px 0 16px; }
 
   .progress-stat-row{ display:flex; gap:8px; }
   .progress-stat-pill{ flex:1; text-align:center; border-radius:8px; padding:10px 4px; }
-  .progress-stat-pill--mastered{ background:#F5F0E8; }
-  .progress-stat-pill--learning{ background:#FDF6EC; }
-  .progress-stat-pill--notstarted{ background:#F7F4F0; }
+  .progress-stat-pill--mastered{ background:#E8EEEE; }
+  .progress-stat-pill--learning{ background:#DFE4E8; }
+  .progress-stat-pill--notstarted{ background:#E8E8E8; }
   .progress-stat-num{ font-size:1.4rem; font-weight:700; }
-  .progress-stat-pill--mastered .progress-stat-num{ color:#6B5234; }
-  .progress-stat-pill--learning .progress-stat-num{ color:#8B6914; }
-  .progress-stat-pill--notstarted .progress-stat-num{ color:#9A8C7A; }
-  .progress-stat-label{ font-size:.68rem; color:#9A8070; margin-top:2px; }
+  .progress-stat-pill--mastered .progress-stat-num{ color:#284b63; }
+  .progress-stat-pill--learning .progress-stat-num{ color:#3A5D5F; }
+  .progress-stat-pill--notstarted .progress-stat-num{ color:#777777; }
+  .progress-stat-label{ font-size:.68rem; color:#3A5D5F; margin-top:2px; }
 
   .progress-stat-bar{
-    height:5px; border-radius:3px; background:#EDE5D8; overflow:hidden;
+    height:5px; border-radius:3px; background:#d9d9d9; overflow:hidden;
     margin-top:10px; display:flex;
   }
-  .progress-stat-bar-seg--mastered{ background:#9A7250; }
-  .progress-stat-bar-seg--learning{ background:#C4A050; }
-  .progress-stat-bar-seg--notstarted{ background:#D4C5B0; }
+  .progress-stat-bar-seg--mastered{ background:#284b63; }
+  .progress-stat-bar-seg--learning{ background:#3c6e71; }
+  .progress-stat-bar-seg--notstarted{ background:#979797; }
 
   .progress-chart-title{
-    font-size:.68rem; color:#9A8070; font-weight:600;
+    font-size:.68rem; color:#3A5D5F; font-weight:600;
     letter-spacing:.04em; margin-bottom:4px;
   }
   .progress-chart-empty{
-    font-size:.72rem; color:#C0B4A4; text-align:center; padding:14px 0;
+    font-size:.72rem; color:#979797; text-align:center; padding:14px 0;
   }
-  .progress-chart-grid-line{ stroke:#EDE5D8; }
-  .progress-chart-line{ stroke:#A07850; }
-  .progress-chart-dot{ fill:#7A5C38; }
-  .progress-chart-label{ fill:#B0A090; }
+  .progress-chart-grid-line{ stroke:#d9d9d9; }
+  .progress-chart-line{ stroke:#284b63; }
+  .progress-chart-dot{ fill:#284b63; }
+  .progress-chart-label{ fill:#3A5D5F; }
 
   /* Tabs（右側：今日/到期/全部） */
   .tab{
@@ -240,7 +240,7 @@
 
   /* Toast */
   .toast{
-    background: #0b1020; color:#fff; border-radius:14px; box-shadow:0 8px 24px rgba(2,6,23,.4);
+    background: #353535; color:#fff; border-radius:14px; box-shadow:0 8px 24px rgba(2,6,23,.4);
   }
 
   /* Modal */
@@ -301,7 +301,7 @@
     word-break:keep-all; /* 中文詞不在字元中間斷開 */
   }
   /* 箭頭：靠頂對齊，與單字視覺基線相近 */
-  .wc-arrow{ color:#ACACAC; font-size:.75rem; flex-shrink:0; margin-top:4px; }
+  .wc-arrow{ color:#777777; font-size:.75rem; flex-shrink:0; margin-top:4px; }
 
   /* Body：flex column，間距略放大 */
   .wc-body{
@@ -313,18 +313,18 @@
   .wc-title .wc-word{
     cursor:pointer; transition:color .15s;
   }
-  .wc-title .wc-word:hover{ color:#A3B18A; }
+  .wc-title .wc-word:hover{ color:#284b63; }
 
   /* 字卡右下角刪除按鈕（hover 才顯示）*/
   .wc-del-corner{
     position:absolute; bottom:8px; right:8px;
     opacity:0; transition:opacity .15s;
-    color:#9ca3af; background:none; border:none;
+    color:#3A5D5F; background:none; border:none;
     cursor:pointer; padding:3px; border-radius:4px;
     display:flex; align-items:center;
   }
   .wc-card:hover .wc-del-corner{ opacity:1; }
-  .wc-del-corner:hover{ color:#C0392B; }
+  .wc-del-corner:hover{ color:#353535; }
 
   /* 文章例句：主要閱讀文字，text-base，leading-relaxed，無斜體 */
   .wc-article{
@@ -368,30 +368,30 @@
     padding:4px 8px; border-radius:6px;
     transition:color .15s, background .15s;
   }
-  .wc-btn-save:hover{ color:#2C5282; background:rgba(44,82,130,.07); }
+  .wc-btn-save:hover{ color:#284b63; background:rgba(40,75,99,.07); }
 
   /* ─── 複習模式：AI 記憶輔助按鈕 ─── */
   .wc-ai-help{
     display:inline-flex; align-items:center;
     font-size:.8125rem; font-weight:500;
-    color:#A3B18A; background:#eef1ea;
+    color:#284b63; background:#E8EEEE;
     border:none; cursor:pointer; align-self:flex-end;
     padding:5px 12px; border-radius:8px;
     transition:background .15s, color .15s;
   }
-  .wc-ai-help:hover{ background:#dde8d5; color:#7a9068; }
+  .wc-ai-help:hover{ background:#D8E2E3; color:#30585A; }
 
   /* ─── 已收藏的關聯字（同義/反義） ─── */
   .wc-relations{ margin-top:8px; display:flex; flex-direction:column; gap:5px; }
   .wc-rel-row{ display:flex; align-items:center; flex-wrap:wrap; gap:5px; }
-  .wc-rel-label{ font-size:.6875rem; font-weight:700; color:#A3B18A; text-transform:uppercase; letter-spacing:.05em; min-width:2.5rem; }
-  .wc-rel-chip{ display:inline-block; padding:2px 8px; border-radius:999px; font-size:.8125rem; color:#4a5940; background:#eef1ea; border:1px solid #d4dece; }
-  .wc-rel-chip--ant{ color:#7a4a4a; background:#f5eaea; border-color:#e8d0d0; }
+  .wc-rel-label{ font-size:.6875rem; font-weight:700; color:#284b63; text-transform:uppercase; letter-spacing:.05em; min-width:2.5rem; }
+  .wc-rel-chip{ display:inline-block; padding:2px 8px; border-radius:999px; font-size:.8125rem; color:#284b63; background:#E8EEEE; border:1px solid #8AA8AA; }
+  .wc-rel-chip--ant{ color:#284b63; background:#DFE4E8; border-color:#7E93A1; }
 
   /* ─── AI 記憶輔助懸浮窗 ─── */
   .mnemonic-overlay{
     position:fixed; inset:0; z-index:1000;
-    background:rgba(0,0,0,.35);
+    background:rgba(53,53,53,.35);
     display:flex; align-items:center; justify-content:center;
   }
   .mnemonic-overlay.hidden{ display:none; }
@@ -417,7 +417,7 @@
   .mnemonic-close:hover{ color: var(--text); }
   .mnemonic-section{ margin-bottom:16px; }
   .mnemonic-label{
-    font-size:.6875rem; font-weight:700; color:#A3B18A;
+    font-size:.6875rem; font-weight:700; color:#284b63;
     text-transform:uppercase; letter-spacing:.06em; margin-bottom:6px;
   }
   .mnemonic-text{
@@ -437,7 +437,7 @@
     display:flex; gap:7px; justify-content:center; padding:36px 0;
   }
   .mnemonic-dot{
-    width:8px; height:8px; border-radius:50%; background:#A3B18A;
+    width:8px; height:8px; border-radius:50%; background:#284b63;
     animation:mnemonic-bounce .9s infinite ease-in-out;
   }
   .mnemonic-dot:nth-child(2){ animation-delay:.15s; }
@@ -447,14 +447,14 @@
     50%{ transform:translateY(-7px); opacity:1; }
   }
   .mnemonic-error{
-    color:#C0392B; font-size:.875rem;
+    color:#353535; font-size:.875rem;
     padding:20px 0; text-align:center;
   }
   .mnemonic-word-title{ cursor:pointer; transition:color .15s; }
-  .mnemonic-word-title:hover{ color:#A3B18A; }
+  .mnemonic-word-title:hover{ color:#284b63; }
   .mnemonic-chips{ display:flex; flex-wrap:wrap; gap:6px; margin-top:2px; }
-  .mnemonic-chip{ display:inline-block; padding:3px 10px; border-radius:999px; font-size:.8125rem; color:#4a5940; background:#eef1ea; border:1px solid #d4dece; }
-  .mnemonic-chip--ant{ color:#7a4a4a; background:#f5eaea; border-color:#e8d0d0; }
+  .mnemonic-chip{ display:inline-block; padding:3px 10px; border-radius:999px; font-size:.8125rem; color:#284b63; background:#E8EEEE; border:1px solid #8AA8AA; }
+  .mnemonic-chip--ant{ color:#284b63; background:#DFE4E8; border-color:#7E93A1; }
   .mnemonic-regen-row{ display:flex; justify-content:flex-end; padding-top:12px; margin-top:4px; border-top:1px solid var(--border); }
   .mnemonic-regen{ font-size:.8rem; color: var(--muted); background:none; border:1px solid var(--border); cursor:pointer; padding:4px 12px; border-radius:8px; transition:all .15s; }
   .mnemonic-regen:hover{ color: var(--text); border-color: var(--primary); background: var(--bg); }
@@ -479,7 +479,7 @@
     color:#fff;
     transition:background .15s;
   }
-  .quiz-btn-next:hover{ background:#3a4833; }
+  .quiz-btn-next:hover{ background:#1C3546; }
 
   /* ─── RWD 斷點系統 ─── */
 
@@ -597,7 +597,7 @@
     }
   }
   .highlight-sentence {
-    background: #fef9c3;
+    background: #E8EEEE;
     border-radius: 3px;
     padding: 1px 2px;
   }
@@ -623,7 +623,7 @@
     font-size: 0.9rem;
     line-height: 1.6;
     margin-bottom: 20px !important;
-    border-left: 3px solid #A3B18A;
+    border-left: 3px solid #284b63;
     padding-left: 12px;
     font-weight: 400;
   }
@@ -696,14 +696,14 @@
      的真正原因，不是 cascade 輸掉。修法：頁首自己要有夠不透明的深色底，
      不能只靠 5% alpha 的玻璃感去露出背後的墨流。 */
   body.scene-cold .header-gradient {
-    background: linear-gradient(180deg, rgba(20, 23, 26, 0.88), rgba(27, 31, 35, 0.82)) !important;
+    /* 2026-07-22：移除 glassmorphism（backdrop-filter blur），底色改實色
+       漸層（原本 0.88/0.82 alpha 已經接近不透明，直接補滿到 100%）。 */
+    background: linear-gradient(180deg, rgb(24, 27, 29), rgb(30, 34, 38)) !important;
     border-bottom: 1px solid var(--glass-cold-border) !important;
-    backdrop-filter: blur(20px) saturate(120%);
-    -webkit-backdrop-filter: blur(20px) saturate(120%);
     color: var(--cold-parchment) !important;
     box-shadow: 0 4px 24px var(--cold-shadow) !important;
     --text: var(--cold-parchment);
-    --muted: var(--cold-dim);
+    --muted: var(--cold-dim-text);
     --navy: var(--cold-parchment);
   }
 
@@ -750,7 +750,7 @@
   }
 
   body.scene-cold #openUsageBtn {
-    color: var(--cold-dim) !important;
+    color: var(--cold-dim-text) !important;
   }
 
   body.scene-cold #openUsageBtn:hover {
@@ -758,13 +758,13 @@
   }
 
   body.scene-cold #darkModeToggle {
-    background: rgba(92, 118, 134, 0.14) !important;
+    background: rgba(60, 110, 113, 0.14) !important;
     color: var(--cold-parchment) !important;
     border: 1px solid var(--glass-cold-border) !important;
   }
 
   body.scene-cold #darkModeToggle:hover {
-    background: rgba(92, 118, 134, 0.22) !important;
+    background: rgba(60, 110, 113, 0.22) !important;
   }
 
   /* 輸入區：玻璃卡片視覺，保留原本的 Tailwind 版面／間距 class 不動。
@@ -780,16 +780,17 @@
   /* Phase 5g P1：主內容卡片吃 --glass-cold-fill-primary（比 sidebar 明顯），
      建立主次視覺層級（見背景/玻璃可感知度評審）。 */
   body.scene-cold #articleInputSection {
+    /* 2026-07-22：移除 glassmorphism，卡片改實色（--glass-cold-fill-primary
+       已改為實色 token，見 theme-perfume-night.css），不再靠 backdrop-filter
+       製造玻璃感。 */
     background: var(--glass-cold-fill-primary) !important;
     border: 1px solid var(--glass-cold-border) !important;
-    backdrop-filter: blur(20px) saturate(120%);
-    -webkit-backdrop-filter: blur(20px) saturate(120%);
     /* Phase 5g P1：疊加 inset 高光，補上材質層次評審裡確認缺失的
        玻璃邊緣反光線索，不動外陰影本身。 */
     box-shadow: 0 20px 60px var(--cold-shadow), 0 1px 0 var(--glass-cold-highlight-inset) inset !important;
     color: var(--cold-parchment) !important;
     --text: var(--cold-parchment);
-    --muted: var(--cold-dim);
+    --muted: var(--cold-dim-text);
   }
 
   /* 單字卡：JS（js/ui.js）動態產生 .wc-card，這裡只覆寫既有規則的視覺呈現，
@@ -804,15 +805,47 @@
   /* Phase 5g P1：.wc-card 只用於右側 sidebar 清單項目（js/ui.js
      makeListItem()），吃 --glass-cold-fill-secondary，比主內容卡片略低。 */
   body.scene-cold .wc-card {
+    /* 2026-07-22：移除 glassmorphism，改實色卡片。 */
     background: var(--glass-cold-fill-secondary) !important;
     border: 1px solid var(--glass-cold-border) !important;
-    backdrop-filter: blur(16px) saturate(115%);
-    -webkit-backdrop-filter: blur(16px) saturate(115%);
     /* Phase 5g P1：疊加 inset 高光（材質層次評審）。 */
     box-shadow: 0 16px 48px var(--cold-shadow), 0 1px 0 var(--glass-cold-highlight-inset) inset !important;
     color: var(--cold-parchment) !important;
     --text: var(--cold-parchment);
-    --muted: var(--cold-dim);
+    --muted: var(--cold-dim-text);
+  }
+
+  /* 2026-07-22（第三輪，實測截圖發現的另一個根因）：.wc-ai 這個 AI 例句框
+     讀的其實不是 theme-perfume-wc.css 的版本，是這份 index.html 自己
+     <style> 區塊裡更早定義的 `.wc-ai{ background: var(--bg); }`（第 340
+     行）——它讀 ocean.css 的 --bg，這個 token 從來沒有被 scene-cold
+     重新宣告過（body 的深色背景是直接蓋 background 屬性，不是改 --bg
+     這個變數本身），所以 .wc-ai 背景永遠是淺灰（C4），不管 scene-cold
+     有沒有套用。結果：.wc-ai-text／.wc-ai-zh 讀的 --text／--muted 在
+     scene-cold 下都被改成淺色（給深色卡片配的），疊在這個「意外維持淺色」
+     的背景上，變成淺字疊淺底，幾乎看不見——這才是使用者反映「AI 例句
+     看不到字」的真正根因，比玻璃卡片更隱蔽。這裡直接補一條 scene-cold
+     專屬覆寫，把背景也改成實色。 */
+  body.scene-cold .wc-ai {
+    background: var(--glass-cold-fill) !important;
+  }
+
+  /* 2026-07-22（使用者實測回報：「藍色系強調色文字疊在卡片上看不清楚」）：
+     theme-perfume-wc.css 裡所有 `color: var(--wc-accent) !important` 的
+     文字用途（單字 hover、關聯字標籤、收藏按鈕 hover、連結），在 scene-cold
+     的實色卡片上直接讀原本的 --wc-accent（= C5 深藍，L 僅 0.06）會變成
+     深疊深。這裡逐一點名覆寫成 --cold-accent-text（淺色版，見
+     theme-perfume-night.css），只換文字色，不動這些元件的背景/邊框。
+     （.wc-ai-help 不在這裡列——它已經有專屬的 body.scene-cold 覆寫，見下方
+     「Phase 5g P0 補件」區塊，用 --cold-parchment 當文字色，不需要重複。） */
+  body.scene-cold .wc-title .wc-word:hover,
+  body.scene-cold .wc-rel-label,
+  body.scene-cold .wc-btn-save:hover,
+  body.scene-cold #articleInputSection .section-h svg,
+  body.scene-cold .wc-card a,
+  body.scene-cold #wordListCard a,
+  body.scene-cold #articleInputSection a {
+    color: var(--cold-accent-text) !important;
   }
 
   /* 測驗 modal 內層卡片。.sidebar-title（標題「單字測驗」）讀的是
@@ -834,14 +867,15 @@
      --glass-cold-highlight-inset）——rim light 是玻璃感最主要的視覺
      線索，這兩個 token 本來就是為 modal 設計的，之前一直沒被接上。 */
   body.scene-cold #quizModal > div {
+    /* 2026-07-22：移除 glassmorphism（modal 面板本體，非遮罩層，見使用者
+       裁決——遮罩層的模糊是合理用途，面板本體不是）。--cold-modal-fill
+       已改為 100% 不透明實色。 */
     background: var(--cold-modal-fill) !important;
     border: 1px solid var(--glass-cold-border) !important;
-    backdrop-filter: blur(32px) saturate(110%) brightness(0.55);
-    -webkit-backdrop-filter: blur(32px) saturate(110%) brightness(0.55);
     box-shadow: 0 20px 60px var(--cold-shadow), inset 0 1px 0 var(--color-rim-modal-top), inset 1px 0 0 var(--color-rim-modal-left) !important;
     color: var(--cold-parchment) !important;
     --text: var(--cold-parchment);
-    --muted: var(--cold-dim);
+    --muted: var(--cold-dim-text);
     --navy: var(--cold-parchment);
   }
 
@@ -859,15 +893,14 @@
   body.scene-cold #wordListCard,
   body.scene-cold #pixelPetCard,
   body.scene-cold #backupCard {
+    /* 2026-07-22：移除 glassmorphism，改實色卡片。 */
     background: var(--glass-cold-fill-secondary) !important;
     border: 1px solid var(--glass-cold-border) !important;
-    backdrop-filter: blur(16px) saturate(115%);
-    -webkit-backdrop-filter: blur(16px) saturate(115%);
     /* Phase 5g P1：疊加 inset 高光（材質層次評審）。 */
     box-shadow: 0 16px 48px var(--cold-shadow), 0 1px 0 var(--glass-cold-highlight-inset) inset !important;
     color: var(--cold-parchment) !important;
     --text: var(--cold-parchment);
-    --muted: var(--cold-dim);
+    --muted: var(--cold-dim-text);
     --navy: var(--cold-parchment);
   }
 
@@ -889,7 +922,7 @@
   }
 
   body.scene-cold #articleInput::placeholder {
-    color: var(--cold-dim) !important;
+    color: var(--cold-dim-text) !important;
     opacity: 1 !important;
   }
 
@@ -925,12 +958,12 @@
     box-shadow: 0 1px 0 var(--glass-cold-highlight-inset) inset !important;
     color: var(--cold-parchment) !important;
     --text: var(--cold-parchment);
-    --muted: var(--cold-dim);
+    --muted: var(--cold-dim-text);
   }
 
   /* Phase 5g P1-4：單字清單 empty state 文字。 */
   body.scene-cold .list-empty-state {
-    color: var(--cold-dim) !important;
+    color: var(--cold-dim-text) !important;
   }
 
   /* 2) 卡片標題（.section-h，「匯入文章」「自訂新增單字」共用同一個
@@ -942,7 +975,7 @@
   }
 
   body.scene-cold .section-h svg {
-    color: var(--cold-dim) !important;
+    color: var(--cold-dim-text) !important;
   }
 
   /* 3) 輸入來源 tabs 的 active 狀態。day.css 的
@@ -962,19 +995,17 @@
     background: var(--glass-cold-fill) !important;
     border: 1px solid var(--glass-cold-border) !important;
     border-radius: 10px;
-    backdrop-filter: blur(16px) saturate(115%);
-    -webkit-backdrop-filter: blur(16px) saturate(115%);
     color: var(--cold-parchment) !important;
     --text: var(--cold-parchment);
-    --muted: var(--cold-dim);
+    --muted: var(--cold-dim-text);
   }
 
   body.scene-cold #customWordHeader:hover {
-    background: rgba(92, 118, 134, 0.06) !important;
+    background: rgba(60, 110, 113, 0.06) !important;
   }
 
   body.scene-cold #customWordSidebar label {
-    color: var(--cold-dim) !important;
+    color: var(--cold-dim-text) !important;
   }
 
   body.scene-cold #customWordSidebar input,
@@ -986,7 +1017,7 @@
 
   body.scene-cold #customWordSidebar input::placeholder,
   body.scene-cold #customWordSidebar textarea::placeholder {
-    color: var(--cold-dim) !important;
+    color: var(--cold-dim-text) !important;
     opacity: 1 !important;
   }
 
@@ -1185,15 +1216,17 @@
      body.scene-cold #usageSaveBudget ID 規則維持不動（仍是 scene-cold 場景
      下贏過 .btn-primary-m 的必要覆寫）。 */
 
-  /* 輸入來源 tabs（手動輸入／上傳圖片）：未選取態原本吃 --muted →
-     --cold-dim，實測太淡難以辨識是「這裡還有一個頁籤」。提高到介於
-     --cold-dim 與 --cold-parchment 之間的中對比，選取態與 hover 仍然
-     維持最亮，保留「選取/未選取」的視覺層級但兩者都要可讀。 */
+  /* 2026-07-22（第三輪修正）：tier-1 換成五色票後 --cold-dim 變成深藍
+     （L=0.06），55/45 混色公式在新卡片實色底上對比只剩 ~2.1:1，比原本
+     想解決的「太淡」問題更嚴重。改直接用 --cold-dim-text（= parchment），
+     用 opacity 做「未選取」的視覺層級，不再靠混入深色犧牲對比度。 */
   body.scene-cold #articleInputSection .input-tab {
-    color: color-mix(in srgb, var(--cold-parchment) 55%, var(--cold-dim) 45%) !important;
+    color: var(--cold-dim-text) !important;
+    opacity: 0.7;
   }
   body.scene-cold #articleInputSection .input-tab:hover {
     color: var(--cold-parchment) !important;
+    opacity: 1;
   }
 
   /* 「今日新增／複習／全部」sidebar tabs：不在 Step 0 白名單內，選擇器是
@@ -1205,19 +1238,19 @@
   body.scene-cold #tabDue,
   body.scene-cold #tabAll {
     background: transparent !important;
-    color: var(--cold-dim) !important;
+    color: var(--cold-dim-text) !important;
     border: none !important;
   }
   body.scene-cold #tabToday:hover,
   body.scene-cold #tabDue:hover,
   body.scene-cold #tabAll:hover {
-    background: rgba(92, 118, 134, 0.10) !important;
+    background: rgba(60, 110, 113, 0.10) !important;
     color: var(--cold-parchment) !important;
   }
   body.scene-cold #tabToday.tab--active,
   body.scene-cold #tabDue.tab--active,
   body.scene-cold #tabAll.tab--active {
-    background: rgba(92, 118, 134, 0.14) !important;
+    background: rgba(60, 110, 113, 0.14) !important;
     color: var(--cold-parchment) !important;
     font-weight: 600 !important;
     box-shadow: inset 0 -2.5px 0 var(--cold-accent) !important;
@@ -1240,16 +1273,16 @@
   body.scene-cold {
     --wc-surface:      var(--cold-wash);
     --wc-word-color:   var(--cold-parchment);
-    --wc-muted:         var(--cold-dim);
+    --wc-muted:         var(--cold-dim-text);
     --wc-accent:        var(--cold-accent);
     --wc-rule:          var(--glass-cold-border);
     --wc-shadow-a:      var(--cold-shadow);
     --wc-shadow-b:      var(--cold-shadow);
     --wc-shadow-c:      var(--cold-shadow);
-    --wc-chip-bg:       rgba(92, 118, 134, 0.12);
-    --wc-chip-bdr:      rgba(92, 118, 134, 0.25);
-    --wc-chip-ant-bg:   rgba(92, 118, 134, 0.10);
-    --wc-chip-ant-bdr:  rgba(92, 118, 134, 0.22);
+    --wc-chip-bg:       rgba(60, 110, 113, 0.12);
+    --wc-chip-bdr:      rgba(60, 110, 113, 0.25);
+    --wc-chip-ant-bg:   rgba(60, 110, 113, 0.10);
+    --wc-chip-ant-bdr:  rgba(60, 110, 113, 0.22);
   }
 
   /* 根因三：測驗（#quizModal／#grammarQuizModal／#quizSettings）是完全
@@ -1272,7 +1305,7 @@
        測驗 Modal 專屬的 --qz-muted（不動全站共用的 --cold-dim 本尊），
        混入 35% --cold-parchment 提升亮度，同時仍維持比主文字（--qz-ink）
        更次要的層級感。 */
-    --qz-muted:     color-mix(in srgb, var(--cold-dim) 65%, var(--cold-parchment) 35%);
+    --qz-muted:     var(--cold-dim-text);
     --qz-accent:    var(--cold-accent);
     background-color: rgba(20, 23, 26, 0.65) !important;
   }
@@ -1317,7 +1350,7 @@
   }
 
   body.scene-cold #allSearch::placeholder {
-    color: var(--cold-dim) !important;
+    color: var(--cold-dim-text) !important;
     opacity: 1 !important;
   }
 
@@ -1354,7 +1387,7 @@
   body.scene-cold .text-gray-500,
   body.scene-cold .text-gray-600,
   body.scene-cold .text-gray-700 {
-    color: var(--cold-dim) !important;
+    color: var(--cold-dim-text) !important;
   }
   body.scene-cold .text-gray-800,
   body.scene-cold .text-gray-900 {
@@ -1367,7 +1400,7 @@
      「次要文字」語意，比照 text-gray-600/700 一樣映射到 --cold-dim，
      不新增強調色。 */
   body.scene-cold .text-amber-700 {
-    color: var(--cold-dim) !important;
+    color: var(--cold-dim-text) !important;
   }
 
   /* 保險絲：.sidebar-title 目前分散在至少 3 套不同的 color token 底下
@@ -1390,7 +1423,7 @@
   body.scene-cold .btn-outline-m:active:not(:disabled) {
     color: var(--cold-parchment) !important;
     border-color: color-mix(in srgb, var(--cold-accent) 60%, transparent) !important;
-    background: rgba(92, 118, 134, 0.10) !important;
+    background: rgba(60, 110, 113, 0.10) !important;
   }
 
   body.scene-cold .btn-outline-m:focus-visible {
@@ -1399,12 +1432,12 @@
   }
 
   body.scene-cold .btn-ghost-m {
-    color: var(--cold-dim) !important;
+    color: var(--cold-dim-text) !important;
   }
 
   body.scene-cold .btn-ghost-m:hover:not(:disabled),
   body.scene-cold .btn-ghost-m:active:not(:disabled) {
-    background: rgba(92, 118, 134, 0.10) !important;
+    background: rgba(60, 110, 113, 0.10) !important;
     color: var(--cold-parchment) !important;
   }
 
@@ -1446,7 +1479,7 @@
   body.scene-cold #usageReset:hover:not(:disabled),
   body.scene-cold #ocrPickBtn:active:not(:disabled),
   body.scene-cold #usageReset:active:not(:disabled) {
-    background: rgba(92, 118, 134, 0.10) !important;
+    background: rgba(60, 110, 113, 0.10) !important;
     border-color: color-mix(in srgb, var(--cold-accent) 60%, transparent) !important;
     color: var(--cold-parchment) !important;
   }
@@ -1459,13 +1492,13 @@
 
   body.scene-cold #ocrRunBtn {
     background: transparent !important;
-    color: var(--cold-dim) !important;
+    color: var(--cold-dim-text) !important;
     border: none !important;
   }
 
   body.scene-cold #ocrRunBtn:hover:not(:disabled),
   body.scene-cold #ocrRunBtn:active:not(:disabled) {
-    background: rgba(92, 118, 134, 0.10) !important;
+    background: rgba(60, 110, 113, 0.10) !important;
     color: var(--cold-parchment) !important;
   }
 
@@ -1487,12 +1520,10 @@
   body.scene-cold #quizSettings > div {
     background: var(--cold-modal-fill) !important;
     border: 1px solid var(--glass-cold-border) !important;
-    backdrop-filter: blur(32px) saturate(110%) brightness(0.55);
-    -webkit-backdrop-filter: blur(32px) saturate(110%) brightness(0.55);
     box-shadow: 0 20px 60px var(--cold-shadow), inset 0 1px 0 var(--color-rim-modal-top), inset 1px 0 0 var(--color-rim-modal-left) !important;
     color: var(--cold-parchment) !important;
     --text: var(--cold-parchment);
-    --muted: var(--cold-dim);
+    --muted: var(--cold-dim-text);
     --navy: var(--cold-parchment);
   }
 
@@ -1507,8 +1538,6 @@
   body.scene-cold #syncModal > div {
     background: var(--cold-modal-fill) !important;
     border: 1px solid var(--glass-cold-border) !important;
-    backdrop-filter: blur(32px) saturate(110%) brightness(0.55);
-    -webkit-backdrop-filter: blur(32px) saturate(110%) brightness(0.55);
     box-shadow: 0 20px 60px var(--cold-shadow), inset 0 1px 0 var(--color-rim-modal-top), inset 1px 0 0 var(--color-rim-modal-left) !important;
     color: var(--cold-parchment) !important;
   }
@@ -1549,7 +1578,7 @@
   body.scene-cold #quizIDK:active:not(:disabled),
   body.scene-cold #syncClose:active:not(:disabled),
   body.scene-cold #usageClose2:active:not(:disabled) {
-    background: rgba(92, 118, 134, 0.10) !important;
+    background: rgba(60, 110, 113, 0.10) !important;
     border-color: color-mix(in srgb, var(--cold-accent) 60%, transparent) !important;
     color: var(--cold-parchment) !important;
   }
@@ -1566,17 +1595,17 @@
      mnemonicModal）原本各自只有裸 Tailwind gray class 或讀 ocean.css 專屬
      的 --muted/--text（.mnemonic-close），沒有共同的 ghost/icon 角色公式，
      hover 也沒有實際視覺回饋。統一成同一組，跟其他 ghost 按鈕的
-     rgba(92,118,134,0.10) hover 公式一致。 */
+     rgba(60,110,113,0.10) hover 公式一致。 */
   body.scene-cold #quizClose,
   body.scene-cold #usageClose,
   body.scene-cold .mnemonic-close {
-    color: var(--cold-dim) !important;
+    color: var(--cold-dim-text) !important;
   }
 
   body.scene-cold #quizClose:hover,
   body.scene-cold #usageClose:hover,
   body.scene-cold .mnemonic-close:hover {
-    background: rgba(92, 118, 134, 0.10) !important;
+    background: rgba(60, 110, 113, 0.10) !important;
     color: var(--cold-parchment) !important;
     border-radius: 6px !important;
   }
@@ -1600,7 +1629,7 @@
   }
 
   body.scene-cold .wc-ai-help:hover {
-    background: rgba(92, 118, 134, 0.10) !important;
+    background: rgba(60, 110, 113, 0.10) !important;
     border-color: color-mix(in srgb, var(--cold-accent) 60%, transparent) !important;
     color: var(--cold-parchment) !important;
   }
@@ -1626,13 +1655,13 @@
     color: var(--cold-parchment) !important;
   }
 
-  /* Bug 4 修正：placeholder 原本跟一般次要文字共用 --cold-dim，在深色
-     輸入框（background: var(--glass-cold-fill)）上太淡。混入比例比
-     --qz-muted 再高一點（40% vs 35%），維持「提示文字」該有的存在感但
-     不到跟已輸入文字（--cold-parchment）一樣亮。 */
+  /* 2026-07-22（第三輪修正）：--cold-dim 換成深藍後，60/40 混色在新的
+     實色輸入框底上對比只剩 ~2:1。改用 --cold-dim-text（= parchment）
+     + opacity，用透明度做「提示文字比已輸入文字淡」的層級，不犧牲底色
+     對比。 */
   body.scene-cold #quizAnswer::placeholder {
-    color: color-mix(in srgb, var(--cold-dim) 60%, var(--cold-parchment) 40%) !important;
-    opacity: 1 !important;
+    color: var(--cold-dim-text) !important;
+    opacity: 0.65 !important;
   }
 
   body.scene-cold #quizAnswer:focus {
@@ -1653,8 +1682,6 @@
   body.scene-cold #rtabPanelWords {
     background: var(--glass-cold-fill) !important;
     border: 1px solid var(--glass-cold-border) !important;
-    backdrop-filter: blur(16px) saturate(115%);
-    -webkit-backdrop-filter: blur(16px) saturate(115%);
     box-shadow: 0 16px 48px var(--cold-shadow) !important;
   }
 
@@ -1663,7 +1690,7 @@
      scene-cold 下從未被覆寫過，分頁文字與底線維持暖色。比照
      .input-tab--active 的公式：parchment 文字 + cold-accent 底線。 */
   body.scene-cold .result-tab {
-    color: var(--cold-dim) !important;
+    color: var(--cold-dim-text) !important;
   }
 
   body.scene-cold .result-tab:hover {
@@ -1715,15 +1742,15 @@
   body.scene-cold .word-suggestion-card .word-card-meta,
   body.scene-cold .word-suggestion-card .word-card-def,
   body.scene-cold .word-suggestion-card .word-card-example {
-    color: var(--cold-dim) !important;
+    color: var(--cold-dim-text) !important;
   }
 
   body.scene-cold .word-suggestion-card .speak-btn-warm {
-    color: var(--cold-dim) !important;
+    color: var(--cold-dim-text) !important;
   }
 
   body.scene-cold .word-suggestion-card .speak-btn-warm:hover {
-    background: rgba(92, 118, 134, 0.10) !important;
+    background: rgba(60, 110, 113, 0.10) !important;
     color: var(--cold-parchment) !important;
   }
 
@@ -1735,7 +1762,7 @@
   }
 
   body.scene-cold .ai-mark-tip {
-    background: rgba(92, 118, 134, 0.20) !important;
+    background: rgba(60, 110, 113, 0.20) !important;
     color: var(--cold-parchment) !important;
   }
 
@@ -1746,7 +1773,7 @@
      不搶注意力的玻璃底，三階視覺權重對應「重要程度」。 */
   body.scene-cold .progress-card-summary,
   body.scene-cold .progress-card-chevron {
-    color: var(--cold-dim) !important;
+    color: var(--cold-dim-text) !important;
   }
   body.scene-cold .progress-divider {
     background: var(--glass-cold-border) !important;
@@ -1769,7 +1796,7 @@
     color: var(--cold-parchment) !important;
   }
   body.scene-cold .progress-stat-label {
-    color: var(--cold-dim) !important;
+    color: var(--cold-dim-text) !important;
   }
 
   body.scene-cold .progress-stat-bar {
@@ -1787,7 +1814,7 @@
 
   body.scene-cold .progress-chart-title,
   body.scene-cold .progress-chart-empty {
-    color: var(--cold-dim) !important;
+    color: var(--cold-dim-text) !important;
   }
   body.scene-cold .progress-chart-grid-line {
     stroke: var(--glass-cold-border) !important;
@@ -1836,13 +1863,13 @@
 
   body.scene-cold input[type="file"]::file-selector-button:hover,
   body.scene-cold input[type="file"]::-webkit-file-upload-button:hover {
-    background: rgba(92, 118, 134, 0.10) !important;
+    background: rgba(60, 110, 113, 0.10) !important;
     border-color: color-mix(in srgb, var(--cold-accent) 60%, transparent) !important;
   }
 
   body.scene-cold input[type="file"]::file-selector-button:active,
   body.scene-cold input[type="file"]::-webkit-file-upload-button:active {
-    background: rgba(92, 118, 134, 0.16) !important;
+    background: rgba(60, 110, 113, 0.16) !important;
   }
 
   body.scene-cold input[type="file"]:focus-visible::file-selector-button {
@@ -1854,18 +1881,18 @@
      Phase 5f — Step 2：上傳圖片頁籤（dropzone / loading / 額度提示）
      ═══════════════════════════════════════════════════════════════════════ */
   .upload-dropzone {
-    border: 1px dashed var(--color-input-border, #D8C9A8);
+    border: 1px dashed var(--color-input-border, #284b63);
     border-radius: var(--radius-input, 8px);
     padding: 28px 16px;
     text-align: center;
     color: var(--muted);
   }
   .upload-dropzone--active {
-    border-color: var(--primary, #8F9A78);
+    border-color: var(--primary, #284b63);
   }
   body.scene-cold .upload-dropzone {
     border-color: var(--glass-cold-border) !important;
-    color: var(--cold-dim) !important;
+    color: var(--cold-dim-text) !important;
     background: var(--glass-cold-fill) !important;
   }
   body.scene-cold .upload-dropzone--active {
@@ -1886,7 +1913,7 @@
     font-size: 0.875rem;
   }
   body.scene-cold .upload-loading {
-    color: var(--cold-dim) !important;
+    color: var(--cold-dim-text) !important;
   }
   .upload-loading__spinner {
     width: 14px; height: 14px;
@@ -1900,10 +1927,10 @@
 
   .upload-quota-hint {
     font-size: 0.75rem;
-    color: var(--muted, #9CA3AF);
+    color: var(--muted, #3A5D5F);
   }
   body.scene-cold .upload-quota-hint {
-    color: var(--cold-dim) !important;
+    color: var(--cold-dim-text) !important;
   }
 
   /* ═══════════════════════════════════════════════════════════════════════
@@ -1911,7 +1938,7 @@
      scene-cold 常駐時改用同語意的 --cold-dim（跟 .upload-quota-hint 同款式）
      ═══════════════════════════════════════════════════════════════════════ */
   body.scene-cold #pdfNarrativeCopy {
-    color: var(--cold-dim) !important;
+    color: var(--cold-dim-text) !important;
   }
   </style>
 
@@ -2120,7 +2147,7 @@
 
           <!-- 文法重點面板 -->
           <div id="rtabPanelGrammar" class="result-tab-panel bg-white rounded-b-xl shadow hidden" tabindex="0">
-            <div style="padding:14px 24px 20px; background:var(--color-surface-recessed,#DFD0B8); border-radius:0 0 12px 12px;">
+            <div style="padding:14px 24px 20px; background:var(--color-surface-recessed,#353535); border-radius:0 0 12px 12px;">
               <div id="grammarContent" class="space-y-0"></div>
             </div>
           </div>
@@ -2178,14 +2205,14 @@
           <div id="customWordSidebar" class="mb-3">
             <div id="customWordHeader" class="flex items-center justify-between cursor-pointer select-none" style="padding:4px 2px;">
               <h3 class="sidebar-title" style="font-size:.875rem;">自訂新增單字</h3>
-              <span id="customWordChevron" style="font-size:.85rem;color:#B0A090;transform:rotate(-90deg);transition:transform .2s;display:inline-block">▼</span>
+              <span id="customWordChevron" style="font-size:.85rem;color:#3A5D5F;transform:rotate(-90deg);transition:transform .2s;display:inline-block">▼</span>
             </div>
             <div id="customWordBody" class="hidden" style="margin-top:8px;">
-              <div style="height:1px;background:#EDE5D8;margin:0 0 12px"></div>
+              <div style="height:1px;background:#d9d9d9;margin:0 0 12px"></div>
 
               <div class="space-y-2 mb-3">
                 <input id="customWordInput" type="text"
-                  class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#7C96AB] focus:ring-2 focus:ring-[#7C96AB]/20"
+                  class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#284b63] focus:ring-2 focus:ring-[#284b63]/20"
                   placeholder="輸入單字或片語…">
                 <button id="customAnalyzeBtn" class="w-full btn-outline-m justify-center" style="font-size:.8125rem;">分析</button>
               </div>
@@ -2194,31 +2221,31 @@
               <div id="customWordEdit" class="hidden space-y-2">
                 <div>
                   <label class="block text-xs font-medium text-gray-500 mb-1">英文單字</label>
-                  <input id="cw_word" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#7C96AB]">
+                  <input id="cw_word" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#284b63]">
                 </div>
                 <div>
                   <label class="block text-xs font-medium text-gray-500 mb-1">詞性</label>
-                  <input id="cw_pos" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#7C96AB]" placeholder="noun / verb…">
+                  <input id="cw_pos" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#284b63]" placeholder="noun / verb…">
                 </div>
                 <div>
                   <label class="block text-xs font-medium text-gray-500 mb-1">難度 (A1–C2)</label>
-                  <input id="cw_level" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#7C96AB]" placeholder="B1">
+                  <input id="cw_level" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#284b63]" placeholder="B1">
                 </div>
                 <div>
                   <label class="block text-xs font-medium text-gray-500 mb-1">中文解釋</label>
-                  <input id="cw_def" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#7C96AB]">
+                  <input id="cw_def" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#284b63]">
                 </div>
                 <div>
                   <label class="block text-xs font-medium text-gray-500 mb-1">文章例句</label>
-                  <textarea id="cw_example_en" rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:border-[#7C96AB]"></textarea>
+                  <textarea id="cw_example_en" rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:border-[#284b63]"></textarea>
                 </div>
                 <div>
                   <label class="block text-xs font-medium text-gray-500 mb-1">AI 造句</label>
-                  <textarea id="cw_example_ai" rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:border-[#7C96AB]"></textarea>
+                  <textarea id="cw_example_ai" rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:border-[#284b63]"></textarea>
                 </div>
                 <div>
                   <label class="block text-xs font-medium text-gray-500 mb-1">翻譯</label>
-                  <textarea id="cw_example_zh" rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:border-[#7C96AB]"></textarea>
+                  <textarea id="cw_example_zh" rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:border-[#284b63]"></textarea>
                 </div>
                 <button id="customAddBtn" class="w-full btn-primary-m justify-center">加入我的清單</button>
               </div>
@@ -2284,22 +2311,22 @@
         <div class="space-y-1.5">
           <div class="flex items-center gap-2 text-xs">
             <span class="text-gray-400 shrink-0" style="width:2rem">燭光</span>
-            <div class="flex-1 rounded-full overflow-hidden" style="height:7px;background:#F0ECE6">
-              <div id="hungerBar" class="h-full rounded-full" style="background:#A3B18A;width:100%;transition:width .5s,background .5s"></div>
+            <div class="flex-1 rounded-full overflow-hidden" style="height:7px;background:#d9d9d9">
+              <div id="hungerBar" class="h-full rounded-full" style="background:#284b63;width:100%;transition:width .5s,background .5s"></div>
             </div>
             <span id="hungerPct" class="text-gray-400 shrink-0 tabular-nums" style="width:2.4rem;text-align:right">100%</span>
           </div>
           <div class="flex items-center gap-2 text-xs">
             <span class="text-gray-400 shrink-0" style="width:2rem">蠟淚</span>
-            <div class="flex-1 rounded-full overflow-hidden" style="height:7px;background:#F0ECE6">
-              <div id="moodBar" class="h-full rounded-full" style="background:#BC9C7F;width:100%;transition:width .5s,background .5s"></div>
+            <div class="flex-1 rounded-full overflow-hidden" style="height:7px;background:#d9d9d9">
+              <div id="moodBar" class="h-full rounded-full" style="background:#3c6e71;width:100%;transition:width .5s,background .5s"></div>
             </div>
             <span id="moodPct" class="text-gray-400 shrink-0 tabular-nums" style="width:2.4rem;text-align:right">100%</span>
           </div>
           <div class="flex items-center gap-2 text-xs">
             <span class="text-gray-400 shrink-0" style="width:2rem">XP</span>
-            <div class="flex-1 rounded-full overflow-hidden" style="height:7px;background:#F0ECE6">
-              <div id="xpBar" class="h-full rounded-full" style="background:#7BAEBA;width:0%;transition:width .5s"></div>
+            <div class="flex-1 rounded-full overflow-hidden" style="height:7px;background:#d9d9d9">
+              <div id="xpBar" class="h-full rounded-full" style="background:#284b63;width:0%;transition:width .5s"></div>
             </div>
           </div>
         </div>
@@ -2324,7 +2351,7 @@
 
         <!-- 雲端 -->
         <button id="loadSheetsBtn"
-                class="px-3 py-2 rounded-lg bg-gray-50 text-gray-600 border border-gray-300 text-sm hover:bg-gray-100 hover:border-[#4A6C6F] hover:text-[#4A6C6F] transition">
+                class="px-3 py-2 rounded-lg bg-gray-50 text-gray-600 border border-gray-300 text-sm hover:bg-gray-100 hover:border-[#3c6e71] hover:text-[#3c6e71] transition">
           雲端載入
         </button>
 
@@ -2345,7 +2372,7 @@
   </main>
 
   <!-- Undo toast -->
-  <div id="undoToast" class="fixed bottom-20 left-1/2 -translate-x-1/2 text-white rounded-xl shadow px-4 py-2 flex items-center gap-3 hidden" style="background:#4a5940;">
+  <div id="undoToast" class="fixed bottom-20 left-1/2 -translate-x-1/2 text-white rounded-xl shadow px-4 py-2 flex items-center gap-3 hidden" style="background:#353535;">
     <span id="undoText">已刪除。</span>
     <button id="undoBtn" class="rounded px-2 py-0.5 text-sm font-medium" style="background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,255,255,.3);">復原</button>
   </div>
@@ -2465,8 +2492,8 @@
     box-shadow:0 2px 10px rgba(0,0,0,.12);
     cursor:pointer; user-select:none; white-space:nowrap;
   ">
-    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#A3B18A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    <span style="font-size:.75rem; font-weight:600; color:#A3B18A; letter-spacing:.02em;">分析</span>
+    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#284b63" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <span style="font-size:.75rem; font-weight:600; color:#284b63; letter-spacing:.02em;">分析</span>
   </div>
 
   <!-- 反白分析結果小卡 -->
@@ -2681,9 +2708,10 @@
        緣由：玻璃 modal 需要背景有光才能折射，純冷調墨流太稀疏太暗，
        glass 讀不出來——不是調參數能解的，是場景裡缺一個「這裡有熱源」
        的敘事前提（調香師工坊燭光/蒸餾熱源）。
-       色相沿用電子雞燭火，不新增色相：#F5A623 取自 js/pixel_pet.js
-       FLAME_RAMPS.F2 的亮端（琥珀色），電子雞依然是最近最亮的那盞，
-       這裡只是它的光暈延伸到遠處牆面的暗示，不是第二個焦點。
+       2026-07-22（使用者裁決）：放棄沿用電子雞燭火琥珀色 #F5A623 的暖色
+       例外，改用 C5 深藍（rgba(40,75,99,.10)），全站不再有任何暖色殘留；
+       光暈語意從「熱源/燭光」改讀為「冷調月光/遠處光源」，其餘位置/
+       z-index/alpha 邏輯不變。
        位置刻意偏右下角（80% 90%）不置中：置中會讀成「這裡有個發光體」，
        偏角落才讀成「光是從畫面外滲進來的」，不會搶電子雞的注意力。
        z-index -2：要低於 #ink-layer 的 -1（見 index.html:735-738 的
@@ -2693,7 +2721,7 @@
        的實際數值，理由見對話回覆。
        alpha 0.10（修正輪 5 從 0.04 提高，讓光暈有實際可感知的效果），
        純 CSS 靜態層，不加 JS、不碰 ink-suminagashi.js、不改 --cold-void。 -->
-  <div id="ambient-candle-glow" style="position:fixed;inset:0;pointer-events:none;z-index:-2;background:radial-gradient(circle 45vw at 80% 90%, rgba(245, 166, 35, 0.10) 0%, transparent 70%);"></div>
+  <div id="ambient-candle-glow" style="position:fixed;inset:0;pointer-events:none;z-index:-2;background:radial-gradient(circle 45vw at 80% 90%, rgba(40, 75, 99, 0.10) 0%, transparent 70%);"></div>
 
   <!-- ═══ Phase 6: 微塵容器 Dust Motes Container ═══ -->
   <div id="dust-container"></div>

@@ -1,37 +1,39 @@
-/* Word Garden Morandi Sage Theme */
+/* 冷色五色票（2026-07-22 覆蓋，docs/COLOR_SPEC_NEW.md）— 全站僅單一配色，
+   [data-theme="dark"] 刻意設為與 :root 完全相同的值（網站目前無實際日夜切換）。 */
 :root{
-  --bg: #F2F3EE;
-  --primary: #A3B18A;     /* 莫蘭迪灰綠（全站主色） */
-  --primary-hover: #8d9b76;
-  --primary-dark: #7a9068; /* Navbar 漸層深端 */
-  --theme-color: #8F9A78;  /* 互動元素統一主題色 */
-  --active: #BC9C7F;       /* 大地駝色（選取色） */
-  --blue: #A3B18A;         /* 統一為 primary */
-  --navy: #4a5940;         /* 深綠（重點文字） */
-  --text: #2c2c2c;
-  --muted: #6B7280;
-  --card: #ffffff;
-  --border: #E0E4DE;
-  --ring: rgba(163,177,138,.30);
-  --error: #ef4444;
+  --bg: #d9d9d9;           /* C4 淺灰 */
+  --primary: #284b63;      /* C5 深藍（全站主色） */
+  --primary-hover: #203C4F; /* Blue-Hover（C5 80% + black 20%） */
+  --primary-dark: #1C3546;  /* color-mix(C5 70%, black 30%)；Navbar 漸層深端 */
+  --theme-color: #284b63;   /* C5 深藍 */
+  --active: #3c6e71;        /* C2 墨綠（選取色） */
+  --blue: #284b63;          /* 統一為 primary */
+  --navy: #203C4F;          /* Blue-Hover（深色重點文字） */
+  --text: #353535;          /* C1 近黑深灰 */
+  --muted: #3A5D5F;         /* Teal-Safe（C2 70% + C1 30%，見 R-2） */
+  --card: #ffffff;          /* C3 純白 */
+  --border: #B2B2B2;        /* color-mix(C4 70%, C1 30%) */
+  --ring: rgba(40,75,99,.30); /* C5 RGB */
+  --error: #353535;         /* 2026-07-22 使用者裁決放棄暖紅例外，改用 C1 近黑深灰 */
 }
 
 [data-theme="dark"]{
-  --bg: #0d1321;
-  --card: #1d2d44;
-  --text: #f0ebd8;
-  --muted: #A2B5CA;                      /* 灰藍輔助文字 */
-  --border: #3e5c76;
-  --hover-bg: rgba(62,92,118,.40);       /* 列表/卡片懸停高光 */
-  --primary: #748cab;                    /* 柔和灰藍主色 */
-  --primary-hover: #8ba0be;              /* 稍亮 hover */
-  --primary-dark: #748cab;
-  --theme-color: #748cab;
-  --active: #f0ebd8;                     /* Tab active：米白 */
-  --blue: #748cab;
-  --navy: #b5c9db;                       /* 深色背景上可讀的淡藍灰 */
-  --ring: rgba(116,140,171,.40);         /* 柔和灰藍 focus ring */
-  --error: #f87171;
+  /* 與 :root 完全相同 — 無雙軌設計，見使用者裁決 */
+  --bg: #d9d9d9;
+  --card: #ffffff;
+  --text: #353535;
+  --muted: #3A5D5F;
+  --border: #B2B2B2;
+  --hover-bg: rgba(40,75,99,.14);        /* 列表/卡片懸停高光（C5 RGB，維持低 alpha 慣例） */
+  --primary: #284b63;
+  --primary-hover: #203C4F;
+  --primary-dark: #1C3546;
+  --theme-color: #284b63;
+  --active: #3c6e71;
+  --blue: #284b63;
+  --navy: #203C4F;
+  --ring: rgba(40,75,99,.30);
+  --error: #353535;
 }
 
 
@@ -83,7 +85,7 @@ div.inline-flex.rounded-md.overflow-hidden.border > button:last-child{ border-ri
 /* Primary action buttons */
 #analyzeBtn,#saveBtn,#customAnalyzeBtn,#customAddBtn,#qsStart,#startQuizBtn,#usageSaveBudget{
   background: var(--primary) !important; color:#fff !important; border-radius:12px;
-  padding:.6rem 1rem; font-weight:600; box-shadow:0 3px 8px rgba(163,177,138,.22);
+  padding:.6rem 1rem; font-weight:600; box-shadow:0 3px 8px rgba(40,75,99,.22);
 }
 #analyzeBtn:hover,#saveBtn:hover,#customAnalyzeBtn:hover,#customAddBtn:hover,#qsStart:hover,#startQuizBtn:hover,#usageSaveBudget:hover{
   background: var(--primary-hover) !important;
@@ -106,16 +108,16 @@ div.inline-flex.rounded-md.overflow-hidden.border > button:last-child{ border-ri
 
 /* Usage modal main close */
 #usageClose2{
-  background:#8A9BA8 !important; color:#fff !important; border-radius:8px; padding:.5rem .9rem; font-weight:600;
+  background:#284b63 !important; color:#fff !important; border-radius:8px; padding:.5rem .9rem; font-weight:600;
 }
 #usageClose2:hover{
-  background:#7a8d9a !important;
+  background:#203C4F !important;
 }
 
 /* Floating bar */
 #fabBar{
   background: var(--primary) !important; color:#fff; border-radius:999px !important;
-  box-shadow: 0 8px 20px rgba(163,177,138,.32) !important;
+  box-shadow: 0 8px 20px rgba(40,75,99,.32) !important;
 }
 #fabBar button{
   background: var(--card) !important; color: var(--primary-dark) !important; border-radius:12px; padding:.4rem .8rem; font-weight:700;
@@ -123,7 +125,7 @@ div.inline-flex.rounded-md.overflow-hidden.border > button:last-child{ border-ri
 
 /* Undo toast */
 #undoToast{
-  background:#0b1020 !important; color:#fff; border-radius:14px !important; box-shadow:0 8px 24px rgba(2,6,23,.4) !important;
+  background:#353535 !important; color:#fff; border-radius:14px !important; box-shadow:0 8px 24px rgba(2,6,23,.4) !important;
 }
 
 /* Quiz settings modal card */
@@ -167,15 +169,15 @@ button[title="播放"]:hover{ background: var(--bg) !important; color: var(--pri
   background: var(--bg) !important;
   border-color: var(--primary) !important;
   box-shadow:
-    0 0 0 3px rgba(163,177,138,.25),
-    0 8px 18px rgba(120,144,104,.15);
+    0 0 0 3px rgba(40,75,99,.25),
+    0 8px 18px rgba(40,75,99,.15);
   transform: translateY(-2px) scale(1.01);
   outline: none;
 }
 
 #quizModePicker .grid [data-mode]:active{
   transform: translateY(-1px) scale(1.005);
-  box-shadow: 0 0 0 2px var(--ring), 0 4px 12px rgba(120,144,104,.12);
+  box-shadow: 0 0 0 2px var(--ring), 0 4px 12px rgba(40,75,99,.12);
   border-color: var(--primary-hover) !important;
 }
 
@@ -197,7 +199,7 @@ button[title="播放"]:hover{ background: var(--bg) !important; color: var(--pri
 
 .pixel-pet-frame {
   background: var(--card);
-  border: 3px solid #D4C4A0;
+  border: 3px solid #979797;
   border-radius: 6px;
   padding: 10px 18px 8px;
   display: inline-block;
@@ -302,7 +304,7 @@ button[title="播放"]:hover{ background: var(--bg) !important; color: var(--pri
   top: 4px;
   right: 95px;
   background: var(--card);
-  border: 2px solid #C8B899;
+  border: 2px solid #979797;
   border-radius: 8px;
   padding: 2px 7px;
   font-size: 11px;
@@ -326,16 +328,16 @@ button[title="播放"]:hover{ background: var(--bg) !important; color: var(--pri
 
 /* ── 0. Header：深夜書房背景 + 米白文字 ── */
 [data-theme="dark"] .header-gradient {
-  background: #3e5c76 !important;
+  background: #284b63 !important;
   box-shadow: 0 4px 16px rgba(13,19,33,.50) !important;
 }
 [data-theme="dark"] .header-gradient,
 [data-theme="dark"] .header-gradient * {
-  color: #f0ebd8 !important;
+  color: #d9d9d9 !important;
 }
 [data-theme="dark"] .header-gradient .chip {
-  background: rgba(240,235,216,.18) !important;
-  color: #f0ebd8 !important;
+  background: rgba(217,217,217,.18) !important;
+  color: #d9d9d9 !important;
 }
 
 /* ── 1. Primary 按鈕：柔灰藍背景 + 米白文字 ── */
@@ -350,7 +352,7 @@ button[title="播放"]:hover{ background: var(--bg) !important; color: var(--pri
 [data-theme="dark"] #qsStart,
 [data-theme="dark"] #startQuizBtn,
 [data-theme="dark"] #usageSaveBudget {
-  color: #f0ebd8 !important;
+  color: #d9d9d9 !important;
 }
 
 /* ── 2. Ghost / Outline 按鈕：柔灰藍邊框 + 米白文字 ── */
@@ -366,7 +368,7 @@ button[title="播放"]:hover{ background: var(--bg) !important; color: var(--pri
 [data-theme="dark"] #importJsonBtn,
 [data-theme="dark"] #loadSheetsBtn,
 [data-theme="dark"] #pushSheetsBtn {
-  color: #f0ebd8 !important;
+  color: #d9d9d9 !important;
   border-color: var(--primary) !important;
   background: var(--card) !important;
 }
@@ -423,7 +425,7 @@ button[title="播放"]:hover{ background: var(--bg) !important; color: var(--pri
 
 /* ── 8. 電子雞進度條 ── */
 [data-theme="dark"] #hungerBar { background: var(--primary) !important; }
-[data-theme="dark"] #moodBar   { background: #cbb29a !important; }  /* 駝色提亮版 */
+[data-theme="dark"] #moodBar   { background: #3c6e71 !important; }  /* 與 light 相同，C2 墨綠 */
 [data-theme="dark"] #xpBar     { background: var(--primary) !important; }
 
 /* ── 9. 單字卡關聯字 chips ── */
@@ -441,12 +443,12 @@ button[title="播放"]:hover{ background: var(--bg) !important; color: var(--pri
 
 /* ── 10. AI 記憶輔助按鈕 ── */
 [data-theme="dark"] .wc-ai-help {
-  color: #f0ebd8 !important;
-  background: rgba(116,140,171,.20) !important;
+  color: #d9d9d9 !important;
+  background: rgba(40,75,99,.20) !important;
 }
 [data-theme="dark"] .wc-ai-help:hover {
-  background: rgba(116,140,171,.32) !important;
-  color: #f0ebd8 !important;
+  background: rgba(40,75,99,.32) !important;
+  color: #d9d9d9 !important;
 }
 
 /* ── 11. 記憶窗 chips ── */
@@ -490,7 +492,7 @@ button[title="播放"]:hover{ background: var(--bg) !important; color: var(--pri
 [data-theme="dark"] #loadSheetsBtn:hover,
 [data-theme="dark"] #pushSheetsBtn:hover {
   background: var(--primary) !important;
-  color: #f0ebd8 !important;
+  color: #d9d9d9 !important;
   border-color: var(--primary) !important;
 }
 
@@ -505,7 +507,7 @@ button[title="播放"]:hover{ background: var(--bg) !important; color: var(--pri
 [data-theme="dark"] #startQuizBtn:hover,
 [data-theme="dark"] #usageSaveBudget:hover {
   background: var(--primary-hover) !important;
-  color: #f0ebd8 !important;
+  color: #d9d9d9 !important;
 }
 
 /* Tab hover（右側清單 + 上方輸入分頁） */
@@ -513,36 +515,36 @@ button[title="播放"]:hover{ background: var(--bg) !important; color: var(--pri
 [data-theme="dark"] #tabDue:hover,
 [data-theme="dark"] #tabAll:hover {
   background: var(--hover-bg) !important;
-  color: #f0ebd8 !important;
+  color: #d9d9d9 !important;
 }
 [data-theme="dark"] .tab:hover {
   background: var(--hover-bg) !important;
-  color: #f0ebd8 !important;
+  color: #d9d9d9 !important;
 }
 [data-theme="dark"] .input-tab:hover {
-  color: #f0ebd8 !important;
+  color: #d9d9d9 !important;
   background: var(--hover-bg) !important;
 }
 
 /* Small utility 按鈕 */
 [data-theme="dark"] .btn-sm-m:hover {
   background: var(--hover-bg) !important;
-  color: #f0ebd8 !important;
+  color: #d9d9d9 !important;
 }
 
 /* 測驗「下一題」按鈕 hover */
 [data-theme="dark"] .quiz-btn-next:hover {
   background: var(--primary) !important;
-  color: #f0ebd8 !important;
+  color: #d9d9d9 !important;
 }
 
 
 /* 單字卡細節 hover */
-[data-theme="dark"] .wc-card:hover .wc-title strong { color: #9bf6ff !important; }
+[data-theme="dark"] .wc-card:hover .wc-title strong { color: var(--primary) !important; }
 [data-theme="dark"] .wc-title .wc-word:hover { color: var(--primary) !important; }
 [data-theme="dark"] .wc-del-corner:hover      { color: var(--error) !important; }
 [data-theme="dark"] .wc-btn-save:hover {
-  color: #f0ebd8 !important;
+  color: #d9d9d9 !important;
   background: var(--hover-bg) !important;
 }
 
@@ -560,28 +562,28 @@ button[title="播放"]:hover{ background: var(--bg) !important; color: var(--pri
 }
 /* 提交按鈕：恢復莫蘭迪綠，讓主按鈕視覺焦點明確 */
 [data-theme="dark"] #quizSubmit {
-  background: #7a9068 !important;
-  color: #f0ebd8 !important;
+  background: #284b63 !important;
+  color: #d9d9d9 !important;
 }
 [data-theme="dark"] #quizSubmit:hover {
-  background: #6b7f57 !important;
-  color: #f0ebd8 !important;
+  background: #203C4F !important;
+  color: #d9d9d9 !important;
 }
 /* 不會按鈕：恢復按鈕輪廓，避免融入 modal 背景 */
 [data-theme="dark"] #quizIDK {
-  background: #2e3d50 !important;
+  background: #C0C0C0 !important;
   color: var(--muted) !important;
 }
 [data-theme="dark"] #quizIDK:hover {
   background: var(--border) !important;
-  color: #f0ebd8 !important;
+  color: #d9d9d9 !important;
 }
 
 /* 記憶窗 hover */
 [data-theme="dark"] .mnemonic-word-title:hover { color: var(--primary) !important; }
 [data-theme="dark"] .mnemonic-regen:hover {
   background: var(--hover-bg) !important;
-  color: #f0ebd8 !important;
+  color: #d9d9d9 !important;
   border-color: var(--primary) !important;
 }
 

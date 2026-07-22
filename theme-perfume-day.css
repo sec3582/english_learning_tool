@@ -10,68 +10,69 @@
 
   /* ── 2A. Color Tokens ─────────────────────────────────────────────────── */
 
-  /* Background & Surface */
-  --color-bg:               #EDEBE4;   /* page floor; hue ~43°, L ~92% */
-  --color-surface-card:     #F0E8D4;   /* section card; fresh parchment */
-  --color-surface-panel:    #E8DCCA;   /* word list panel; old book cover */
-  --color-surface-recessed: #DFD0B8;   /* AI block, input bg, modal inner */
-  --color-surface-modal:    #F3ECDF;   /* modal container; paper held up */
-  --color-surface-panel-alt:#E3D7C0;   /* color-mix() fallback for Scheme B alternating rows */
+  /* Background & Surface — 冷色五色票（2026-07-22 覆蓋，docs/COLOR_SPEC_NEW.md） */
+  --color-bg:               #d9d9d9;   /* page floor; C4 淺灰，刻意不用純白（見規格書 R-3） */
+  --color-surface-card:     #ffffff;   /* section card; C3 純白（使用者授權例外） */
+  --color-surface-panel:    #C0C0C0;   /* word list panel; Panel-Mid（C4 85% + C1 15%） */
+  --color-surface-recessed: #353535;   /* AI block, input bg, modal inner; C1 近黑深灰 */
+  --color-surface-modal:    #ffffff;   /* modal container; C3 純白 */
+  --color-surface-panel-alt:#D1D1D1;   /* color-mix(C4 95%, C1 5%) 預先算好的交錯底色 */
 
   /* Ink (text) */
-  --color-ink-1:            #1C1208;   /* primary; dried brown-black ink */
-  --color-ink-2:            #7A6045;   /* secondary/muted; faded brown ink */
-  --color-ink-3:            #A08568;   /* placeholder, disabled label */
+  --color-ink-1:            #353535;   /* primary; C1 近黑深灰 */
+  --color-ink-2:            #3A5D5F;   /* secondary/muted; Teal-Safe（C2 70% + C1 30%，見 R-2） */
+  --color-ink-3:            #777777;   /* placeholder, disabled label; Placeholder-Gray（C1 60% + C4 40%） */
 
   /* Accent */
-  --color-accent:           #C8952A;   /* amber gold; sun through glass vessel */
-  --color-accent-dim:       #9E7B38;   /* mastered badge bg; desaturated accent */
-  --color-accent-focus:     rgba(200, 149, 42, 0.25);  /* focus ring spread */
+  --color-accent:           #284b63;   /* C5 深藍；文字/邊框/按鈕底皆安全，取代舊暖色強調 */
+  --color-accent-dim:       #203C4F;   /* mastered badge bg; Blue-Hover（C5 80% + black 20%） */
+  --color-accent-focus:     rgba(40, 75, 99, 0.25);  /* focus ring spread（C5 RGB） */
 
   /* Ledger Lines (CG-13) — alpha varies by row index % 3 */
-  --color-ledger-hi:        rgba(120, 85, 30, 0.20);   /* index % 3 === 0 */
-  --color-ledger-mid:       rgba(120, 85, 30, 0.15);   /* index % 3 === 1 */
-  --color-ledger-lo:        rgba(120, 85, 30, 0.12);   /* index % 3 === 2 */
-  --color-ledger-section:   rgba(120, 85, 30, 0.22);   /* section/header dividers */
+  --color-ledger-hi:        rgba(58, 93, 95, 0.20);   /* index % 3 === 0（Teal-Safe RGB） */
+  --color-ledger-mid:       rgba(58, 93, 95, 0.15);   /* index % 3 === 1 */
+  --color-ledger-lo:        rgba(58, 93, 95, 0.12);   /* index % 3 === 2 */
+  --color-ledger-section:   rgba(58, 93, 95, 0.22);   /* section/header dividers */
 
   /* Rim Light (CG-5) — inset top/left shadows simulate physical elevation */
-  --color-rim-card:         rgba(255, 220, 140, 0.30); /* section card top rim */
-  --color-rim-panel:        rgba(255, 220, 140, 0.38); /* word list panel top rim */
-  --color-rim-modal-top:    rgba(255, 220, 140, 0.35); /* modal top rim */
-  --color-rim-modal-left:   rgba(255, 220, 140, 0.20); /* modal left rim */
-  --color-rim-btn:          rgba(255, 220, 140, 0.28); /* primary button top rim */
-  --color-rim-hover:        rgba(255, 220, 140, 0.38); /* hover state rim (transient) */
+  /* 頂緣高光改用 C3 純白，但 alpha 降到原本約一半，避免過曝（見 R-3） */
+  --color-rim-card:         rgba(255, 255, 255, 0.15); /* section card top rim */
+  --color-rim-panel:        rgba(255, 255, 255, 0.19); /* word list panel top rim */
+  --color-rim-modal-top:    rgba(255, 255, 255, 0.18); /* modal top rim */
+  --color-rim-modal-left:   rgba(255, 255, 255, 0.10); /* modal left rim */
+  --color-rim-btn:          rgba(255, 255, 255, 0.14); /* primary button top rim */
+  --color-rim-hover:        rgba(255, 255, 255, 0.19); /* hover state rim (transient) */
 
   /* Input Borders (CG-13 special rule) */
-  --color-input-border:     rgba(120, 85, 30, 0.22);   /* default groove edge */
-  --color-input-border-foc: rgba(160, 100, 30, 0.55);  /* left border on focus */
+  --color-input-border:     rgba(40, 75, 99, 0.22);   /* default groove edge（C5 RGB） */
+  --color-input-border-foc: rgba(40, 75, 99, 0.55);  /* left border on focus */
 
   /* Modal Overlay */
-  --color-overlay:          rgba(40, 25, 8, 0.55);     /* warm brown; day-mode air */
+  --color-overlay:          rgba(53, 53, 53, 0.6);     /* cool gray; C1 RGB */
 
   /* Card separator — Option A (recommended): desaturated, counts as 0 accent points */
-  --color-card-separator:   rgba(160, 110, 30, 0.35);
+  --color-card-separator:   rgba(40, 75, 99, 0.35);
 
   /* Badge Semantic Colors */
-  --color-badge-pos-bg:      #3E3018;  /* part-of-speech; dark warm ink */
-  --color-badge-pos-fg:      #E8DCCA;  /* part-of-speech text; pale parchment */
-  --color-badge-mastered-bg: #4A5C2F;  /* mastered; dark moss-olive */
-  --color-badge-mastered-fg: #D8E0C4;  /* mastered text; pale moss-cream */
-  --color-badge-due-bg:      #7A5020;  /* due; dark amber-brown */
-  --color-badge-due-fg:      #EAD9BC;  /* due text; parchment */
-  --color-badge-enrich-bg:   #E4D5BA;  /* enrich badge (TR/GR) bg; warm tan */
-  --color-badge-enrich-fg:   #5C3D1A;  /* enrich badge text; dark brown */
-  --color-chip-navbar:       rgba(200, 180, 140, 0.35); /* navbar chip; warm semi-transparent */
+  --color-badge-pos-bg:      #353535;  /* part-of-speech; C1 近黑深灰 */
+  --color-badge-pos-fg:      #d9d9d9;  /* part-of-speech text; C4 淺灰 */
+  --color-badge-mastered-bg: #30585A;  /* mastered; Teal-Hover（C2 80% + black 20%） */
+  --color-badge-mastered-fg: #d9d9d9;  /* mastered text; C4 淺灰 */
+  --color-badge-due-bg:      #353535;  /* due；2026-07-22 使用者裁決放棄暖棕例外，改用 C1 近黑深灰 */
+  --color-badge-due-fg:      #d9d9d9;  /* due text；C4 淺灰，對 C1 底對比 8.68:1 */
+  --color-badge-enrich-bg:   #d9d9d9;  /* enrich badge (TR/GR) bg; C4 淺灰 */
+  --color-badge-enrich-fg:   #353535;  /* enrich badge text; C1 近黑深灰 */
+  --color-chip-navbar:       rgba(60, 110, 113, 0.35); /* navbar chip；C2 墨綠 RGB */
 
   /* ── 2B. Shadow Ladder ────────────────────────────────────────────────── */
-  /* All shadows: rgba(80, 50, 15, x) — warm brown, never rgba(0,0,0,x)    */
+  /* All shadows: rgba(53, 53, 53, x) — C1 近黑深灰，never rgba(0,0,0,x)    */
   /* x-offset positive (right), y-offset positive + larger (down-dominant) */
 
-  --shadow-sh1: 2px 4px 16px rgba(80, 50, 15, 0.10);   /* section cards */
-  --shadow-sh2: 3px 6px 20px rgba(80, 50, 15, 0.14);   /* word list panel */
-  --shadow-sh3: 3px 8px 28px rgba(80, 50, 15, 0.22);   /* modal container */
-  --shadow-sh-groove: inset 0 1px 3px rgba(80, 50, 15, 0.12); /* inputs, recessed */
-  --shadow-sh-btn: 1px 2px 6px rgba(80, 50, 15, 0.18); /* primary button */
+  --shadow-sh1: 2px 4px 16px rgba(53, 53, 53, 0.10);   /* section cards */
+  --shadow-sh2: 3px 6px 20px rgba(53, 53, 53, 0.14);   /* word list panel */
+  --shadow-sh3: 3px 8px 28px rgba(53, 53, 53, 0.22);   /* modal container */
+  --shadow-sh-groove: inset 0 1px 3px rgba(53, 53, 53, 0.12); /* inputs, recessed */
+  --shadow-sh-btn: 1px 2px 6px rgba(53, 53, 53, 0.18); /* primary button */
 
   /* ── 2E. Radius & Spacing ─────────────────────────────────────────────── */
 
@@ -100,13 +101,14 @@
   --motion-entrance:    160ms ease-out;   /* list item entrance base */
   --motion-stagger:     40ms;             /* per-item stagger increment */
 
-  /* ── 2G. Story Palette（新增，2026-07-15；與 --cold-* 並存，暫不替換） ──── */
-  /* 來源：.claude/agents/perfume-game-director.md — 情感弧線四色 */
+  /* ── 2G. Story Palette（2026-07-15 新增；2026-07-22 使用者裁決：放棄敘事色
+     弧線的暖色語意例外，全部改用冷色五色票，優先讀性，不再保留舊暖色） ──── */
+  /* 來源：.claude/agents/perfume-game-director.md — 情感弧線四色（舊值已作廢） */
 
-  --story-fog:    #8A8378;   /* 霧灰曬白：全站基礎中性底色 */
-  --story-mud:    #5C4A3A;   /* 污泥棕：警示/答錯/逾期 */
-  --story-amber:  #C08A3E;   /* 燭光琥珀：唯一正向回饋亮點 */
-  --story-breath: #EDE6DA;   /* 極淡霧白：完成頁/結局留白 */
+  --story-fog:    #d9d9d9;   /* 原霧灰曬白 → C4 淺灰（全站基礎中性底色） */
+  --story-mud:    #353535;   /* 原污泥棕 → C1 近黑深灰（主要深色文字） */
+  --story-amber:  #3c6e71;   /* 原燭光琥珀 → C2 墨綠（正向回饋改用墨綠，不再用暖色） */
+  --story-breath: #ffffff;   /* 原極淡霧白 → C3 純白（完成頁/結局留白，此處允許用純白） */
 
   /* ── 2H. Animation Tokens（新增，2026-07-15） ─────────────────────────── */
 
@@ -184,7 +186,7 @@ body::after {
   inset: 0;
   pointer-events: none;
   z-index: 1;
-  background: radial-gradient(ellipse at center, transparent 40%, rgba(40, 25, 8, 0.25) 100%);
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(53, 53, 53, 0.25) 100%);
 }
 
 /* ── Content layer: above texture + vignette ── */
@@ -244,7 +246,7 @@ main {
 #tabToday.tab--active,
 #tabDue.tab--active,
 #tabAll.tab--active {
-  background: #DED2C0 !important;   /* fallback: color-mix(panel 95% + ink-1 5%) pre-computed */
+  background: #B9B9B9 !important;   /* fallback: color-mix(panel 95% + ink-1 5%) pre-computed */
   background: color-mix(in srgb, var(--color-surface-panel) 95%, var(--color-ink-1) 5%) !important;
   color: var(--color-ink-1) !important;
   font-weight: 600 !important;
@@ -263,14 +265,14 @@ main {
 [data-theme="dark"] #tabToday:hover,
 [data-theme="dark"] #tabDue:hover,
 [data-theme="dark"] #tabAll:hover {
-  background: rgba(200, 120, 42, 0.10) !important;
+  background: rgba(40, 75, 99, 0.10) !important;
   color: var(--wc-word-color) !important;
 }
 
 [data-theme="dark"] #tabToday.tab--active,
 [data-theme="dark"] #tabDue.tab--active,
 [data-theme="dark"] #tabAll.tab--active {
-  background: rgba(200, 120, 42, 0.14) !important;
+  background: rgba(40, 75, 99, 0.14) !important;
   color: var(--wc-accent) !important;
   box-shadow: inset 0 -2.5px 0 var(--wc-accent) !important;
 }
@@ -316,15 +318,15 @@ main {
 /* Alpha jitter by position index (fixed at render — CG-8) */
 #sidebarTodayList li:nth-child(3n+1):not(:last-child),
 #sidebarDueList   li:nth-child(3n+1):not(:last-child) {
-  border-bottom-color: var(--color-ledger-hi);   /* rgba(120,85,30, 0.20) */
+  border-bottom-color: var(--color-ledger-hi);   /* rgba(58,93,95, 0.20) */
 }
 #sidebarTodayList li:nth-child(3n+2):not(:last-child),
 #sidebarDueList   li:nth-child(3n+2):not(:last-child) {
-  border-bottom-color: var(--color-ledger-mid);  /* rgba(120,85,30, 0.15) */
+  border-bottom-color: var(--color-ledger-mid);  /* rgba(58,93,95, 0.15) */
 }
 #sidebarTodayList li:nth-child(3n):not(:last-child),
 #sidebarDueList   li:nth-child(3n):not(:last-child) {
-  border-bottom-color: var(--color-ledger-lo);   /* rgba(120,85,30, 0.12) */
+  border-bottom-color: var(--color-ledger-lo);   /* rgba(58,93,95, 0.12) */
 }
 
 /* ── Scheme B: All ─────────────────────────────────────────────────────── */
@@ -375,12 +377,12 @@ main {
 /* ── Panel base: surface-panel + SH-2 + rim-panel ── */
 /* Deliberately heavier than section cards: darker bg, larger shadow, stronger rim */
 #wordListCard {
-  background:    var(--color-surface-panel) !important;  /* #E8DCCA — 3–5% darker than card */
+  background:    var(--color-surface-panel) !important;  /* #C0C0C0 — 3–5% darker than card */
   border:        none !important;                        /* CG-2: depth from shadow only */
   border-radius: var(--radius-container) !important;     /* 8px */
   padding:       var(--pad-panel) !important;            /* 18px 20px */
   box-shadow:
-    3px 6px 20px rgba(80, 50, 15, 0.14),                 /* SH-2: heavier than SH-1 */
+    3px 6px 20px rgba(53, 53, 53, 0.14),                 /* SH-2: heavier than SH-1 */
     inset 0 1px 0 var(--color-rim-panel) !important;     /* rim: 0.38 — stronger than card's 0.30 */
   isolation: isolate;                                    /* contain M-2 soft-light (CG-3) */
   position: relative;
@@ -421,13 +423,13 @@ main {
 /* ── Section card base ── */
 /* SH-1 + rim inset on top edge; no border (depth from shadow only, CG-2) */
 section.bg-white.rounded-xl.shadow {
-  background:    var(--color-surface-card) !important;  /* #F0E8D4 fresh parchment */
+  background:    var(--color-surface-card) !important;  /* #ffffff fresh parchment */
   color:         var(--color-ink-2) !important;
   border:        none !important;
   border-radius: var(--radius-container) !important;    /* 8px */
   padding:       var(--pad-card) !important;            /* 20px 22px */
   box-shadow:
-    2px 4px 16px rgba(80, 50, 15, 0.10),                /* SH-1 directional warm shadow */
+    2px 4px 16px rgba(53, 53, 53, 0.10),                /* SH-1 directional warm shadow */
     inset 0 1px 0 var(--color-rim-card) !important;     /* rim: candlelight on top edge */
 }
 
@@ -436,7 +438,7 @@ section.bg-white.rounded-xl.shadow {
 section.bg-white.rounded-xl.shadow:hover {
   background: var(--color-surface-card) !important;
   box-shadow:
-    2px 4px 16px rgba(80, 50, 15, 0.10),
+    2px 4px 16px rgba(53, 53, 53, 0.10),
     inset 0 1px 0 var(--color-rim-card) !important;
 }
 
@@ -466,9 +468,9 @@ section.bg-white.rounded-xl.shadow:hover {
 input:not([type="radio"]):not([type="checkbox"]):not([type="file"]):not([type="range"]),
 textarea,
 select {
-  background:    var(--color-surface-recessed) !important;  /* #DFD0B8 — deepest surface */
+  background:    var(--color-surface-recessed) !important;  /* #353535 — deepest surface */
   color:         var(--color-ink-1) !important;
-  border:        1px solid var(--color-input-border) !important;   /* rgba(120,85,30,0.22) */
+  border:        1px solid var(--color-input-border) !important;   /* rgba(58,93,95,0.22) */
   border-radius: var(--radius-input) !important;                   /* 6px */
   box-shadow:    var(--shadow-sh-groove) !important;               /* inset 0 1px 3px warm */
   outline:       none !important;                                  /* kill cold browser ring */
@@ -480,7 +482,7 @@ select {
 /* ── Placeholder: ink-3 (lightest warm brown, never cold grey) ── */
 input:not([type="radio"]):not([type="checkbox"]):not([type="file"]):not([type="range"])::placeholder,
 textarea::placeholder {
-  color:   var(--color-ink-3) !important;  /* #A08568 */
+  color:   var(--color-ink-3) !important;  /* #777777 */
   opacity: 1 !important;                  /* Firefox default is 0.54 — force full */
 }
 
@@ -488,7 +490,7 @@ textarea::placeholder {
 input:not([type="radio"]):not([type="checkbox"]):not([type="file"]):not([type="range"]):hover:not(:focus),
 textarea:hover:not(:focus),
 select:hover:not(:focus) {
-  border-color: rgba(120, 85, 30, 0.32) !important;
+  border-color: rgba(58, 93, 95, 0.32) !important;
 }
 
 /* ── Focus: left indicator 3px + outer amber ring ── */
@@ -500,11 +502,11 @@ textarea:focus,
 select:focus {
   outline:           none !important;
   border-color:      var(--color-input-border) !important;      /* 3 sides: unchanged */
-  border-left-color: var(--color-input-border-foc) !important;  /* rgba(160,100,30,0.55) */
+  border-left-color: var(--color-input-border-foc) !important;  /* rgba(40,75,99,0.55) */
   border-left-width: 3px !important;
   box-shadow:
-    inset 0 1px 3px rgba(80, 50, 15, 0.12),                     /* SH-groove: retained */
-    0 0 0 3px var(--color-accent-focus) !important;             /* rgba(200,149,42,0.25) */
+    inset 0 1px 3px rgba(53, 53, 53, 0.12),                     /* SH-groove: retained */
+    0 0 0 3px var(--color-accent-focus) !important;             /* rgba(40,75,99,0.25) */
 }
 
 /* ── Disabled: faded ink, no groove ── */
@@ -526,7 +528,7 @@ select {
   appearance:         none !important;
   -webkit-appearance: none !important;
   background-color:   var(--color-surface-recessed) !important;
-  background-image:   url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237A6045' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+  background-image:   url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%233A5D5F' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
   background-position: right 10px center !important;
   background-repeat:  no-repeat !important;
   background-size:    12px 8px !important;
@@ -544,20 +546,20 @@ select {
 /* Alpha 0.55 preserves parchment texture visibility behind veil (§3.4 air check) */
 #quizModal,
 #quizSettings {
-  background: var(--color-overlay) !important;  /* rgba(40,25,8,0.55) warm brown */
+  background: var(--color-overlay) !important;  /* rgba(53,53,53,0.55) warm brown */
 }
 
 /* ── Modal container: paper held up — surface-modal + SH-3 + rim top/left ── */
 #quizModal > div,
 #quizSettings > div {
-  background:    var(--color-surface-modal) !important;  /* #F3ECDF — 2-3% lighter than card */
+  background:    var(--color-surface-modal) !important;  /* #ffffff — 2-3% lighter than card */
   border:        none !important;                        /* CG-2: depth from shadow, not border */
   border-radius: var(--radius-modal) !important;         /* 8px — not 16px (CG-10) */
   padding:       var(--pad-modal) !important;            /* 22px 24px */
   box-shadow:
-    var(--shadow-sh3),                                   /* 3px 8px 28px rgba(80,50,15,0.22) */
-    inset 0 1px 0 var(--color-rim-modal-top),            /* rim top:  rgba(255,220,140,0.35) */
-    inset 1px 0 0 var(--color-rim-modal-left) !important;/* rim left: rgba(255,220,140,0.20) */
+    var(--shadow-sh3),                                   /* 3px 8px 28px rgba(53,53,53,0.22) */
+    inset 0 1px 0 var(--color-rim-modal-top),            /* rim top:  rgba(255,255,255,0.35) */
+    inset 1px 0 0 var(--color-rim-modal-left) !important;/* rim left: rgba(255,255,255,0.20) */
 }
 
 /* ── Appear animation: drop from above + fade in (§3.4) ── */
@@ -596,12 +598,12 @@ select {
 /* ── Night-mode guard: revert overlay + container to dark variables ── */
 [data-theme="dark"] body:not(.scene-cold) #quizModal,
 [data-theme="dark"] body:not(.scene-cold) #quizSettings {
-  background: rgba(0, 0, 0, 0.65) !important;
+  background: rgba(53, 53, 53, 0.65) !important;
 }
 
 [data-theme="dark"] body:not(.scene-cold) #quizModal > div,
 [data-theme="dark"] body:not(.scene-cold) #quizSettings > div {
-  background: var(--wc-card, #1e2433) !important;
+  background: var(--wc-card, #ffffff) !important;
   box-shadow: 3px 8px 28px rgba(0, 0, 0, 0.40) !important;
 }
 
@@ -609,37 +611,37 @@ select {
 [data-theme="dark"] input:not([type="radio"]):not([type="checkbox"]):not([type="file"]):not([type="range"]),
 [data-theme="dark"] textarea,
 [data-theme="dark"] select {
-  background:   var(--wc-card, #1e2433) !important;
-  color:        var(--wc-word-color, #e8e0d0) !important;
-  border-color: rgba(200, 120, 42, 0.20) !important;
+  background:   var(--wc-card, #ffffff) !important;
+  color:        var(--wc-word-color, #353535) !important;
+  border-color: rgba(40, 75, 99, 0.20) !important;
   box-shadow:   none !important;
 }
 
 [data-theme="dark"] input:not([type="radio"]):not([type="checkbox"]):not([type="file"]):not([type="range"])::placeholder,
 [data-theme="dark"] textarea::placeholder {
-  color: var(--wc-muted, rgba(200, 180, 140, 0.45)) !important;
+  color: var(--wc-muted, rgba(60, 110, 113, 0.45)) !important;
 }
 
 [data-theme="dark"] input:not([type="radio"]):not([type="checkbox"]):not([type="file"]):not([type="range"]):hover:not(:focus),
 [data-theme="dark"] textarea:hover:not(:focus),
 [data-theme="dark"] select:hover:not(:focus) {
-  border-color: rgba(200, 120, 42, 0.35) !important;
+  border-color: rgba(40, 75, 99, 0.35) !important;
 }
 
 [data-theme="dark"] input:not([type="radio"]):not([type="checkbox"]):not([type="file"]):not([type="range"]):focus,
 [data-theme="dark"] textarea:focus,
 [data-theme="dark"] select:focus {
-  border-color:      rgba(200, 120, 42, 0.20) !important;
-  border-left-color: var(--wc-accent, #C8782A) !important;
+  border-color:      rgba(40, 75, 99, 0.20) !important;
+  border-left-color: var(--wc-accent, #284b63) !important;
   border-left-width: 3px !important;
   box-shadow:
     inset 0 1px 3px rgba(0, 0, 0, 0.18),
-    0 0 0 3px rgba(200, 120, 42, 0.20) !important;
+    0 0 0 3px rgba(40, 75, 99, 0.20) !important;
 }
 
 [data-theme="dark"] select {
-  background-color:   var(--wc-card, #1e2433) !important;
-  background-image:   url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23C8782A' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+  background-color:   var(--wc-card, #ffffff) !important;
+  background-image:   url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23284b63' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -661,14 +663,14 @@ select {
 #qsStart,
 #startQuizBtn,
 #usageSaveBudget {
-  background-color: #1C1208 !important;  /* (A) explicit hex — no var() resolution gap */
-  background:       #1C1208 !important;
-  color:            #F0E8D4 !important;  /* parchment cream on dark ink */
+  background-color: #353535 !important;  /* (A) explicit hex — no var() resolution gap */
+  background:       #353535 !important;
+  color:            #ffffff !important;  /* parchment cream on dark ink */
   border:           none !important;
   border-radius:    var(--radius-btn) !important;
   box-shadow:
-    1px 2px 6px rgba(80, 50, 15, 0.18),
-    inset 0 1px 0 rgba(255, 220, 140, 0.28) !important;
+    1px 2px 6px rgba(53, 53, 53, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28) !important;
   opacity:          1 !important;        /* reset any inherited opacity */
   cursor:           pointer !important;
   transition:
@@ -721,12 +723,12 @@ select {
 #qsStart:hover:not(:disabled),
 #startQuizBtn:hover:not(:disabled),
 #usageSaveBudget:hover:not(:disabled) {
-  background-color: #2E251C !important;
-  background: color-mix(in srgb, #1C1208 92%, #fff 8%) !important;
-  color:      #F0E8D4 !important;
+  background-color: #454545 !important;
+  background: color-mix(in srgb, #353535 92%, #fff 8%) !important;
+  color:      #ffffff !important;
   box-shadow:
-    1px 3px 8px rgba(80, 50, 15, 0.24),
-    inset 0 1px 0 rgba(255, 220, 140, 0.38) !important;
+    1px 3px 8px rgba(53, 53, 53, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.38) !important;
 }
 
 /* ── ACTIVE: inset press groove ── */
@@ -738,12 +740,12 @@ select {
 #qsStart:active:not(:disabled),
 #startQuizBtn:active:not(:disabled),
 #usageSaveBudget:active:not(:disabled) {
-  background-color: #150E06 !important;
-  background: color-mix(in srgb, #1C1208 95%, black 5%) !important;
-  color:      #F0E8D4 !important;
+  background-color: #323232 !important;
+  background: color-mix(in srgb, #353535 95%, black 5%) !important;
+  color:      #ffffff !important;
   box-shadow:
-    inset 0 1px 3px rgba(80, 50, 15, 0.22),
-    inset 0 1px 0 rgba(255, 220, 140, 0.10) !important;
+    inset 0 1px 3px rgba(53, 53, 53, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.10) !important;
 }
 
 /* ── DISABLED: native btn.disabled = true → :disabled pseudo-class ── */
@@ -756,9 +758,9 @@ select {
 #qsStart:disabled,
 #startQuizBtn:disabled,
 #usageSaveBudget:disabled {
-  background-color: #1C1208 !important;  /* keep dark base, opacity does the fade */
-  background:       #1C1208 !important;
-  color:            #F0E8D4 !important;
+  background-color: #353535 !important;  /* keep dark base, opacity does the fade */
+  background:       #353535 !important;
+  color:            #ffffff !important;
   opacity:          0.4 !important;      /* 40% → clearly faded, still readable */
   box-shadow:       none !important;
   pointer-events:   none !important;
@@ -776,9 +778,9 @@ select {
 #usageSaveBudget:focus-visible {
   outline: none !important;
   box-shadow:
-    1px 2px 6px rgba(80, 50, 15, 0.18),
-    inset 0 1px 0 rgba(255, 220, 140, 0.28),
-    0 0 0 3px rgba(200, 149, 42, 0.25) !important;
+    1px 2px 6px rgba(53, 53, 53, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    0 0 0 3px rgba(40, 75, 99, 0.25) !important;
 }
 
 /* Night-mode guard for ID-specific overrides */
@@ -790,9 +792,9 @@ select {
 [data-theme="dark"] #qsStart,
 [data-theme="dark"] #startQuizBtn,
 [data-theme="dark"] #usageSaveBudget {
-  background-color: var(--wc-accent, #C8782A) !important;
-  background:       var(--wc-accent, #C8782A) !important;
-  color:            var(--wc-card, #1e2433) !important;
+  background-color: var(--wc-accent, #284b63) !important;
+  background:       var(--wc-accent, #284b63) !important;
+  color:            var(--wc-card, #ffffff) !important;
   box-shadow:       none !important;
   opacity:          1 !important;
 }
@@ -805,7 +807,7 @@ select {
 [data-theme="dark"] #qsStart:hover,
 [data-theme="dark"] #startQuizBtn:hover,
 [data-theme="dark"] #usageSaveBudget:hover {
-  background: color-mix(in srgb, var(--wc-accent, #C8782A) 88%, white 12%) !important;
+  background: color-mix(in srgb, var(--wc-accent, #284b63) 88%, white 12%) !important;
 }
 
 [data-theme="dark"] #analyzeBtn:disabled,
@@ -822,13 +824,13 @@ select {
 /* ── Primary: dark ink body + top rim — NEVER amber fill (CG-11) ── */
 .btn-primary-m,
 .quiz-btn-primary {
-  background:    var(--color-ink-1) !important;             /* #1C1208 — dried brown-black ink */
+  background:    var(--color-ink-1) !important;             /* #353535 — dried brown-black ink */
   color:         var(--color-surface-card) !important;      /* cream text on dark body */
   border:        none !important;
   border-radius: var(--radius-btn) !important;              /* 6px — not 16px */
   box-shadow:
-    var(--shadow-sh-btn),                                   /* 1px 2px 6px rgba(80,50,15,0.18) */
-    inset 0 1px 0 var(--color-rim-btn) !important;          /* top rim: rgba(255,220,140,0.28) */
+    var(--shadow-sh-btn),                                   /* 1px 2px 6px rgba(53,53,53,0.18) */
+    inset 0 1px 0 var(--color-rim-btn) !important;          /* top rim: rgba(255,255,255,0.28) */
   transition:
     background var(--motion-hover),
     box-shadow  var(--motion-hover) !important;
@@ -837,21 +839,21 @@ select {
 /* Hover: 8% lighter, stays warm dark; rim brightens slightly */
 .btn-primary-m:hover:not(:disabled),
 .quiz-btn-primary:hover:not(:disabled) {
-  background: #2E251C !important;  /* fallback: color-mix(ink-1 92%, white 8%) pre-computed */
+  background: #454545 !important;  /* fallback: color-mix(ink-1 92%, white 8%) pre-computed */
   background: color-mix(in srgb, var(--color-ink-1) 92%, #fff 8%) !important;
   box-shadow:
-    1px 3px 8px rgba(80, 50, 15, 0.24),                     /* SH-btn + 1px deeper */
+    1px 3px 8px rgba(53, 53, 53, 0.24),                     /* SH-btn + 1px deeper */
     inset 0 1px 0 var(--color-rim-hover) !important;        /* rim brightens: 0.38 */
 }
 
 /* Active/Press: 5% darker + inset groove (tactile press feel); rim dims */
 .btn-primary-m:active:not(:disabled),
 .quiz-btn-primary:active:not(:disabled) {
-  background: #150E06 !important;  /* fallback: color-mix(ink-1 95%, black 5%) pre-computed */
+  background: #323232 !important;  /* fallback: color-mix(ink-1 95%, black 5%) pre-computed */
   background: color-mix(in srgb, var(--color-ink-1) 95%, black 5%) !important;
   box-shadow:
-    inset 0 1px 3px rgba(80, 50, 15, 0.22),                 /* SH-groove replaces SH-btn */
-    inset 0 1px 0 rgba(255, 220, 140, 0.10) !important;     /* rim dims on press */
+    inset 0 1px 3px rgba(53, 53, 53, 0.22),                 /* SH-groove replaces SH-btn */
+    inset 0 1px 0 rgba(255, 255, 255, 0.10) !important;     /* rim dims on press */
 }
 
 /* Focus: base state + 3px amber focus ring */
@@ -861,7 +863,7 @@ select {
   box-shadow:
     var(--shadow-sh-btn),
     inset 0 1px 0 var(--color-rim-btn),
-    0 0 0 3px var(--color-accent-focus) !important;         /* rgba(200,149,42,0.25) */
+    0 0 0 3px var(--color-accent-focus) !important;         /* rgba(40,75,99,0.25) */
 }
 
 /* Disabled: 40% opacity, no shadow */
@@ -875,8 +877,8 @@ select {
 /* ── Outline: transparent + warm groove border ── */
 .btn-outline-m {
   background:    transparent !important;
-  color:         var(--color-ink-2) !important;             /* #7A6045 faded brown ink */
-  border:        1px solid var(--color-ledger-section) !important;  /* rgba(120,85,30,0.22) */
+  color:         var(--color-ink-2) !important;             /* #3A5D5F faded brown ink */
+  border:        1px solid var(--color-ledger-section) !important;  /* rgba(58,93,95,0.22) */
   border-radius: var(--radius-btn) !important;
   box-shadow:    none !important;
   transition:
@@ -888,21 +890,21 @@ select {
 .btn-outline-m:hover:not(:disabled) {
   background:   transparent !important;
   color:        var(--color-ink-1) !important;
-  border-color: rgba(120, 85, 30, 0.45) !important;
+  border-color: rgba(58, 93, 95, 0.45) !important;
 }
 
 /* Active: faint warm tint wash */
 .btn-outline-m:active:not(:disabled) {
-  background:   rgba(120, 85, 30, 0.06) !important;
+  background:   rgba(58, 93, 95, 0.06) !important;
   color:        var(--color-ink-1) !important;
-  border-color: rgba(120, 85, 30, 0.45) !important;
+  border-color: rgba(58, 93, 95, 0.45) !important;
 }
 
 /* Focus */
 .btn-outline-m:focus-visible {
   outline:      none !important;
   color:        var(--color-ink-1) !important;
-  border-color: rgba(120, 85, 30, 0.45) !important;
+  border-color: rgba(58, 93, 95, 0.45) !important;
   box-shadow:   0 0 0 3px var(--color-accent-focus) !important;
 }
 
@@ -925,13 +927,13 @@ select {
 
 /* Hover: barely-there warm tint */
 .btn-ghost-m:hover:not(:disabled) {
-  background: rgba(120, 85, 30, 0.06) !important;
+  background: rgba(58, 93, 95, 0.06) !important;
   color:      var(--color-ink-1) !important;
 }
 
 /* Active: slightly deeper tint */
 .btn-ghost-m:active:not(:disabled) {
-  background: rgba(120, 85, 30, 0.10) !important;
+  background: rgba(58, 93, 95, 0.10) !important;
   color:      var(--color-ink-1) !important;
 }
 
@@ -944,33 +946,33 @@ select {
 /* ── Night-mode guard: revert all button types to dark variables ── */
 [data-theme="dark"] .btn-primary-m,
 [data-theme="dark"] .quiz-btn-primary {
-  background: var(--wc-accent, #C8782A) !important;
-  color:      var(--wc-card, #1e2433) !important;
+  background: var(--wc-accent, #284b63) !important;
+  color:      var(--wc-card, #ffffff) !important;
   box-shadow: none !important;
 }
 
 [data-theme="dark"] .btn-primary-m:hover:not(:disabled),
 [data-theme="dark"] .quiz-btn-primary:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--wc-accent, #C8782A) 88%, white 12%) !important;
+  background: color-mix(in srgb, var(--wc-accent, #284b63) 88%, white 12%) !important;
 }
 
 [data-theme="dark"] .btn-outline-m {
-  color:        var(--wc-muted, rgba(200,180,140,0.7)) !important;
-  border-color: rgba(200, 120, 42, 0.25) !important;
+  color:        var(--wc-muted, rgba(60,110,113,0.7)) !important;
+  border-color: rgba(40, 75, 99, 0.25) !important;
 }
 
 [data-theme="dark"] .btn-outline-m:hover:not(:disabled) {
-  color:        var(--wc-word-color, #e8e0d0) !important;
-  border-color: rgba(200, 120, 42, 0.50) !important;
+  color:        var(--wc-word-color, #353535) !important;
+  border-color: rgba(40, 75, 99, 0.50) !important;
 }
 
 [data-theme="dark"] .btn-ghost-m {
-  color: var(--wc-muted, rgba(200,180,140,0.7)) !important;
+  color: var(--wc-muted, rgba(60,110,113,0.7)) !important;
 }
 
 [data-theme="dark"] .btn-ghost-m:hover:not(:disabled) {
-  background: rgba(200, 120, 42, 0.10) !important;
-  color:      var(--wc-word-color, #e8e0d0) !important;
+  background: rgba(40, 75, 99, 0.10) !important;
+  color:      var(--wc-word-color, #353535) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -984,9 +986,9 @@ select {
 /* Base: dark ink background + parchment text, fully opaque */
 #analyzeBtn,
 #urlFetchBtn {
-  background-color: #1C1208 !important;
-  background:       #1C1208 !important;
-  color:            #F0E8D4 !important;
+  background-color: #353535 !important;
+  background:       #353535 !important;
+  color:            #ffffff !important;
   opacity:          1 !important;
 }
 
@@ -997,7 +999,7 @@ select {
   opacity: 1 !important;
 }
 
-/* SVG and its children: stroke follows currentColor (= #F0E8D4) */
+/* SVG and its children: stroke follows currentColor (= #ffffff) */
 #analyzeBtn svg,
 #urlFetchBtn svg {
   color:   inherit !important;
@@ -1015,9 +1017,9 @@ select {
 /* Hover: slightly lighter dark bg, same cream text — NOT transparent→colour */
 #analyzeBtn:hover:not(:disabled),
 #urlFetchBtn:hover:not(:disabled) {
-  background-color: #2E251C !important;
-  background:       #2E251C !important;
-  color:            #F0E8D4 !important;
+  background-color: #454545 !important;
+  background:       #454545 !important;
+  color:            #ffffff !important;
 }
 
 /* ── SPECIFICITY LIFT: beat theme-perfume-wc.css:1088                     ── */
@@ -1027,7 +1029,7 @@ select {
 
 #analyzeBtn.btn-primary-m,
 #urlFetchBtn.btn-primary-m {
-  color: #F0E8D4 !important;  /* (0,1,1,0) beats wc.css (0,1,0,1) */
+  color: #ffffff !important;  /* (0,1,1,0) beats wc.css (0,1,0,1) */
 }
 
 /* All child elements (svg, path, spans) inherit cream — same lift */
@@ -1040,25 +1042,25 @@ select {
 /* Hover / active / disabled: same specificity bump */
 #analyzeBtn.btn-primary-m:hover:not(:disabled),
 #urlFetchBtn.btn-primary-m:hover:not(:disabled) {
-  color: #F0E8D4 !important;
+  color: #ffffff !important;
 }
 
 #analyzeBtn.btn-primary-m:active:not(:disabled),
 #urlFetchBtn.btn-primary-m:active:not(:disabled) {
-  color: #F0E8D4 !important;
+  color: #ffffff !important;
 }
 
 #analyzeBtn.btn-primary-m:disabled,
 #urlFetchBtn.btn-primary-m:disabled {
-  color: #F0E8D4 !important;
+  color: #ffffff !important;
 }
 
 /* Night-mode guard: don't apply dark-ink override in dark theme */
 [data-theme="dark"] #analyzeBtn,
 [data-theme="dark"] #urlFetchBtn {
-  background-color: var(--wc-accent, #C8782A) !important;
-  background:       var(--wc-accent, #C8782A) !important;
-  color:            var(--wc-card, #1e2433) !important;
+  background-color: var(--wc-accent, #284b63) !important;
+  background:       var(--wc-accent, #284b63) !important;
+  color:            var(--wc-card, #ffffff) !important;
 }
 
 [data-theme="dark"] #analyzeBtn *,
@@ -1088,8 +1090,8 @@ select {
 .chip {
   display:       inline-block !important;
   padding:       .2rem .65rem !important;
-  background:    var(--color-chip-navbar, rgba(200,180,140,0.35)) !important;
-  color:         #F0E8D4 !important;    /* cream text on dark header */
+  background:    var(--color-chip-navbar, rgba(60,110,113,0.35)) !important;
+  color:         #ffffff !important;    /* cream text on dark header */
   font-size:     .8125rem !important;
   font-weight:   700 !important;
   line-height:   1.4 !important;
@@ -1099,28 +1101,28 @@ select {
 
 /* ── §3.8-E  .wc-rel-chip — related-word chips ─────────────────────────── */
 .wc-rel-chip {
-  background: #EDE3D0 !important;    /* warm parchment — replaces cold #eef1ea */
-  color:      #5C3D1A !important;    /* dark warm brown — replaces cold #4a5940 */
-  border:     1px solid #C8B08A !important;
+  background: #E8EEEE !important;    /* Teal-Tint（C2 12% + white 88%）— 冷色五色票覆蓋，原為暖色 parchment */
+  color:      #284b63 !important;    /* C5 深藍 — 冷色五色票覆蓋，原為暖棕 #5C3D1A */
+  border:     1px solid #8AA8AA !important;
 }
 
 .wc-rel-chip--ant {
-  background: #EAD8C8 !important;    /* rosier warm tint for antonyms */
-  color:      #5C2E1A !important;
-  border-color: #C4907A !important;
+  background: #DFE4E8 !important;    /* Blue-Tint（C5）— 2026-07-22 使用者裁決放棄暖紅例外，反義詞改用深藍系與同義詞的墨綠系區隔 */
+  color:      #284b63 !important;
+  border-color: #7E93A1 !important;
 }
 
 /* ── §3.8-F  .mnemonic-chip — mnemonic association chips ───────────────── */
 .mnemonic-chip {
-  background: #EDE3D0 !important;    /* same warm parchment as wc-rel-chip */
-  color:      #5C3D1A !important;
-  border:     1px solid #C8B08A !important;
+  background: #E8EEEE !important;    /* same Teal-Tint as wc-rel-chip */
+  color:      #284b63 !important;
+  border:     1px solid #8AA8AA !important;
 }
 
 .mnemonic-chip--ant {
-  background:  #EAD8C8 !important;
-  color:       #5C2E1A !important;
-  border-color: #C4907A !important;
+  background:  #DFE4E8 !important;
+  color:       #284b63 !important;
+  border-color: #7E93A1 !important;
 }
 
 /* ── §3.8-H  Dark mode toggle — hidden ─────────────────────────────────── */
@@ -1140,35 +1142,35 @@ select {
 :root:not([data-theme="dark"]) .text-gray-400,
 :root:not([data-theme="dark"]) .text-gray-500,
 :root:not([data-theme="dark"]) .text-gray-600 {
-  color: var(--color-ink-3) !important;   /* #A08568 — muted warm brown */
+  color: var(--color-ink-3) !important;   /* #777777 — muted warm brown */
 }
 
 :root:not([data-theme="dark"]) .text-gray-700,
 :root:not([data-theme="dark"]) .text-gray-800,
 :root:not([data-theme="dark"]) .text-gray-900 {
-  color: var(--color-ink-1) !important;   /* #1C1208 — primary dried ink */
+  color: var(--color-ink-1) !important;   /* #353535 — primary dried ink */
 }
 
 /* ── Surface grays → warm parchment/recessed tokens ── */
 :root:not([data-theme="dark"]) .bg-gray-50,
 :root:not([data-theme="dark"]) .bg-gray-100 {
-  background: var(--color-surface-card) !important;     /* #F0E8D4 — fresh parchment */
+  background: var(--color-surface-card) !important;     /* #ffffff — fresh parchment */
 }
 
 :root:not([data-theme="dark"]) .bg-gray-200 {
-  background: var(--color-surface-recessed) !important; /* #DFD0B8 — recessed surface */
+  background: var(--color-surface-recessed) !important; /* #353535 — recessed surface */
 }
 
 /* ── Border grays → warm groove edge token ── */
 :root:not([data-theme="dark"]) .border-gray-200,
 :root:not([data-theme="dark"]) .border-gray-300 {
-  border-color: var(--color-input-border) !important;   /* rgba(120,85,30,0.22) */
+  border-color: var(--color-input-border) !important;   /* rgba(58,93,95,0.22) */
 }
 
 /* ── Tailwind focus:ring-gray-300 → amber focus ring ── */
 /* Targets the Tailwind ring colour variable before box-shadow is composed */
 :root:not([data-theme="dark"]) .focus\:ring-gray-300:focus {
-  --tw-ring-color: rgba(200, 149, 42, 0.25) !important; /* matches --color-accent-focus */
+  --tw-ring-color: rgba(40, 75, 99, 0.25) !important; /* matches --color-accent-focus */
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -1178,14 +1180,14 @@ select {
    ═══════════════════════════════════════════════════════════════════════════ */
 
 #syncSave {
-  background-color: #1C1208 !important;
-  background:       #1C1208 !important;
-  color:            #F0E8D4 !important;
+  background-color: #353535 !important;
+  background:       #353535 !important;
+  color:            #ffffff !important;
   border:           none !important;
   border-radius:    var(--radius-btn) !important;
   box-shadow:
-    1px 2px 6px rgba(80, 50, 15, 0.18),
-    inset 0 1px 0 rgba(255, 220, 140, 0.28) !important;
+    1px 2px 6px rgba(53, 53, 53, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28) !important;
   opacity:          1 !important;
   cursor:           pointer !important;
   transition:
@@ -1194,41 +1196,41 @@ select {
 }
 
 #syncSave:hover:not(:disabled) {
-  background-color: #2E251C !important;
-  background: color-mix(in srgb, #1C1208 92%, #fff 8%) !important;
-  color:      #F0E8D4 !important;
+  background-color: #454545 !important;
+  background: color-mix(in srgb, #353535 92%, #fff 8%) !important;
+  color:      #ffffff !important;
   box-shadow:
-    1px 3px 8px rgba(80, 50, 15, 0.24),
-    inset 0 1px 0 rgba(255, 220, 140, 0.38) !important;
+    1px 3px 8px rgba(53, 53, 53, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.38) !important;
 }
 
 #syncSave:active:not(:disabled) {
-  background-color: #150E06 !important;
-  background: color-mix(in srgb, #1C1208 95%, black 5%) !important;
+  background-color: #323232 !important;
+  background: color-mix(in srgb, #353535 95%, black 5%) !important;
   box-shadow:
-    inset 0 1px 3px rgba(80, 50, 15, 0.22),
-    inset 0 1px 0 rgba(255, 220, 140, 0.10) !important;
+    inset 0 1px 3px rgba(53, 53, 53, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.10) !important;
 }
 
 #syncSave:focus-visible {
   outline: none !important;
   box-shadow:
-    1px 2px 6px rgba(80, 50, 15, 0.18),
-    inset 0 1px 0 rgba(255, 220, 140, 0.28),
-    0 0 0 3px rgba(200, 149, 42, 0.25) !important;
+    1px 2px 6px rgba(53, 53, 53, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    0 0 0 3px rgba(40, 75, 99, 0.25) !important;
 }
 
 /* Night-mode guard — let night theme own this button */
 [data-theme="dark"] #syncSave {
-  background-color: var(--wc-accent, #C8782A) !important;
-  background:       var(--wc-accent, #C8782A) !important;
-  color:            var(--wc-card, #1e2433) !important;
+  background-color: var(--wc-accent, #284b63) !important;
+  background:       var(--wc-accent, #284b63) !important;
+  color:            var(--wc-card, #ffffff) !important;
   box-shadow:       none !important;
   opacity:          1 !important;
 }
 
 [data-theme="dark"] #syncSave:hover {
-  background: color-mix(in srgb, var(--wc-accent, #C8782A) 88%, white 12%) !important;
+  background: color-mix(in srgb, var(--wc-accent, #284b63) 88%, white 12%) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -1242,7 +1244,7 @@ select {
 #syncModal,
 #grammarModal,
 #translateModal {
-  background: var(--color-overlay) !important;  /* rgba(40,25,8,0.55) warm brown */
+  background: var(--color-overlay) !important;  /* rgba(53,53,53,0.55) warm brown */
 }
 
 /* ── Container: paper held up ── */
@@ -1250,12 +1252,12 @@ select {
 #syncModal > div,
 #grammarModal > div,
 #translateModal > div {
-  background:    var(--color-surface-modal) !important;  /* #F3ECDF */
+  background:    var(--color-surface-modal) !important;  /* #ffffff */
   border:        none !important;
   border-radius: var(--radius-modal) !important;          /* 8px */
   padding:       var(--pad-modal) !important;             /* 22px 24px */
   box-shadow:
-    var(--shadow-sh3),                                    /* 3px 8px 28px rgba(80,50,15,0.22) */
+    var(--shadow-sh3),                                    /* 3px 8px 28px rgba(53,53,53,0.22) */
     inset 0 1px 0 var(--color-rim-modal-top),             /* rim top */
     inset 1px 0 0 var(--color-rim-modal-left) !important; /* rim left */
 }
@@ -1288,7 +1290,7 @@ select {
 [data-theme="dark"] #syncModal,
 [data-theme="dark"] #grammarModal,
 [data-theme="dark"] #translateModal {
-  background: rgba(0, 0, 0, 0.65) !important;
+  background: rgba(53, 53, 53, 0.65) !important;
 }
 
 [data-theme="dark"] #usageModal > div,
@@ -1296,7 +1298,7 @@ select {
 [data-theme="dark"] #grammarModal > div,
 [data-theme="dark"] #translateModal > div,
 [data-theme="dark"] .mnemonic-window {
-  background: var(--wc-card, #1e2433) !important;
+  background: var(--wc-card, #ffffff) !important;
   box-shadow: 3px 8px 28px rgba(0, 0, 0, 0.40) !important;
 }
 
@@ -1323,10 +1325,10 @@ select {
   height: 18px;
   margin-top: 3px;
   border-radius: 4px;
-  background: var(--color-surface-recessed, #DFD0B8);
+  background: var(--color-surface-recessed, #353535);
   box-shadow:
     inset 0 1px 3px rgba(0, 0, 0, 0.22),
-    inset 0 0 0 1px rgba(120, 85, 30, 0.28);
+    inset 0 0 0 1px rgba(58, 93, 95, 0.28);
   cursor: pointer;
   transition: box-shadow 0.15s ease;
 }
@@ -1335,14 +1337,14 @@ select {
 .stamp-label:hover .stamp-box {
   box-shadow:
     inset 0 2px 5px rgba(0, 0, 0, 0.30),
-    inset 0 0 0 1px rgba(120, 85, 30, 0.45);
+    inset 0 0 0 1px rgba(58, 93, 95, 0.45);
 }
 
 /* 4. 勾選狀態：墨色填滿 + 蓋印動畫 */
 .stamp-label input[name="word"]:checked ~ .stamp-box {
-  background: var(--color-ink-1, #1C1208);
+  background: var(--color-ink-1, #353535);
   box-shadow:
-    inset 0 0 0 1px rgba(120, 85, 30, 0.15),
+    inset 0 0 0 1px rgba(58, 93, 95, 0.15),
     0 1px 3px rgba(0, 0, 0, 0.35);
   animation: inkStamp 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -1356,7 +1358,7 @@ select {
 /* 5. 文字鎖定連動：勾選時單字 strong 變深加粗 */
 .stamp-label:has(input[name="word"]:checked) .stamp-word {
   font-weight: 800;
-  color: var(--color-ink-1, #1C1208);
+  color: var(--color-ink-1, #353535);
   letter-spacing: 0.01em;
 }
 
@@ -1366,12 +1368,12 @@ select {
 
 /* 卡片容器：羊皮紙底色 + 暖棕陰影 + 左上 rim light，移除白底與描邊 */
 .word-suggestion-card {
-  background: var(--color-surface-card, #F0E8D4);
+  background: var(--color-surface-card, #ffffff);
   border: none;
   border-radius: var(--radius-container, 8px);
   box-shadow:
-    2px 4px 16px rgba(80, 50, 15, 0.10),
-    inset 0 1px 0 var(--color-rim-card, rgba(255, 220, 140, 0.30));
+    2px 4px 16px rgba(53, 53, 53, 0.10),
+    inset 0 1px 0 var(--color-rim-card, rgba(255, 255, 255, 0.30));
   padding: 12px 14px;
   transition: box-shadow 150ms ease-out;
 }
@@ -1381,14 +1383,14 @@ select {
   font-family: "EB Garamond", "Lora", "Crimson Pro", Georgia, serif;
   font-size: 1.0625rem;
   font-weight: 700;
-  color: var(--color-ink-1, #1C1208);
+  color: var(--color-ink-1, #353535);
   letter-spacing: -0.01em;
 }
 
 /* 詞性 · 級別：輕量 muted 標籤行（限定在選字卡，防止全域汙染） */
 .word-suggestion-card .word-card-meta {
   font-size: 0.6875rem;
-  color: var(--color-ink-2, #7A6045);
+  color: var(--color-ink-2, #3A5D5F);
   letter-spacing: 0.02em;
 }
 
@@ -1404,8 +1406,8 @@ select {
   margin-left: 5px;
   padding: 0 5px;
   border-radius: var(--radius-badge, 3px);
-  background: var(--color-badge-enrich-bg, #E4D5BA);
-  color: var(--color-badge-enrich-fg, #5C3D1A);
+  background: var(--color-badge-enrich-bg, #d9d9d9);
+  color: var(--color-badge-enrich-fg, #353535);
   font-weight: 600;
   font-size: 0.625rem;
   letter-spacing: 0.04em;
@@ -1418,7 +1420,7 @@ select {
   display: block;
   font-family: "Noto Sans TC", system-ui, sans-serif;
   font-size: 0.875rem;
-  color: var(--color-ink-2, #7A6045);
+  color: var(--color-ink-2, #3A5D5F);
   margin-top: 2px;
   word-break: keep-all;
 }
@@ -1427,7 +1429,7 @@ select {
 .word-suggestion-card .word-card-example {
   display: block;
   font-size: 0.8125rem;
-  color: var(--color-ink-3, #A08568);
+  color: var(--color-ink-3, #777777);
   line-height: 1.65;
   margin-top: 6px;
   font-style: italic;
@@ -1438,13 +1440,13 @@ select {
 
 /* 發音按鈕：改用暖色調，移除冷灰 */
 .word-suggestion-card .speak-btn-warm {
-  color: var(--color-ink-3, #A08568);
+  color: var(--color-ink-3, #777777);
   background: transparent;
   transition: background 150ms ease-out, color 150ms ease-out;
 }
 .word-suggestion-card .speak-btn-warm:hover {
-  background: rgba(160, 110, 30, 0.08);
-  color: var(--color-ink-2, #7A6045);
+  background: rgba(40, 75, 99, 0.08);
+  color: var(--color-ink-2, #3A5D5F);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -1459,7 +1461,7 @@ select {
   transition: background 150ms ease-out;
 }
 #grammarContent details summary:hover {
-  background: rgba(160, 110, 30, 0.07);
+  background: rgba(40, 75, 99, 0.07);
 }
 #grammarContent details summary::-webkit-details-marker { display: none; }
 
@@ -1476,7 +1478,7 @@ select {
 .article-viewer .cht-text,
 .article-viewer p {
   font-size: 0.9375rem;
-  color: var(--color-ink-1, #1C1208);
+  color: var(--color-ink-1, #353535);
   line-height: 1.9;
   margin-bottom: 0.9em;
 }

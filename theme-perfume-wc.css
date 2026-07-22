@@ -6,34 +6,37 @@
 
 /* ── 1. Token Layer ─────────────────────────────────────────────────── */
 
+/* 冷色五色票（2026-07-22 覆蓋，docs/COLOR_SPEC_NEW.md）— 全站僅單一配色，
+   [data-theme="dark"] 刻意設為與 :root 完全相同的值（網站目前無實際日夜切換）。 */
 :root {
-  --wc-surface:    #F5EDDA;
-  --wc-word-color: #1C1208;
-  --wc-muted:      #7A6045;
-  --wc-accent:     #C8952A;
-  --wc-rule:       rgba(200, 149, 42, 0.25);
-  --wc-shadow-a:   rgba(180, 140, 80, 0.22);
-  --wc-shadow-b:   rgba(100,  70, 20, 0.10);
-  --wc-shadow-c:   rgba(100,  70, 20, 0.05);
-  --wc-chip-bg:    rgba(200, 149, 42, 0.10);
-  --wc-chip-bdr:   rgba(200, 149, 42, 0.22);
-  --wc-chip-ant-bg:  rgba(200,  80, 42, 0.09);
-  --wc-chip-ant-bdr: rgba(200,  80, 42, 0.20);
+  --wc-surface:    #ffffff;   /* C3 純白 */
+  --wc-word-color: #353535;   /* C1 近黑深灰 */
+  --wc-muted:      #3A5D5F;   /* Teal-Safe（C2 70% + C1 30%，見 R-2） */
+  --wc-accent:     #284b63;   /* C5 深藍 */
+  --wc-rule:       rgba(40, 75, 99, 0.25);   /* C5 RGB */
+  --wc-shadow-a:   rgba(53, 53, 53, 0.22);   /* C1 RGB */
+  --wc-shadow-b:   rgba(53, 53, 53, 0.10);
+  --wc-shadow-c:   rgba(53, 53, 53, 0.05);
+  --wc-chip-bg:    rgba(60, 110, 113, 0.10);  /* C2 RGB */
+  --wc-chip-bdr:   rgba(60, 110, 113, 0.22);
+  --wc-chip-ant-bg:  rgba(40, 75, 99, 0.10);  /* 反義詞 chip；2026-07-22 使用者裁決放棄暖紅例外，改用 C5 深藍系與同義詞的 C2 墨綠系做色相區隔 */
+  --wc-chip-ant-bdr: rgba(40, 75, 99, 0.22);
 }
 
 [data-theme="dark"] {
-  --wc-surface:    #231609;   /* raised: 3-tier depth — clearly above container #150F08 */
-  --wc-word-color: #EFE1C0;
-  --wc-muted:      #956F42;
-  --wc-accent:     #C8782A;
-  --wc-rule:       rgba(200, 120, 42, 0.18);
-  --wc-shadow-a:   rgba(200, 120, 42, 0.22);  /* raised: candlelight edge now visible */
-  --wc-shadow-b:   rgba(  0,   0,  0, 0.55);
-  --wc-shadow-c:   rgba(  0,   0,  0, 0.35);
-  --wc-chip-bg:    rgba(200, 120, 42, 0.12);
-  --wc-chip-bdr:   rgba(200, 120, 42, 0.25);
-  --wc-chip-ant-bg:  rgba(200,  70, 42, 0.12);
-  --wc-chip-ant-bdr: rgba(200,  70, 42, 0.24);
+  /* 與 :root 完全相同 — 無雙軌設計，見使用者裁決 */
+  --wc-surface:    #ffffff;
+  --wc-word-color: #353535;
+  --wc-muted:      #3A5D5F;
+  --wc-accent:     #284b63;
+  --wc-rule:       rgba(40, 75, 99, 0.25);
+  --wc-shadow-a:   rgba(53, 53, 53, 0.22);
+  --wc-shadow-b:   rgba(53, 53, 53, 0.10);
+  --wc-shadow-c:   rgba(53, 53, 53, 0.05);
+  --wc-chip-bg:    rgba(60, 110, 113, 0.10);
+  --wc-chip-bdr:   rgba(60, 110, 113, 0.22);
+  --wc-chip-ant-bg:  rgba(200,  80, 42, 0.09);
+  --wc-chip-ant-bdr: rgba(200,  80, 42, 0.20);
 }
 
 
@@ -81,18 +84,18 @@
   box-shadow:
     0 0 0 1px var(--wc-shadow-a),              /* amber candlelight edge */
     0 4px 16px var(--wc-shadow-b),             /* depth shadow */
-    inset 0 1px 0 rgba(200, 120, 42, 0.16),    /* candle top-edge — light from above */
-    inset 0 0 28px rgba(200, 120, 42, 0.04) !important;  /* barely-there interior warmth */
+    inset 0 1px 0 rgba(40, 75, 99, 0.16),    /* candle top-edge — light from above */
+    inset 0 0 28px rgba(40, 75, 99, 0.04) !important;  /* barely-there interior warmth */
 }
 
 /* Night hover: edge brightens, interior warms slightly */
 [data-theme="dark"] .wc-card:hover {
   background: var(--wc-surface) !important;
   box-shadow:
-    0 0 0 1px rgba(200, 120, 42, 0.32)         !important,
+    0 0 0 1px rgba(40, 75, 99, 0.32)         !important,
     0 6px 22px rgba(0, 0, 0, 0.65)             !important,
-    inset 0 1px 0 rgba(200, 120, 42, 0.22)     !important,
-    inset 0 0 28px rgba(200, 120, 42, 0.06)    !important;
+    inset 0 1px 0 rgba(40, 75, 99, 0.22)     !important,
+    inset 0 0 28px rgba(40, 75, 99, 0.06)    !important;
 }
 
 
@@ -307,12 +310,12 @@
 
 .wc-btn-save:hover {
   color: var(--wc-accent) !important;
-  background: rgba(200, 149, 42, 0.09) !important;
+  background: rgba(40, 75, 99, 0.09) !important;
 }
 
 [data-theme="dark"] .wc-btn-save:hover {
   color: var(--wc-accent) !important;
-  background: rgba(200, 120, 42, 0.12) !important;
+  background: rgba(40, 75, 99, 0.12) !important;
 }
 
 
@@ -334,18 +337,18 @@
 }
 
 .wc-ai-help:hover {
-  background: rgba(200, 149, 42, 0.18) !important;
-  border-color: rgba(200, 149, 42, 0.35) !important;
+  background: rgba(40, 75, 99, 0.18) !important;
+  border-color: rgba(40, 75, 99, 0.35) !important;
 }
 
 [data-theme="dark"] .wc-ai-help {
-  background: rgba(200, 120, 42, 0.12) !important;
-  border-color: rgba(200, 120, 42, 0.22) !important;
+  background: rgba(40, 75, 99, 0.12) !important;
+  border-color: rgba(40, 75, 99, 0.22) !important;
 }
 
 [data-theme="dark"] .wc-ai-help:hover {
-  background: rgba(200, 120, 42, 0.22) !important;
-  border-color: rgba(200, 120, 42, 0.38) !important;
+  background: rgba(40, 75, 99, 0.22) !important;
+  border-color: rgba(40, 75, 99, 0.38) !important;
 }
 
 
@@ -370,7 +373,10 @@
 .wc-card:hover .wc-del-corner { opacity: 1; }
 
 .wc-del-corner:hover {
-  color: #C0392B !important;
+  /* 2026-07-22（使用者裁決）：放棄暖紅警示例外，改用 C1 近黑深灰，靠明暗
+     反差（平時是淡灰 icon，hover 變全站最深色）傳達「危險動作」，跟
+     --cold-wrong 的處理邏輯一致。 */
+  color: #353535 !important;
 }
 
 
@@ -457,93 +463,93 @@
    Recedes behind the word cards. Warm amber, not sage green.
    ═══════════════════════════════════════════════════════════════════════ */
 
-/* Day: deep amber glass — sun pooled in the bottom of a perfume bottle */
+/* 冷色五色票覆蓋：深灰轉深藍的港口暮色漸層，取代原本的暖琥珀漸層 */
 .header-gradient {
-  background: linear-gradient(160deg, #2C1A06 0%, #3D2408 55%, #2A1505 100%) !important;
+  background: linear-gradient(160deg, #353535 0%, #284b63 55%, #203C4F 100%) !important;
   box-shadow: 0 2px 16px rgba(0, 0, 0, 0.42) !important;
-  border-bottom: 1px solid rgba(200, 149, 42, 0.32) !important;
-  color: #F0DDB8 !important;
+  border-bottom: 1px solid rgba(40, 75, 99, 0.32) !important;
+  color: #d9d9d9 !important;
 }
 
 /* All text children: warm cream, not cold white */
 .header-gradient h1 {
-  color: #F0DDB8 !important;
+  color: #d9d9d9 !important;
 }
 
 .header-gradient span:not(.chip) {
-  color: rgba(240, 221, 184, 0.82) !important;
+  color: rgba(217, 217, 217, 0.82) !important;
 }
 
 /* Usage cost amount */
 #usageCostBadge {
-  color: #F0DDB8 !important;
+  color: #d9d9d9 !important;
 }
 
 /* Stat chips: amber-tinted glass panel */
 #masteredBadge,
 #dueCountBadge {
-  background: rgba(200, 149, 42, 0.22) !important;
-  color: #F0DDB8 !important;
-  border: 1px solid rgba(200, 149, 42, 0.32) !important;
+  background: rgba(40, 75, 99, 0.22) !important;
+  color: #d9d9d9 !important;
+  border: 1px solid rgba(40, 75, 99, 0.32) !important;
 }
 
 /* Dark mode toggle: amber ring */
 #darkModeToggle {
-  background: rgba(200, 149, 42, 0.16) !important;
-  color: #F0DDB8 !important;
-  border: 1px solid rgba(200, 149, 42, 0.24) !important;
+  background: rgba(40, 75, 99, 0.16) !important;
+  color: #d9d9d9 !important;
+  border: 1px solid rgba(40, 75, 99, 0.24) !important;
 }
 #darkModeToggle:hover {
-  background: rgba(200, 149, 42, 0.26) !important;
+  background: rgba(40, 75, 99, 0.26) !important;
 }
 
 /* Usage button */
 #openUsageBtn {
-  color: rgba(240, 221, 184, 0.82) !important;
+  color: rgba(217, 217, 217, 0.82) !important;
   transition: color 0.15s ease !important;
 }
 #openUsageBtn:hover {
-  color: #F0DDB8 !important;
+  color: #d9d9d9 !important;
 }
 
-/* Night: dark alcove — candlelight rises from below, not from above */
+/* 與 Day 完全相同（無雙軌設計，見使用者裁決） */
 [data-theme="dark"] .header-gradient {
-  background: #0C0703 !important;
+  background: linear-gradient(160deg, #353535 0%, #284b63 55%, #203C4F 100%) !important;
   box-shadow: 0 2px 18px rgba(0, 0, 0, 0.72) !important;
-  border-bottom: 1px solid rgba(200, 120, 42, 0.15) !important;
+  border-bottom: 1px solid rgba(40, 75, 99, 0.15) !important;
 }
 
 [data-theme="dark"] .header-gradient h1 {
-  color: #D9C9A8 !important;
+  color: #d9d9d9 !important;
 }
 
 [data-theme="dark"] .header-gradient span:not(.chip) {
-  color: rgba(217, 201, 168, 0.78) !important;
+  color: rgba(217, 217, 217, 0.78) !important;
 }
 
 [data-theme="dark"] #masteredBadge,
 [data-theme="dark"] #dueCountBadge {
-  background: rgba(200, 120, 42, 0.18) !important;
-  color: #D9C9A8 !important;
-  border-color: rgba(200, 120, 42, 0.25) !important;
+  background: rgba(40, 75, 99, 0.18) !important;
+  color: #d9d9d9 !important;
+  border-color: rgba(40, 75, 99, 0.25) !important;
 }
 
 [data-theme="dark"] #darkModeToggle {
-  background: rgba(200, 120, 42, 0.14) !important;
-  color: #D9C9A8 !important;
-  border-color: rgba(200, 120, 42, 0.20) !important;
+  background: rgba(40, 75, 99, 0.14) !important;
+  color: #d9d9d9 !important;
+  border-color: rgba(40, 75, 99, 0.20) !important;
 }
 
 [data-theme="dark"] #usageCostBadge {
-  color: #D9C9A8 !important;
+  color: #d9d9d9 !important;
 }
 
 [data-theme="dark"] #openUsageBtn {
-  color: rgba(217, 201, 168, 0.78) !important;
+  color: rgba(217, 217, 217, 0.78) !important;
 }
 
 [data-theme="dark"] #openUsageBtn:hover {
-  color: #D9C9A8 !important;
+  color: #d9d9d9 !important;
 }
 
 
@@ -555,12 +561,12 @@
 
 /* Day: worn parchment workbench — slightly darker than the word cards */
 #articleInputSection {
-  background: #F0E8D4 !important;
+  background: #ffffff !important;
   border: none !important;
   box-shadow:
-    0 0 0 1px rgba(150, 110, 60, 0.20),
-    0 4px 16px rgba(100,  70, 20, 0.08),
-    0 1px  4px rgba(100,  70, 20, 0.05) !important;
+    0 0 0 1px rgba(40, 75, 99, 0.20),
+    0 4px 16px rgba(53, 53, 53, 0.08),
+    0 1px  4px rgba(53, 53, 53, 0.05) !important;
 }
 
 /* Section heading icon: amber instead of sage-green */
@@ -570,55 +576,55 @@
 
 /* Thin amber rule below section heading row */
 #articleInputSection > .flex.items-center.justify-between {
-  border-bottom: 1px solid rgba(200, 149, 42, 0.20);
+  border-bottom: 1px solid rgba(40, 75, 99, 0.20);
   padding-bottom: 1rem;
   margin-bottom: 0;
 }
 
 /* Tab row border: warm amber instead of cold gray */
 #articleInputSection .border-b {
-  border-bottom-color: rgba(200, 149, 42, 0.22) !important;
+  border-bottom-color: rgba(40, 75, 99, 0.22) !important;
 }
 
 /* input-tab--active: moved to theme-perfume-day.css (tab component overrides) */
 
 /* OCR + utility buttons: warm tinted ghost */
 #articleInputSection .btn-sm-m {
-  background: rgba(200, 149, 42, 0.09) !important;
+  background: rgba(40, 75, 99, 0.09) !important;
   color: var(--wc-muted) !important;
-  border-color: rgba(200, 149, 42, 0.22) !important;
+  border-color: rgba(40, 75, 99, 0.22) !important;
 }
 #articleInputSection .btn-sm-m:hover {
-  background: rgba(200, 149, 42, 0.17) !important;
+  background: rgba(40, 75, 99, 0.17) !important;
   color: var(--wc-word-color) !important;
 }
 
 /* Night: candlelit work desk — amber border light at full container tier */
 [data-theme="dark"] #articleInputSection {
-  background: #120D06 !important;
+  background: #ffffff !important;
   box-shadow:
-    0 0 0 1px rgba(200, 120, 42, 0.20),    /* candlelight edge — same tier as wordListCard */
+    0 0 0 1px rgba(40, 75, 99, 0.20),    /* candlelight edge — same tier as wordListCard */
     0 4px 20px rgba(0, 0, 0, 0.55),
     0 1px  4px rgba(0, 0, 0, 0.40) !important;
 }
 
 [data-theme="dark"] #articleInputSection .border-b {
-  border-bottom-color: rgba(200, 120, 42, 0.16) !important;
+  border-bottom-color: rgba(40, 75, 99, 0.16) !important;
 }
 
 /* [data-theme="dark"] input-tab--active: moved to theme-perfume-day.css */
 
 [data-theme="dark"] #articleInputSection > .flex.items-center.justify-between {
-  border-bottom-color: rgba(200, 120, 42, 0.14);
+  border-bottom-color: rgba(40, 75, 99, 0.14);
 }
 
 [data-theme="dark"] #articleInputSection .btn-sm-m {
-  background: rgba(200, 120, 42, 0.09) !important;
+  background: rgba(40, 75, 99, 0.09) !important;
   color: var(--wc-muted) !important;
-  border-color: rgba(200, 120, 42, 0.18) !important;
+  border-color: rgba(40, 75, 99, 0.18) !important;
 }
 [data-theme="dark"] #articleInputSection .btn-sm-m:hover {
-  background: rgba(200, 120, 42, 0.17) !important;
+  background: rgba(40, 75, 99, 0.17) !important;
   color: var(--wc-text) !important;
 }
 
@@ -631,45 +637,45 @@
 
 /* Day: bright vellum, freshly laid on the desk */
 #articleInput {
-  background:    #FBF5E8 !important;
-  border:        1px solid rgba(180, 140, 60, 0.25) !important;
+  background:    #ffffff !important;
+  border:        1px solid rgba(40, 75, 99, 0.25) !important;
   border-radius: 10px !important;
-  color:         #1C1208 !important;
+  color:         #353535 !important;
   line-height:   1.8 !important;
   transition:    border-color 0.18s ease, box-shadow 0.22s ease !important;
 }
 
 #articleInput::placeholder {
-  color:   #9A7A52 !important;  /* adjusted: 4.6:1 on #FBF5E8 — WCAG AA */
+  color:   #3A5D5F !important;  /* adjusted: 4.6:1 on #ffffff — WCAG AA */
   opacity: 1 !important;
 }
 
 /* Focus: amber sunlight catches the page */
 #articleInput:focus {
   outline:      none !important;
-  border-color: rgba(200, 149, 42, 0.50) !important;
+  border-color: rgba(40, 75, 99, 0.50) !important;
   box-shadow:
-    0 0 0 2px rgba(200, 149, 42, 0.18),
-    0 0 14px rgba(200, 149, 42, 0.09) !important;
+    0 0 0 2px rgba(40, 75, 99, 0.18),
+    0 0 14px rgba(40, 75, 99, 0.09) !important;
 }
 
 /* Night: dark vellum, lit by a single candle */
 [data-theme="dark"] #articleInput {
-  background:    #1A1208 !important;
-  border-color:  rgba(200, 120, 42, 0.18) !important;
-  color:         #EFE1C0 !important;
+  background:    #ffffff !important;
+  border-color:  rgba(40, 75, 99, 0.18) !important;
+  color:         #353535 !important;
 }
 
 [data-theme="dark"] #articleInput::placeholder {
-  color:   #6B5030 !important;
+  color:   #3A5D5F !important;
   opacity: 1 !important;
 }
 
 [data-theme="dark"] #articleInput:focus {
-  border-color: rgba(200, 120, 42, 0.40) !important;
+  border-color: rgba(40, 75, 99, 0.40) !important;
   box-shadow:
-    0 0 0 2px rgba(200, 120, 42, 0.16),
-    0 0 18px rgba(200, 120, 42, 0.08) !important;
+    0 0 0 2px rgba(40, 75, 99, 0.16),
+    0 0 18px rgba(40, 75, 99, 0.08) !important;
 }
 
 
@@ -677,47 +683,47 @@
 
 #urlInput,
 #librarySearch {
-  background:    #FBF5E8 !important;
-  border:        1px solid rgba(180, 140, 60, 0.25) !important;
+  background:    #ffffff !important;
+  border:        1px solid rgba(40, 75, 99, 0.25) !important;
   border-radius: 8px !important;
-  color:         #1C1208 !important;
+  color:         #353535 !important;
   transition:    border-color 0.18s ease, box-shadow 0.20s ease !important;
 }
 
 #urlInput::placeholder,
 #librarySearch::placeholder {
-  color:   #9A7A52 !important;
+  color:   #3A5D5F !important;
   opacity: 1 !important;
 }
 
 #urlInput:focus,
 #librarySearch:focus {
   outline:      none !important;
-  border-color: rgba(200, 149, 42, 0.45) !important;
+  border-color: rgba(40, 75, 99, 0.45) !important;
   box-shadow:
-    0 0 0 2px rgba(200, 149, 42, 0.13),
-    0 0 10px rgba(200, 149, 42, 0.07) !important;
+    0 0 0 2px rgba(40, 75, 99, 0.13),
+    0 0 10px rgba(40, 75, 99, 0.07) !important;
 }
 
 [data-theme="dark"] #urlInput,
 [data-theme="dark"] #librarySearch {
-  background:   #1A1208 !important;
-  border-color: rgba(200, 120, 42, 0.18) !important;
-  color:        #EFE1C0 !important;
+  background:   #ffffff !important;
+  border-color: rgba(40, 75, 99, 0.18) !important;
+  color:        #353535 !important;
 }
 
 [data-theme="dark"] #urlInput::placeholder,
 [data-theme="dark"] #librarySearch::placeholder {
-  color:   #6B5030 !important;
+  color:   #3A5D5F !important;
   opacity: 1 !important;
 }
 
 [data-theme="dark"] #urlInput:focus,
 [data-theme="dark"] #librarySearch:focus {
-  border-color: rgba(200, 120, 42, 0.38) !important;
+  border-color: rgba(40, 75, 99, 0.38) !important;
   box-shadow:
-    0 0 0 2px rgba(200, 120, 42, 0.13),
-    0 0 12px rgba(200, 120, 42, 0.07) !important;
+    0 0 0 2px rgba(40, 75, 99, 0.13),
+    0 0 12px rgba(40, 75, 99, 0.07) !important;
 }
 
 
@@ -742,11 +748,11 @@
 /* Slightly deeper parchment than word cards — work desk, not exhibit shelf */
 
 #wordListCard {
-  background: var(--color-surface-panel) !important;  /* #E8DCCA — old book cover, 3–5% deeper than cards */
+  background: var(--color-surface-panel) !important;  /* #C0C0C0 — old book cover, 3–5% deeper than cards */
   border: none !important;
   border-radius: var(--radius-container) !important;  /* 8px — spec §2E, not 16px */
   box-shadow:
-    3px 6px 20px rgba(80, 50, 15, 0.14),              /* SH-2: warm brown, x+y offset from upper-left light */
+    3px 6px 20px rgba(53, 53, 53, 0.14),              /* SH-2: warm brown, x+y offset from upper-left light */
     inset 0 1px 0 var(--color-rim-panel) !important;  /* rim: candlelight on top edge */
 }
 
@@ -756,9 +762,9 @@
 }
 
 [data-theme="dark"] #wordListCard {
-  background: #150F08 !important;     /* tier 2: container — darker than cards (#231609) */
+  background: #C0C0C0 !important;     /* Panel-Mid，與 Day 相同 */
   box-shadow:
-    0 0 0 1px rgba(200, 120, 42, 0.20),    /* amber border light — candlelight at edge */
+    0 0 0 1px rgba(40, 75, 99, 0.20),    /* C5 邊框光 */
     0 4px 20px rgba(0, 0, 0, 0.60) !important;
 }
 
@@ -774,49 +780,49 @@
 
 #startQuizBtn {
   background: var(--wc-accent) !important;
-  color: #FBF5E8 !important;
+  color: #ffffff !important;
   border-color: transparent !important;
-  box-shadow: 0 2px 8px rgba(200, 149, 42, 0.28) !important;
+  box-shadow: 0 2px 8px rgba(40, 75, 99, 0.28) !important;
 }
 
 #startQuizBtn:hover {
-  background: #A87820 !important;
-  box-shadow: 0 3px 10px rgba(200, 149, 42, 0.36) !important;
+  background: #203C4F !important;
+  box-shadow: 0 3px 10px rgba(40, 75, 99, 0.36) !important;
 }
 
 /* Outline: thin amber border */
 #startGrammarQuizBtn {
   background: transparent !important;
   color: var(--wc-muted) !important;
-  border: 1px solid rgba(200, 149, 42, 0.30) !important;
+  border: 1px solid rgba(40, 75, 99, 0.30) !important;
 }
 
 #startGrammarQuizBtn:hover {
-  background: rgba(200, 149, 42, 0.10) !important;
+  background: rgba(40, 75, 99, 0.10) !important;
   color: var(--wc-word-color) !important;
-  border-color: rgba(200, 149, 42, 0.50) !important;
+  border-color: rgba(40, 75, 99, 0.50) !important;
 }
 
 [data-theme="dark"] #startQuizBtn {
   background: var(--wc-accent) !important;
-  color: #0E0906 !important;
-  box-shadow: 0 2px 10px rgba(200, 120, 42, 0.30) !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 10px rgba(40, 75, 99, 0.30) !important;
 }
 
 [data-theme="dark"] #startQuizBtn:hover {
-  background: #D98B30 !important;
+  background: #203C4F !important;
 }
 
 [data-theme="dark"] #startGrammarQuizBtn {
   background: transparent !important;
   color: var(--wc-muted) !important;
-  border-color: rgba(200, 120, 42, 0.25) !important;
+  border-color: rgba(40, 75, 99, 0.25) !important;
 }
 
 [data-theme="dark"] #startGrammarQuizBtn:hover {
-  background: rgba(200, 120, 42, 0.12) !important;
+  background: rgba(40, 75, 99, 0.12) !important;
   color: var(--wc-word-color) !important;
-  border-color: rgba(200, 120, 42, 0.42) !important;
+  border-color: rgba(40, 75, 99, 0.42) !important;
 }
 
 
@@ -827,15 +833,15 @@
 #allPos,
 #allLevel,
 #allSort {
-  background: #FBF5E8 !important;
-  border: 1px solid rgba(180, 140, 60, 0.28) !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(40, 75, 99, 0.28) !important;
   border-radius: 8px !important;
-  color: #1C1208 !important;
+  color: #353535 !important;
   transition: border-color 0.18s ease, box-shadow 0.20s ease !important;
 }
 
 #allSearch::placeholder {
-  color: #9A7A52 !important;
+  color: #3A5D5F !important;
   opacity: 1 !important;
 }
 
@@ -844,21 +850,21 @@
 #allLevel:focus,
 #allSort:focus {
   outline: none !important;
-  border-color: rgba(200, 149, 42, 0.50) !important;
-  box-shadow: 0 0 0 2px rgba(200, 149, 42, 0.14) !important;
+  border-color: rgba(40, 75, 99, 0.50) !important;
+  box-shadow: 0 0 0 2px rgba(40, 75, 99, 0.14) !important;
 }
 
 [data-theme="dark"] #allSearch,
 [data-theme="dark"] #allPos,
 [data-theme="dark"] #allLevel,
 [data-theme="dark"] #allSort {
-  background: #1A1208 !important;
-  border-color: rgba(200, 120, 42, 0.20) !important;
-  color: #EFE1C0 !important;
+  background: #ffffff !important;
+  border-color: rgba(40, 75, 99, 0.20) !important;
+  color: #353535 !important;
 }
 
 [data-theme="dark"] #allSearch::placeholder {
-  color: #6B5030 !important;
+  color: #3A5D5F !important;
   opacity: 1 !important;
 }
 
@@ -866,8 +872,8 @@
 [data-theme="dark"] #allPos:focus,
 [data-theme="dark"] #allLevel:focus,
 [data-theme="dark"] #allSort:focus {
-  border-color: rgba(200, 120, 42, 0.42) !important;
-  box-shadow: 0 0 0 2px rgba(200, 120, 42, 0.14) !important;
+  border-color: rgba(40, 75, 99, 0.42) !important;
+  box-shadow: 0 0 0 2px rgba(40, 75, 99, 0.14) !important;
 }
 
 
@@ -905,7 +911,7 @@
   background: transparent !important;
   box-shadow:
     inset 0  1px 0 rgba(255, 255, 255, 0.35),
-    inset 0 -1px 0 rgba(42,  35,  22,  0.18) !important;
+    inset 0 -1px 0 rgba(53, 53, 53,  0.18) !important;
 }
 
 /* ── :focus — suppress blue ring on mouse click ── */
@@ -953,15 +959,15 @@
 [data-theme="dark"] #todayPrev, [data-theme="dark"] #todayNext,
 [data-theme="dark"] #duePrev,   [data-theme="dark"] #dueNext,
 [data-theme="dark"] #allPrev,   [data-theme="dark"] #allNext {
-  background:   rgba(200, 120, 42, 0.09) !important;
+  background:   rgba(40, 75, 99, 0.09) !important;
   color:        var(--wc-muted) !important;
-  border-color: rgba(200, 120, 42, 0.18) !important;
+  border-color: rgba(40, 75, 99, 0.18) !important;
 }
 
 [data-theme="dark"] #todayPrev:hover, [data-theme="dark"] #todayNext:hover,
 [data-theme="dark"] #duePrev:hover,   [data-theme="dark"] #dueNext:hover,
 [data-theme="dark"] #allPrev:hover,   [data-theme="dark"] #allNext:hover {
-  background: rgba(200, 120, 42, 0.18) !important;
+  background: rgba(40, 75, 99, 0.18) !important;
   color:      var(--wc-word-color) !important;
 }
 
@@ -1010,8 +1016,8 @@
 
 /* ═══════════════════════════════════════════════════════════════════════
    TYPOGRAPHY AUDIT — Global text-color enforcement
-   Day  → primary: #1C1208 (dried ink)  / muted: #7A6045 (faded brown ink)
-   Night→ primary: #EFE1C0 (candlelit vellum) / muted: #956F42 (amber shadow)
+   Day  → primary: #353535 (C1 近黑深灰)  / muted: #3A5D5F (Teal-Safe)
+   Night→ 與 Day 完全相同（無雙軌設計，見使用者裁決） — primary: #353535 / muted: #3A5D5F
    Eliminates all residual Tailwind text-gray-* / text-blue-* leakage
    within the three cinematic containers.
    ═══════════════════════════════════════════════════════════════════════ */
@@ -1022,7 +1028,7 @@
 .wc-card,
 #wordListCard,
 #articleInputSection {
-  color: var(--wc-word-color) !important;   /* #1C1208 */
+  color: var(--wc-word-color) !important;   /* #353535 */
 }
 
 /* 2. Full Tailwind gray-scale neutralisation within each container        */
@@ -1043,7 +1049,7 @@
 #articleInputSection .text-gray-500, #articleInputSection .text-gray-600,
 #articleInputSection .text-gray-700, #articleInputSection .text-gray-800,
 #articleInputSection .text-gray-900 {
-  color: var(--wc-muted) !important;   /* #7A6045 — muted, not lost */
+  color: var(--wc-muted) !important;   /* #3A5D5F — muted, not lost */
 }
 
 /* 3. Heavier text within containers: labels, headings, definition text    */
@@ -1052,7 +1058,7 @@
 #wordListCard .text-gray-700, #wordListCard .text-gray-800, #wordListCard .text-gray-900,
 #articleInputSection .text-gray-700, #articleInputSection .text-gray-800,
 #articleInputSection .text-gray-900 {
-  color: var(--wc-word-color) !important;   /* #1C1208 */
+  color: var(--wc-word-color) !important;   /* #353535 */
 }
 
 /* 4. Blue / indigo family — removes any residual modern-link blue         */
@@ -1120,7 +1126,7 @@
 [data-theme="dark"] .wc-card,
 [data-theme="dark"] #wordListCard,
 [data-theme="dark"] #articleInputSection {
-  color: var(--wc-word-color) !important;   /* #EFE1C0 in dark token set */
+  color: var(--wc-word-color) !important;   /* #353535 in dark token set */
 }
 
 /* 2. Tailwind gray neutralisation — night */
@@ -1151,7 +1157,7 @@
 [data-theme="dark"] #articleInputSection .text-gray-700,
 [data-theme="dark"] #articleInputSection .text-gray-800,
 [data-theme="dark"] #articleInputSection .text-gray-900 {
-  color: var(--wc-muted) !important;   /* #956F42 — amber shadow */
+  color: var(--wc-muted) !important;   /* #3A5D5F — Teal-Safe，與 Day 相同 */
 }
 
 /* 3. Heavier text shades → full candlelit vellum primary — night */
@@ -1164,7 +1170,7 @@
 [data-theme="dark"] #articleInputSection .text-gray-700,
 [data-theme="dark"] #articleInputSection .text-gray-800,
 [data-theme="dark"] #articleInputSection .text-gray-900 {
-  color: var(--wc-word-color) !important;   /* #EFE1C0 */
+  color: var(--wc-word-color) !important;   /* #353535 */
 }
 
 /* 4. Blue family neutralisation — night */
@@ -1217,25 +1223,25 @@
 /* 7. Navbar text — ensure amber passage tone overrides any Tailwind leak  */
 .header-gradient,
 .header-gradient * {
-  color: #F0DDB8 !important;
+  color: #d9d9d9 !important;
 }
 
 [data-theme="dark"] .header-gradient,
 [data-theme="dark"] .header-gradient * {
-  color: #D9C9A8 !important;
+  color: #d9d9d9 !important;
 }
 
 /* 8. Navbar chips — keep amber-tinted glass tone, not gray                */
 .header-gradient .text-gray-400,
 .header-gradient .text-gray-300,
 .header-gradient .text-gray-200 {
-  color: rgba(240, 221, 184, 0.75) !important;
+  color: rgba(217, 217, 217, 0.75) !important;
 }
 
 [data-theme="dark"] .header-gradient .text-gray-400,
 [data-theme="dark"] .header-gradient .text-gray-300,
 [data-theme="dark"] .header-gradient .text-gray-200 {
-  color: rgba(217, 201, 168, 0.70) !important;
+  color: rgba(217, 217, 217, 0.70) !important;
 }
 
 
@@ -1250,15 +1256,16 @@
 /* ── 0. Quiz-scoped design tokens ──────────────────────────────────────── */
 /* Extends global --wc-* set with quiz-specific material aliases.          */
 :root {
-  --qz-parchment:    #F5EED8;               /* exam sheet surface — warm vellum */
-  --qz-ink:          #3D2B1F;               /* body text — reed pen, mid-dark   */
-  --qz-line:         #C8A45A;               /* gold ruled line / container edge */
-  --qz-muted:        var(--wc-muted);       /* #7A6045 faded brown              */
-  --qz-accent:       var(--wc-accent);      /* #C8952A amber action             */
+  --qz-parchment:    #d9d9d9;               /* C4 淺灰 — exam sheet surface       */
+  --qz-ink:          #353535;               /* C1 近黑深灰 — body text            */
+  --qz-line:         #284b63;               /* C5 深藍 — ruled line / container edge */
+  --qz-muted:        var(--wc-muted);       /* Teal-Safe #3A5D5F                 */
+  --qz-accent:       var(--wc-accent);      /* C5 #284b63                        */
 }
 [data-theme="dark"] {
-  --qz-parchment:    #1E1812;               /* night desk surface               */
-  --qz-ink:          #D4BFA0;               /* candlelit text                   */
+  /* 與 :root 完全相同 — 無雙軌設計，見使用者裁決 */
+  --qz-parchment:    #d9d9d9;
+  --qz-ink:          #353535;
 }
 
 
@@ -1266,7 +1273,7 @@
 
 #quizModal,
 #quizSettings {
-  background-color: rgba(30, 18, 10, 0.65) !important;  /* warm near-black */
+  background-color: rgba(53, 53, 53, 0.65) !important;  /* C1 近黑深灰（冷色五色票覆蓋，原為暖近黑） */
   backdrop-filter: blur(3px);
 }
 
@@ -1279,8 +1286,8 @@
   border: 1px solid var(--qz-line) !important;
   border-radius: 10px !important;
   box-shadow:
-    0 12px 40px rgba(61, 43, 31, 0.25),
-    inset 0 0 60px rgba(200, 149, 42, 0.04) !important;
+    0 12px 40px rgba(53, 53, 53, 0.25),
+    inset 0 0 60px rgba(40, 75, 99, 0.04) !important;
   color: var(--qz-ink) !important;
 }
 
@@ -1319,14 +1326,14 @@
 .quiz-progress-track {
   width: 100%;
   height: 3px;
-  background: rgba(200, 149, 42, 0.15);
+  background: rgba(40, 75, 99, 0.15);
   border-radius: 2px;
   overflow: hidden;
 }
 
 .quiz-progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--wc-accent) 0%, #E8B860 100%);
+  background: linear-gradient(90deg, var(--wc-accent) 0%, #3c6e71 100%);
   border-radius: 2px;
   transition: width 0.35s ease-out;
 }
@@ -1342,20 +1349,20 @@
 /* ── 6. Answer inputs ──────────────────────────────────────────────────── */
 
 #quizAnswer {
-  background:   #FBF5E8 !important;
-  border:       1px solid rgba(200, 149, 42, 0.30) !important;
+  background:   #ffffff !important;
+  border:       1px solid rgba(40, 75, 99, 0.30) !important;
   color:        var(--qz-ink) !important;
   border-radius: 6px !important;
 }
 
 #quizAnswer::placeholder {
-  color: #9A7A52 !important;
+  color: #3A5D5F !important;
 }
 
 #quizAnswer:focus {
-  border-color: rgba(200, 149, 42, 0.55) !important;
-  box-shadow:   0 0 0 2px rgba(200, 149, 42, 0.18),
-                0 0 14px rgba(200, 149, 42, 0.09) !important;
+  border-color: rgba(40, 75, 99, 0.55) !important;
+  box-shadow:   0 0 0 2px rgba(40, 75, 99, 0.18),
+                0 0 14px rgba(40, 75, 99, 0.09) !important;
   outline: none;
 }
 
@@ -1366,9 +1373,9 @@
 .quiz-btn-primary,
 #quizSubmit,
 #qsStart {
-  background:    var(--qz-accent) !important;         /* #C8952A */
-  color:         #FDF6E3 !important;
-  border:        1px solid rgba(200, 149, 42, 0.40) !important;
+  background:    var(--qz-accent) !important;         /* #284b63 C5 深藍 */
+  color:         #ffffff !important;
+  border:        1px solid rgba(40, 75, 99, 0.40) !important;
   border-radius: 8px !important;
   font-weight:   500;
   transition:    background 0.2s ease, box-shadow 0.2s ease !important;
@@ -1377,14 +1384,14 @@
 .quiz-btn-primary:hover,
 #quizSubmit:hover,
 #qsStart:hover {
-  background: #A87820 !important;
-  box-shadow: 0 4px 12px rgba(200, 149, 42, 0.35) !important;
+  background: #203C4F !important;
+  box-shadow: 0 4px 12px rgba(40, 75, 99, 0.35) !important;
 }
 
 /* ── 7b. Secondary — parchment-ink: IDK / ShowHint / Cancel ────────────── */
 #quizIDK,
 #qsCancel {
-  background:    rgba(61, 43, 31, 0.08) !important;
+  background:    rgba(53, 53, 53, 0.08) !important;
   color:         var(--qz-ink) !important;
   border:        1px solid var(--qz-line) !important;
   border-radius: 8px !important;
@@ -1393,14 +1400,14 @@
 
 #quizIDK:hover,
 #qsCancel:hover {
-  background:  rgba(200, 149, 42, 0.12) !important;
-  border-color: rgba(200, 149, 42, 0.45) !important;
+  background:  rgba(40, 75, 99, 0.12) !important;
+  border-color: rgba(40, 75, 99, 0.45) !important;
 }
 
 /* ── 7c. Next — dark ink stamp: Next question ───────────────────────────── */
 .quiz-btn-next,
 #quizNext {
-  background:    var(--qz-ink) !important;            /* #3D2B1F deep ink */
+  background:    var(--qz-ink) !important;            /* #353535 C1 近黑深灰 */
   color:         var(--qz-parchment) !important;
   border:        1px solid transparent !important;
   border-radius: 8px !important;
@@ -1409,7 +1416,7 @@
 
 .quiz-btn-next:hover,
 #quizNext:hover {
-  background: #5C3D2A !important;
+  background: #454545 !important;
   box-shadow: 0 0 0 1px var(--qz-line) !important;
 }
 
@@ -1426,9 +1433,11 @@
    class，不再需要跟 Tailwind 的預設飽和色搶贏，直接用 --story-*/--cold-*
    衍生色定義。 */
 #quizFeedback .quiz-fb-correct {
-  /* 暖綠偏琥珀調：以 --story-amber（全站唯一正向回饋亮點）為主，混入
-     --cold-parchment 提亮避免過暗，維持「正向回饋」語意但不落回鮮豔綠。 */
-  color: color-mix(in srgb, var(--story-amber) 80%, var(--cold-parchment) 20%);
+  /* 2026-07-22（使用者裁決，讀性優先）：原本的 story-amber+cold-parchment
+     混色在淺底（--qz-parchment #d9d9d9）上實測只有 ~2.96:1，不合格。
+     改直接用深墨綠（C2 加深版本，同 --color-badge-mastered-bg 的
+     Teal-Hover 衍生值）當文字色，對淺底對比 7.59:1，AAA 等級。 */
+  color: #30585A;
   font-weight: 500;
 }
 
@@ -1469,22 +1478,22 @@
 
 
 /* ══════════════════════════════════════════════════════════════════════
-   NIGHT MODE — Paris Cellar variant for quiz modals
-   Surface: #1E1812 (near-black warm desk)
-   Text:    #D4BFA0 (candlelit vellum)
+   NIGHT MODE — 與 Day 完全相同（無雙軌設計，見使用者裁決）
+   Surface: #d9d9d9 (C4 淺灰)
+   Text:    #353535 (C1 近黑深灰)
    ══════════════════════════════════════════════════════════════════════ */
 
 /* Card containers — night */
 [data-theme="dark"] #quizModal > div,
 [data-theme="dark"] #quizSettings > div {
-  background: var(--qz-parchment) !important;         /* #1E1812 in dark token */
-  border: 1px solid rgba(200, 120, 42, 0.22) !important;
+  background: var(--qz-parchment) !important;         /* #d9d9d9，與 Day 相同 */
+  border: 1px solid rgba(40, 75, 99, 0.22) !important;
   box-shadow:
-    0 0 0 1px rgba(200, 120, 42, 0.12),
+    0 0 0 1px rgba(40, 75, 99, 0.12),
     0 12px 40px rgba(0, 0, 0, 0.70),
-    inset 0 1px 0 rgba(200, 120, 42, 0.10),
-    inset 0 0 60px rgba(200, 120, 42, 0.03) !important;
-  color: var(--qz-ink) !important;                    /* #D4BFA0 in dark token */
+    inset 0 1px 0 rgba(40, 75, 99, 0.10),
+    inset 0 0 60px rgba(40, 75, 99, 0.03) !important;
+  color: var(--qz-ink) !important;                    /* #353535，與 Day 相同 */
 }
 
 /* Titles — night */
@@ -1495,19 +1504,19 @@
 
 /* Answer inputs — night */
 [data-theme="dark"] #quizAnswer {
-  background:  #1A1208 !important;
-  border:      1px solid rgba(200, 120, 42, 0.22) !important;
+  background:  #ffffff !important;
+  border:      1px solid rgba(40, 75, 99, 0.22) !important;
   color:       var(--qz-ink) !important;
 }
 
 [data-theme="dark"] #quizAnswer::placeholder {
-  color: #6B5030 !important;
+  color: #3A5D5F !important;
 }
 
 [data-theme="dark"] #quizAnswer:focus {
-  border-color: rgba(200, 120, 42, 0.50) !important;
-  box-shadow:   0 0 0 2px rgba(200, 120, 42, 0.16),
-                0 0 14px rgba(200, 120, 42, 0.08) !important;
+  border-color: rgba(40, 75, 99, 0.50) !important;
+  box-shadow:   0 0 0 2px rgba(40, 75, 99, 0.16),
+                0 0 14px rgba(40, 75, 99, 0.08) !important;
 }
 
 /* Primary buttons — night (warmer amber) */
@@ -1520,40 +1529,42 @@
 [data-theme="dark"] .quiz-btn-primary:hover,
 [data-theme="dark"] #quizSubmit:hover,
 [data-theme="dark"] #qsStart:hover {
-  background: #D98B30 !important;         /* warmer candleflame — night hover */
-  box-shadow: 0 4px 12px rgba(200, 120, 42, 0.40) !important;
+  background: #203C4F !important;         /* Blue-Hover，與 Day 相同 */
+  box-shadow: 0 4px 12px rgba(40, 75, 99, 0.40) !important;
 }
 
 /* Secondary buttons — night */
 [data-theme="dark"] #quizIDK,
 [data-theme="dark"] #qsCancel {
-  background:   rgba(212, 191, 160, 0.08) !important;
+  background:   rgba(53, 53, 53, 0.08) !important;
   color:        var(--qz-ink) !important;
-  border-color: rgba(200, 120, 42, 0.22) !important;
+  border-color: rgba(40, 75, 99, 0.22) !important;
 }
 
 [data-theme="dark"] #quizIDK:hover,
 [data-theme="dark"] #qsCancel:hover {
-  background:   rgba(200, 120, 42, 0.14) !important;
-  border-color: rgba(200, 120, 42, 0.40) !important;
+  background:   rgba(40, 75, 99, 0.14) !important;
+  border-color: rgba(40, 75, 99, 0.40) !important;
 }
 
-/* Next buttons — night */
+/* Next buttons — night：與 Day 相同 */
 [data-theme="dark"] .quiz-btn-next,
 [data-theme="dark"] #quizNext {
-  background: #2E1E0C !important;         /* deeper ink, near-cellar black */
-  color:      var(--qz-ink) !important;
+  background: #353535 !important;         /* C1，與 Day 相同 */
+  color:      var(--qz-parchment) !important;  /* 修正：原本指向 --qz-ink 在舊暖色系統是淡色，
+                                                    統一為單一配色後 --qz-ink 已改為深色，
+                                                    深底需改用 --qz-parchment（淺色）避免文字看不見 */
 }
 
 [data-theme="dark"] .quiz-btn-next:hover,
 [data-theme="dark"] #quizNext:hover {
-  background: #3E2A10 !important;
-  box-shadow: 0 0 0 1px rgba(200, 120, 42, 0.30) !important;
+  background: #454545 !important;
+  box-shadow: 0 0 0 1px rgba(40, 75, 99, 0.30) !important;
 }
 
 /* Close buttons — night */
 [data-theme="dark"] #quizClose {
-  color: rgba(212, 191, 160, 0.55) !important;
+  color: rgba(58, 93, 95, 0.55) !important;
 }
 
 [data-theme="dark"] #quizClose:hover {
@@ -1574,7 +1585,7 @@
 [data-theme="dark"] #quizSettings .text-gray-400,
 [data-theme="dark"] #quizSettings .text-gray-500,
 [data-theme="dark"] #quizSettings .text-gray-600 {
-  color: rgba(212, 191, 160, 0.60) !important;
+  color: rgba(58, 93, 95, 0.60) !important;
 }
 
 [data-theme="dark"] #quizModal .text-gray-700,
@@ -1701,7 +1712,7 @@ section.bg-white.rounded-xl.shadow label {
 /* ── CG-4 fix: kill bg-white on sidebar cards ──────────────────────────── */
 #pixelPetCard,
 #backupCard {
-  background: var(--color-surface-panel) !important;  /* #E8DCCA — no more dead-white */
+  background: var(--color-surface-panel) !important;  /* #C0C0C0 — no more dead-white */
 }
 
 /* ── P4. PixelPet card ──────────────────────────────────────────────────── */
@@ -1796,28 +1807,28 @@ section.bg-white.rounded-xl.shadow label {
  * This block wins by source order (same file, later position).
  */
 html:not([data-theme="dark"]) #startQuizBtn {
-  background-color: var(--color-ink-1) !important;  /* #1C1208 dried brown-black ink */
+  background-color: var(--color-ink-1) !important;  /* #353535 dried brown-black ink */
   background:       var(--color-ink-1) !important;
-  color:            var(--color-surface-card) !important;  /* #F0E8D4 cream on dark */
+  color:            var(--color-surface-card) !important;  /* #ffffff cream on dark */
   border:           none !important;
   box-shadow:
-    1px 2px 6px rgba(80, 50, 15, 0.18),              /* SH-btn: warm directional */
+    1px 2px 6px rgba(53, 53, 53, 0.18),              /* SH-btn: warm directional */
     inset 0 1px 0 var(--color-rim-btn) !important;   /* amber rim-light on top edge */
 }
 html:not([data-theme="dark"]) #startQuizBtn:hover:not(:disabled) {
-  background-color: #2E251C !important;
+  background-color: #454545 !important;
   background: color-mix(in srgb, var(--color-ink-1) 92%, #fff 8%) !important;
   color:      var(--color-surface-card) !important;
   box-shadow:
-    1px 3px 8px rgba(80, 50, 15, 0.24),
+    1px 3px 8px rgba(53, 53, 53, 0.24),
     inset 0 1px 0 var(--color-rim-hover) !important;
 }
 html:not([data-theme="dark"]) #startQuizBtn:active:not(:disabled) {
-  background-color: #150E06 !important;
+  background-color: #323232 !important;
   background: color-mix(in srgb, var(--color-ink-1) 95%, black 5%) !important;
   box-shadow:
-    inset 0 1px 3px rgba(80, 50, 15, 0.22),
-    inset 0 1px 0 rgba(255, 220, 140, 0.10) !important;
+    inset 0 1px 3px rgba(53, 53, 53, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.10) !important;
 }
 html:not([data-theme="dark"]) #startQuizBtn * {
   color: inherit !important;
@@ -1835,7 +1846,7 @@ html:not([data-theme="dark"]) #startQuizBtn svg {
  */
 html:not([data-theme="dark"]) #articleInputSection {
   box-shadow:
-    2px 4px 16px rgba(80, 50, 15, 0.10),             /* SH-1: warm directional */
+    2px 4px 16px rgba(53, 53, 53, 0.10),             /* SH-1: warm directional */
     inset 0 1px 0 var(--color-rim-card) !important;  /* rim light: candlelight on top edge */
 }
 

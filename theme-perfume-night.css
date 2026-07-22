@@ -29,32 +29,56 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .scene-cold {
-  /* ── 冷調系統（主世界，VISUAL_SPEC §2.1，約佔畫面時間 85–90%） ── */
-  --cold-void:          #14171a;  /* 全站底色（霧黑，非純黑；帶極淡藍灰） */
-  --cold-wash:          #1b1f23;  /* 次層墨色、Liquid Glass 卡片底層陰影 */
-  --cold-parchment:     #d6dbe0;  /* 主要文字（冷灰白，非純白） */
-  --cold-dim:           #838d96;  /* 次要文字、說明文字 */
-  --cold-accent:        #5c7686;  /* 唯一允許的冷調強調色 ── 禁止提高飽和度 */
-  /* Phase 5g P1（背景與玻璃可感知度評審後）：--glass-cold-fill 原本
-     0.05 alpha，等同於卡片直接看穿到墨流／body 底色，玻璃卡片在畫面上
-     幾乎「不存在」，是使用者反映「第一眼像純黑背景」的主因之一。這裡
-     提高到 0.10 作為基礎值，並新增兩個衍生 token 拉出主內容／sidebar
-     的層級差異（原本兩者共用同一個 token，沒有主次之分）。三者色相/
-     色板完全相同，只有 alpha 不同，不引入新色相。 */
-  --glass-cold-fill:            rgba(214, 219, 224, 0.10);  /* 冷調 Liquid Glass 卡片填色（基礎值） */
-  --glass-cold-fill-primary:    rgba(214, 219, 224, 0.12);  /* 主內容卡片（如 #articleInputSection）用，略比 sidebar 明顯 */
-  --glass-cold-fill-secondary:  rgba(214, 219, 224, 0.09);  /* sidebar 卡片與單字清單項目卡用，略低於主內容 */
-  /* Phase 5g P0：原 rgba(92,118,134,0.20) 對 --cold-void 只有 ~1.24:1
-     non-text contrast，不合 WCAG 1.4.11（需 ≥3:1）。純提高同色相 alpha
-     要到 0.90+ 才夠（92,118,134 solid 上限僅 3.76:1），會讓邊界從「玻璃
-     邊緣」變成近乎實色描邊。改用同色系但較亮的既有 token --cold-dim
-     （不引入新色相），alpha 0.70 實測 3.25:1，邊界仍維持半透明玻璃感。 */
-  --glass-cold-border:  color-mix(in srgb, var(--cold-dim) 70%, transparent);
+  /* ── 冷調系統（主世界，VISUAL_SPEC §2.1，約佔畫面時間 85–90%） ──
+     2026-07-22（perfume-game-director 裁決）：tier-1 原始 hex 改為冷色五色票
+     的等效值，取代原本的霧黑/冷灰白/青灰藍系統。--cold-parchment 刻意落在
+     #d9d9d9（冷灰白），不用純白，維持「非純黑非純白」的既有內規；
+     --cold-void/--cold-accent/--cold-dim 同步換成五色票的近黑深灰／墨綠／
+     深藍。其餘約 30 個 --color-*／badge／correct 系列 token 透過既有
+     var()/color-mix() 公式自動連動，不逐一改寫。（2026-07-22 二次裁決：
+     --cold-wrong 原本刻意保留鏽棕成分 #7a4a42 不變，這條裁決已作廢——
+     使用者要求全站不再有任何暖色殘留，--cold-wrong 已改為直接鎖定
+     --cold-void，見下方語意色區塊。） */
+  --cold-void:          #353535;  /* 全站底色（近黑深灰，非純黑） */
+  --cold-wash:          color-mix(in srgb, var(--cold-void) 85%, var(--cold-dim) 15%);  /* 次層墨色、Liquid Glass 卡片底層陰影——原本是獨立寫死 hex，這次改成從新 tier-1 衍生的公式，比 void 亮一階、帶一點深藍 */
+  --cold-parchment:     #d9d9d9;  /* 主要文字（冷灰白，非純白） */
+  --cold-dim:           #284b63;  /* 次要文字、說明文字 */
+  --cold-accent:        #3c6e71;  /* 唯一允許的冷調強調色 ── 禁止提高飽和度 */
+  /* 2026-07-22（使用者最終裁決，第三輪）：徹底放棄「半透明疊色玻璃」這個
+     材質語言本身——CLAUDE.md／perfume-game-director.md 禁止清單第 2 條本來
+     就明訂禁止 glassmorphism，先前把 --glass-cold-fill 當成「既有材質語言，
+     只能調 alpha」是誤判。使用者實測回報：藍色系強調色文字（C2 #3c6e71／
+     C5 #284b63）疊在半透明卡片上幾乎看不見，且不管 alpha 調到多高都無法
+     同時滿足「卡片跟 void 背景對比 ≥3:1」與「淺色內文 --cold-parchment
+     在卡片上對比 ≥4.5:1」——這兩個目標在 void(L=0.036)／parchment(L=0.694)
+     固定不變的前提下，數學上互斥（若卡片亮到能跟 void 拉出 3:1，parchment
+     文字在卡片上就會不夠 4.5:1；反之亦然）。這裡的解法：卡片改成**實色**
+     （不透明度 100%，不再是疊色），亮度只能顧文字讀性（deep gray，約
+     L=0.09，parchment 文字對比 ~5.3:1），無法再兼顧卡片本身跟 void 的
+     3:1；「這是一張卡片」的邊界視覺線索改由下面重新設計的 --glass-cold-border
+     （提高到接近全不透明、且明顯提亮）承擔，不再依賴卡片填色本身。 */
+  --glass-cold-fill:            #575757;  /* 實色深灰（原本是半透明疊色），parchment 文字對比 ~5.3:1 */
+  --glass-cold-fill-primary:    #616161;  /* 主內容卡片，比基礎值略亮一階 */
+  --glass-cold-fill-secondary:  #4D4D4D;  /* sidebar／單字清單項目卡，比基礎值略暗一階 */
+  /* 邊界視覺線索改靠這條 border 承擔（見上方說明）：提高到接近全不透明
+     （0.85）且改用較亮的衍生色（cold-dim 混 cold-parchment），對 void
+     達 3.15:1、對新的卡片實色也有可辨識的邊線反差，不再依賴卡片填色
+     本身的透明度堆疊。 */
+  --glass-cold-border:  color-mix(in srgb, var(--cold-dim) 60%, var(--cold-parchment) 40%);
+
+  /* 2026-07-22（使用者實測回報）：--cold-accent（C2 墨綠）／--cold-dim（C5
+     深藍）本身都偏暗（L 分別 0.13／0.06），直接當「強調色文字」疊在新的
+     實色卡片（L≈0.09-0.12）上是深疊深，幾乎看不見——這正是使用者反饋
+     「藍色系文字看不清楚」的根因。這裡新增一個專門給「強調色文字」用的
+     淺色版本，把 accent 往 parchment 方向混，混完仍讀得出原本的色相
+     （墨綠/深藍），但亮度夠高，對深色卡片對比 >5:1。只用在「文字」用途，
+     border／background 等非文字用途不受影響，繼續讀原本的 --cold-accent。 */
+  --cold-accent-text: color-mix(in srgb, var(--cold-accent) 40%, var(--cold-parchment) 60%);
 
   /* 衍生 token（非 VISUAL_SPEC 原表列出，僅為實作方便從 --cold-accent 算出的
      透明度變體，供 focus ring / 陰影使用；仍然只是「同一個顏色的亮度或
      透明度變化」，沒有引入新色相） */
-  --cold-accent-ring:   rgba(92, 118, 134, 0.35);
+  --cold-accent-ring:   rgba(60, 110, 113, 0.35);
   --cold-shadow:        rgba(8, 10, 12, 0.45);
   /* Phase 5g P1（Liquid Glass material cue 評審）：目前線上實際套用的
      scene-cold 卡片（#articleInputSection／.wc-card／sidebar 4 卡）完全
@@ -64,13 +88,27 @@
      線索。這裡新增一個獨立 token，數值比 .glass-card 原本的 0.04 略明顯
      （0.07），供 index.html 既有 box-shadow 規則疊加使用，不動 fill／
      border／backdrop-filter。 */
-  --glass-cold-highlight-inset: rgba(214, 219, 224, 0.07);
+  --glass-cold-highlight-inset: rgba(217, 217, 217, 0.07);
+
+  /* 2026-07-22（第三輪，實測發現的系統性根因）：--cold-dim 原本的角色是
+     「次要文字/說明文字」（見上面 tier-1 定義的原始註解），舊值 #838d96
+     是偏亮的灰色，直接當文字疊在深底上沒問題。但這輪 tier-1 改成
+     #284b63（C5 深藍，L 只有 0.06）之後，--cold-dim 本質上變成一個「深色」
+     ，40+ 個直接讀 --cold-dim 當文字色的地方（.wc-pos／.wc-def 單字詞性
+     定義、各種 muted 說明文字）全部變成深字疊深底，這是使用者「幾乎看不到
+     字」最主要的根因，比卡片玻璃感更嚴重、影響範圍更廣。
+     這裡新增專門給「次要文字」用的淺色版本，直接鎖定 --cold-parchment
+     （不再嘗試中間調的淡化——這次卡片實色本身偏暗，任何摻入 cold-dim
+     的淡化都會把對比度拉回 4.5:1 以下，讀性優先，犧牲主/次文字的
+     明暗層次感，改用其他手法（如 opacity）做次要文字的視覺區隔）。
+     --cold-dim 本身保留給邊框/裝飾用途，不受影響。 */
+  --cold-dim-text: var(--cold-parchment);
 
   /* 場景別名 ── 給 .glass-card / .word-card 這類內容容器使用 */
   --scene-void:         var(--cold-void);
   --scene-wash:         var(--cold-wash);
   --scene-parchment:    var(--cold-parchment);
-  --scene-dim:          var(--cold-dim);
+  --scene-dim:          var(--cold-dim-text);
   --scene-glass-fill:   var(--glass-cold-fill);
   --scene-glass-border: var(--glass-cold-border);
   --scene-shadow:       var(--cold-shadow);
@@ -109,26 +147,26 @@ body.scene-cold {
   --color-surface-panel-alt: color-mix(in srgb, var(--cold-wash) 92%, var(--cold-parchment) 8%);
 
   --color-ink-1: var(--cold-parchment);
-  --color-ink-2: var(--cold-dim);
-  --color-ink-3: color-mix(in srgb, var(--cold-dim) 70%, transparent);
+  --color-ink-2: var(--cold-dim-text);
+  --color-ink-3: color-mix(in srgb, var(--cold-dim-text) 70%, transparent);
 
-  --color-ledger-hi:      rgba(92, 118, 134, 0.20);
-  --color-ledger-mid:     rgba(92, 118, 134, 0.15);
-  --color-ledger-lo:      rgba(92, 118, 134, 0.12);
+  --color-ledger-hi:      rgba(60, 110, 113, 0.20);
+  --color-ledger-mid:     rgba(60, 110, 113, 0.15);
+  --color-ledger-lo:      rgba(60, 110, 113, 0.12);
   --color-ledger-section: var(--glass-cold-border);
 
-  --color-rim-card:       rgba(214, 219, 224, 0.06);
-  --color-rim-panel:      rgba(214, 219, 224, 0.08);
+  --color-rim-card:       rgba(217, 217, 217, 0.06);
+  --color-rim-panel:      rgba(217, 217, 217, 0.08);
   /* 修正輪 4（perfume-art-director 提案）：0.07/0.04 太淡，玻璃邊緣的
      水面張力反光幾乎感覺不到——rim light 是玻璃感最主要的視覺線索，
      不是底色本身，加倍以上讓邊緣讀得出來。維持 top > left 比例，延續
      CLAUDE.md 既有「光源來自左上 30-40°」的日夜共用光源方向。 */
-  --color-rim-modal-top:  rgba(214, 219, 224, 0.16);
-  --color-rim-modal-left: rgba(214, 219, 224, 0.09);
+  --color-rim-modal-top:  rgba(217, 217, 217, 0.16);
+  --color-rim-modal-left: rgba(217, 217, 217, 0.09);
 
   --color-input-border:     var(--glass-cold-border);
   --color-card-separator:   var(--glass-cold-border);
-  --color-chip-navbar:      rgba(92, 118, 134, 0.20);
+  --color-chip-navbar:      rgba(60, 110, 113, 0.20);
 
   /* --color-rim-btn / --color-rim-hover 刻意不宣告：按鈕公式已在 P0
      Commit 3 改成「深底+邊框」，不再需要 rim light token（見
@@ -172,16 +210,23 @@ body.scene-cold {
      改用 color-mix() 從 --cold-dim 與 --cold-wash 衍生（同樣不引入新色
      相），RGB 明顯高於 --cold-overlay，疊在遮罩之上合成約 rgb(51,56,62)，
      比遮罩再亮 14-16 階，讓「離觀者最近、被光源照到的物件」這層讀得出來。 */
-  --cold-modal-fill: color-mix(in srgb, color-mix(in srgb, var(--cold-dim) 25%, var(--cold-wash) 75%) 88%, transparent);
+  /* 2026-07-22：拿掉外層 88% alpha 疊色，改成 100% 不透明實色（放棄
+     glassmorphism，見使用者裁決）。 */
+  --cold-modal-fill: color-mix(in srgb, var(--cold-dim) 25%, var(--cold-wash) 75%);
 
-  /* ── 語意色：正確／錯誤（docs/VISUAL_QA_5E.md §9.3 提案，這輪正式寫入） ── */
+  /* ── 語意色：正確／錯誤（docs/VISUAL_QA_5E.md §9.3 提案，這輪正式寫入） ──
+     2026-07-22（使用者裁決）：--cold-wrong 放棄保留鏽棕成分 #7a4a42，
+     改直接鎖定 --cold-void（C1 近黑深灰）——不靠色相（暖紅棕 vs 冷藍綠），
+     改靠明暗對比做出「正確」與「錯誤」的視覺區別：--cold-correct 解析為
+     偏亮的墨綠調（col-mix 出的淺色調），--cold-wrong 是全站最深的近黑，
+     兩者亮度差夠大，色盲使用者也能單靠明暗分辨，不必依賴色相。 */
   --cold-correct: color-mix(in srgb, var(--cold-accent) 70%, var(--cold-parchment) 30%);
-  --cold-wrong:   color-mix(in srgb, var(--cold-dim) 55%, #7a4a42 45%);
+  --cold-wrong:   var(--cold-void);
 
   /* ── 語意徽章色階（COLOR_TOKEN_MIGRATION.md §2.2 新設計，內部可互相區分，
      不是全部壓同一個 --cold-* token） ── */
   --cold-badge-pos-bg:       var(--cold-wash);
-  --cold-badge-pos-fg:       var(--cold-dim);
+  --cold-badge-pos-fg:       var(--cold-dim-text);
   --cold-badge-mastered-bg:  color-mix(in srgb, var(--cold-accent) 55%, var(--cold-void) 45%);
   --cold-badge-mastered-fg:  color-mix(in srgb, var(--cold-accent) 25%, var(--cold-parchment) 75%);
   --cold-badge-due-bg:       color-mix(in srgb, var(--cold-wrong) 60%, var(--cold-void) 40%);
@@ -204,18 +249,21 @@ body.scene-cold {
 }
 
 .scene-warm {
-  /* ── 暖調系統（教會／政客場景，VISUAL_SPEC §2.2，稀有敘事事件，約 10–15%） ── */
-  --warm-void:          #241a12;  /* 場景底色（燭光暗底，非純黑；帶暖棕） */
-  --warm-parchment:     #e8dcc8;  /* 主要文字（羊皮紙白，非純白） */
-  --warm-gold:          #a8792e;  /* 暗金強調（火把、燭光反射、標題底線） */
-  --warm-dim:           #8c7355;  /* 次要文字 */
-  --glass-warm-fill:    rgba(232, 220, 200, 0.06);  /* 暖調 Liquid Glass 卡片填色 */
-  --glass-warm-border:  rgba(168, 121, 46, 0.24);   /* 暖調 Liquid Glass 卡片邊緣 */
+  /* ── 原「暖調系統」（教會／政客場景，VISUAL_SPEC §2.2，稀有敘事事件，約
+     10–15%）── 2026-07-22（使用者裁決）：放棄「故事唯一暖色亮點」的語意
+     例外，全部改用冷色五色票，跟 .scene-cold 系統同源，只是換一組明暗
+     排列，不再引入暖棕/暗金色相。 */
+  --warm-void:          #353535;  /* 原暖棕暗底 → C1 近黑深灰 */
+  --warm-parchment:     #d9d9d9;  /* 原羊皮紙白 → C4 淺灰 */
+  --warm-gold:          #3c6e71;  /* 原暗金強調 → C2 墨綠 */
+  --warm-dim:           #284b63;  /* 原次要文字 → C5 深藍 */
+  --glass-warm-fill:    rgba(217, 217, 217, 0.20);  /* 冷色五色票 Liquid Glass 卡片填色，alpha 同步 .scene-cold 的可讀性修正 */
+  --glass-warm-border:  rgba(60, 110, 113, 0.24);   /* C2 墨綠邊緣，取代原本的暗金邊緣 */
 
   /* 衍生 token（同 .scene-cold 邏輯，僅供陰影使用；注意：不提供
      --warm-gold 的 ring 衍生版本給互動元件 ── 互動狀態一律鎖定
      --cold-accent，見 Step 3 說明） */
-  --warm-shadow:        rgba(14, 9, 5, 0.50);
+  --warm-shadow:        rgba(8, 10, 12, 0.45);  /* 中性深色陰影，取代原本偏暖的陰影色 */
 
   /* 場景別名 ── warm 系統沒有獨立的「次層墨色」token，--scene-wash 沿用
      --warm-void（暖調場景的深度感來自燭光聚光燈式的單一光源，而非分層
@@ -486,12 +534,12 @@ body.scene-cold {
 }
 
 .btn-night--ghost:hover:not(:disabled) {
-  background:   rgba(92, 118, 134, 0.10);   /* --cold-accent 的低透明度疊層 */
+  background:   rgba(60, 110, 113, 0.10);   /* --cold-accent 的低透明度疊層 */
   border-color: color-mix(in srgb, var(--cold-accent) 60%, transparent);
 }
 
 .btn-night--ghost:active:not(:disabled) {
-  background: rgba(92, 118, 134, 0.16);
+  background: rgba(60, 110, 113, 0.16);
 }
 
 .btn-night--ghost:focus-visible {
@@ -590,7 +638,10 @@ body.scene-cold {
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .day14-reveal-card {
-  --wound: #8a3b2c;
+  /* 2026-07-22（使用者裁決）：放棄鏽紅「傷口色」的暖色例外，改用 C4 淺灰
+     ——在深色 void 底上做出最強的明暗反差（淺色細邊線疊在深底），不靠
+     色相傳達「這裡不一樣」，靠亮度落差。 */
+  --wound: #d9d9d9;
 
   /* 事件觸發瞬間：邊框由 --cold-accent 轉為 --wound，轉色拉長到 1.2s
      （比通則 350ms 慢超過三倍，強調「這不是一般互動」，見 VISUAL_SPEC §3.3-2） */
