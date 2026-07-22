@@ -1205,7 +1205,7 @@
 [data-theme="dark"] #articleInputSection select,
 [data-theme="dark"] #articleInputSection input,
 [data-theme="dark"] #articleInputSection label {
-  color: var(--wc-word-color) !important;
+  color: var(--wc-word-color);
 }
 
 /* 6. Anchor links — night: candleflame accent replaces blue */

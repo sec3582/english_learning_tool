@@ -696,3 +696,74 @@ body.scene-cold::before,
 body.scene-cold::after {
   content: none;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   2026-07-23（使用者裁決）：統一全站「行動按鈕」樣式 — 綠底白字，完全不做
+   hover/active/focus 變化（背景、文字、陰影都跟平常一模一樣）。
+   範圍：所有 .btn-primary-m/.btn-outline-m/.btn-ghost-m/.quiz-btn-primary/
+   .quiz-btn-next，以及沒有共用 class 的次要按鈕（關閉/取消/不知道/復原）。
+   不含：分頁籤（.input-tab/.result-tab/#tabToday 等）與純圖示 X 關閉鈕
+   （#quizClose/#usageClose/#mnemonicClose）——這兩類是「選擇狀態」而非
+   「動作」，維持原樣。
+   這裡直接列出每個 ID（而非只用 class），是因為前面每個按鈕都已經被各檔案
+   各種 #id 專屬規則鎖定過，只用 class 選擇器特異性不夠高，贏不了那些舊規則；
+   放在最後載入的 theme-perfume-night.css 最尾端，同層特異性靠 source order
+   壓過前面所有規則，不用逐一去改舊規則。 */
+html:not([data-theme="dark"]) .btn-primary-m, html:not([data-theme="dark"]) .btn-outline-m, html:not([data-theme="dark"]) .btn-ghost-m,
+html:not([data-theme="dark"]) .quiz-btn-primary, html:not([data-theme="dark"]) .quiz-btn-next,
+html:not([data-theme="dark"]) #analyzeBtn, html:not([data-theme="dark"]) #ocrPickBtn, html:not([data-theme="dark"]) #ocrRunBtn, html:not([data-theme="dark"]) #pdfPickBtn, html:not([data-theme="dark"]) #pdfRerunBtn,
+html:not([data-theme="dark"]) #stripExpandBtn, html:not([data-theme="dark"]) #stripReanalyzeBtn, html:not([data-theme="dark"]) #raWordsBtn, html:not([data-theme="dark"]) #raTransBtn, html:not([data-theme="dark"]) #raGrammarBtn,
+html:not([data-theme="dark"]) #saveBtn, html:not([data-theme="dark"]) #sidebarNotionBtn, html:not([data-theme="dark"]) #startQuizBtn, html:not([data-theme="dark"]) #customAnalyzeBtn, html:not([data-theme="dark"]) #customAddBtn,
+html:not([data-theme="dark"]) #quizSubmit, html:not([data-theme="dark"]) #quizNext, html:not([data-theme="dark"]) #qsStart, html:not([data-theme="dark"]) #usageSaveBudget, html:not([data-theme="dark"]) #usageReset, html:not([data-theme="dark"]) #syncSave,
+html:not([data-theme="dark"]) #usageClose2, html:not([data-theme="dark"]) #syncClose, html:not([data-theme="dark"]) #qsCancel, html:not([data-theme="dark"]) #quizIDK, html:not([data-theme="dark"]) #undoBtn,
+html:not([data-theme="dark"]) .btn-primary-m:hover:not(:disabled), html:not([data-theme="dark"]) .btn-outline-m:hover:not(:disabled), html:not([data-theme="dark"]) .btn-ghost-m:hover:not(:disabled),
+html:not([data-theme="dark"]) .quiz-btn-primary:hover:not(:disabled), html:not([data-theme="dark"]) .quiz-btn-next:hover:not(:disabled),
+html:not([data-theme="dark"]) #analyzeBtn:hover:not(:disabled), html:not([data-theme="dark"]) #ocrPickBtn:hover:not(:disabled), html:not([data-theme="dark"]) #ocrRunBtn:hover:not(:disabled), html:not([data-theme="dark"]) #pdfPickBtn:hover:not(:disabled), html:not([data-theme="dark"]) #pdfRerunBtn:hover:not(:disabled),
+html:not([data-theme="dark"]) #stripExpandBtn:hover:not(:disabled), html:not([data-theme="dark"]) #stripReanalyzeBtn:hover:not(:disabled), html:not([data-theme="dark"]) #raWordsBtn:hover:not(:disabled), html:not([data-theme="dark"]) #raTransBtn:hover:not(:disabled), html:not([data-theme="dark"]) #raGrammarBtn:hover:not(:disabled),
+html:not([data-theme="dark"]) #saveBtn:hover:not(:disabled), html:not([data-theme="dark"]) #sidebarNotionBtn:hover:not(:disabled), html:not([data-theme="dark"]) #startQuizBtn:hover:not(:disabled), html:not([data-theme="dark"]) #customAnalyzeBtn:hover:not(:disabled), html:not([data-theme="dark"]) #customAddBtn:hover:not(:disabled),
+html:not([data-theme="dark"]) #quizSubmit:hover:not(:disabled), html:not([data-theme="dark"]) #quizNext:hover:not(:disabled), html:not([data-theme="dark"]) #qsStart:hover:not(:disabled), html:not([data-theme="dark"]) #usageSaveBudget:hover:not(:disabled), html:not([data-theme="dark"]) #usageReset:hover:not(:disabled), html:not([data-theme="dark"]) #syncSave:hover:not(:disabled),
+html:not([data-theme="dark"]) #usageClose2:hover:not(:disabled), html:not([data-theme="dark"]) #syncClose:hover:not(:disabled), html:not([data-theme="dark"]) #qsCancel:hover:not(:disabled), html:not([data-theme="dark"]) #quizIDK:hover:not(:disabled), html:not([data-theme="dark"]) #undoBtn:hover:not(:disabled),
+html:not([data-theme="dark"]) .btn-primary-m:active:not(:disabled), html:not([data-theme="dark"]) .btn-outline-m:active:not(:disabled), html:not([data-theme="dark"]) .btn-ghost-m:active:not(:disabled),
+html:not([data-theme="dark"]) .quiz-btn-primary:active:not(:disabled), html:not([data-theme="dark"]) .quiz-btn-next:active:not(:disabled),
+html:not([data-theme="dark"]) #analyzeBtn:active:not(:disabled), html:not([data-theme="dark"]) #ocrPickBtn:active:not(:disabled), html:not([data-theme="dark"]) #ocrRunBtn:active:not(:disabled), html:not([data-theme="dark"]) #pdfPickBtn:active:not(:disabled), html:not([data-theme="dark"]) #pdfRerunBtn:active:not(:disabled),
+html:not([data-theme="dark"]) #stripExpandBtn:active:not(:disabled), html:not([data-theme="dark"]) #stripReanalyzeBtn:active:not(:disabled), html:not([data-theme="dark"]) #raWordsBtn:active:not(:disabled), html:not([data-theme="dark"]) #raTransBtn:active:not(:disabled), html:not([data-theme="dark"]) #raGrammarBtn:active:not(:disabled),
+html:not([data-theme="dark"]) #saveBtn:active:not(:disabled), html:not([data-theme="dark"]) #sidebarNotionBtn:active:not(:disabled), html:not([data-theme="dark"]) #startQuizBtn:active:not(:disabled), html:not([data-theme="dark"]) #customAnalyzeBtn:active:not(:disabled), html:not([data-theme="dark"]) #customAddBtn:active:not(:disabled),
+html:not([data-theme="dark"]) #quizSubmit:active:not(:disabled), html:not([data-theme="dark"]) #quizNext:active:not(:disabled), html:not([data-theme="dark"]) #qsStart:active:not(:disabled), html:not([data-theme="dark"]) #usageSaveBudget:active:not(:disabled), html:not([data-theme="dark"]) #usageReset:active:not(:disabled), html:not([data-theme="dark"]) #syncSave:active:not(:disabled),
+html:not([data-theme="dark"]) #usageClose2:active:not(:disabled), html:not([data-theme="dark"]) #syncClose:active:not(:disabled), html:not([data-theme="dark"]) #qsCancel:active:not(:disabled), html:not([data-theme="dark"]) #quizIDK:active:not(:disabled), html:not([data-theme="dark"]) #undoBtn:active:not(:disabled),
+html:not([data-theme="dark"]) .btn-primary-m:focus-visible, html:not([data-theme="dark"]) .btn-outline-m:focus-visible, html:not([data-theme="dark"]) .btn-ghost-m:focus-visible,
+html:not([data-theme="dark"]) .quiz-btn-primary:focus-visible, html:not([data-theme="dark"]) .quiz-btn-next:focus-visible,
+html:not([data-theme="dark"]) #analyzeBtn:focus-visible, html:not([data-theme="dark"]) #ocrPickBtn:focus-visible, html:not([data-theme="dark"]) #ocrRunBtn:focus-visible, html:not([data-theme="dark"]) #pdfPickBtn:focus-visible, html:not([data-theme="dark"]) #pdfRerunBtn:focus-visible,
+html:not([data-theme="dark"]) #stripExpandBtn:focus-visible, html:not([data-theme="dark"]) #stripReanalyzeBtn:focus-visible, html:not([data-theme="dark"]) #raWordsBtn:focus-visible, html:not([data-theme="dark"]) #raTransBtn:focus-visible, html:not([data-theme="dark"]) #raGrammarBtn:focus-visible,
+html:not([data-theme="dark"]) #saveBtn:focus-visible, html:not([data-theme="dark"]) #sidebarNotionBtn:focus-visible, html:not([data-theme="dark"]) #startQuizBtn:focus-visible, html:not([data-theme="dark"]) #customAnalyzeBtn:focus-visible, html:not([data-theme="dark"]) #customAddBtn:focus-visible,
+html:not([data-theme="dark"]) #quizSubmit:focus-visible, html:not([data-theme="dark"]) #quizNext:focus-visible, html:not([data-theme="dark"]) #qsStart:focus-visible, html:not([data-theme="dark"]) #usageSaveBudget:focus-visible, html:not([data-theme="dark"]) #usageReset:focus-visible, html:not([data-theme="dark"]) #syncSave:focus-visible,
+html:not([data-theme="dark"]) #usageClose2:focus-visible, html:not([data-theme="dark"]) #syncClose:focus-visible, html:not([data-theme="dark"]) #qsCancel:focus-visible, html:not([data-theme="dark"]) #quizIDK:focus-visible, html:not([data-theme="dark"]) #undoBtn:focus-visible {
+  background: #3c6e71 !important;
+  background-color: #3c6e71 !important;
+  color: #ffffff !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+html:not([data-theme="dark"]) .btn-primary-m *, html:not([data-theme="dark"]) .btn-outline-m *, html:not([data-theme="dark"]) .btn-ghost-m *,
+html:not([data-theme="dark"]) .quiz-btn-primary *, html:not([data-theme="dark"]) .quiz-btn-next *,
+html:not([data-theme="dark"]) #analyzeBtn *, html:not([data-theme="dark"]) #ocrPickBtn *, html:not([data-theme="dark"]) #ocrRunBtn *, html:not([data-theme="dark"]) #pdfPickBtn *, html:not([data-theme="dark"]) #pdfRerunBtn *,
+html:not([data-theme="dark"]) #stripExpandBtn *, html:not([data-theme="dark"]) #stripReanalyzeBtn *, html:not([data-theme="dark"]) #raWordsBtn *, html:not([data-theme="dark"]) #raTransBtn *, html:not([data-theme="dark"]) #raGrammarBtn *,
+html:not([data-theme="dark"]) #saveBtn *, html:not([data-theme="dark"]) #sidebarNotionBtn *, html:not([data-theme="dark"]) #startQuizBtn *, html:not([data-theme="dark"]) #customAnalyzeBtn *, html:not([data-theme="dark"]) #customAddBtn *,
+html:not([data-theme="dark"]) #quizSubmit *, html:not([data-theme="dark"]) #quizNext *, html:not([data-theme="dark"]) #qsStart *, html:not([data-theme="dark"]) #usageSaveBudget *, html:not([data-theme="dark"]) #usageReset *, html:not([data-theme="dark"]) #syncSave *,
+html:not([data-theme="dark"]) #usageClose2 *, html:not([data-theme="dark"]) #syncClose *, html:not([data-theme="dark"]) #qsCancel *, html:not([data-theme="dark"]) #quizIDK *, html:not([data-theme="dark"]) #undoBtn * {
+  color: inherit !important;
+}
+
+html:not([data-theme="dark"]) .btn-primary-m:disabled, html:not([data-theme="dark"]) .btn-outline-m:disabled, html:not([data-theme="dark"]) .btn-ghost-m:disabled,
+html:not([data-theme="dark"]) .quiz-btn-primary:disabled, html:not([data-theme="dark"]) .quiz-btn-next:disabled,
+html:not([data-theme="dark"]) #analyzeBtn:disabled, html:not([data-theme="dark"]) #ocrPickBtn:disabled, html:not([data-theme="dark"]) #ocrRunBtn:disabled, html:not([data-theme="dark"]) #pdfPickBtn:disabled, html:not([data-theme="dark"]) #pdfRerunBtn:disabled,
+html:not([data-theme="dark"]) #stripExpandBtn:disabled, html:not([data-theme="dark"]) #stripReanalyzeBtn:disabled, html:not([data-theme="dark"]) #raWordsBtn:disabled, html:not([data-theme="dark"]) #raTransBtn:disabled, html:not([data-theme="dark"]) #raGrammarBtn:disabled,
+html:not([data-theme="dark"]) #saveBtn:disabled, html:not([data-theme="dark"]) #sidebarNotionBtn:disabled, html:not([data-theme="dark"]) #startQuizBtn:disabled, html:not([data-theme="dark"]) #customAnalyzeBtn:disabled, html:not([data-theme="dark"]) #customAddBtn:disabled,
+html:not([data-theme="dark"]) #quizSubmit:disabled, html:not([data-theme="dark"]) #quizNext:disabled, html:not([data-theme="dark"]) #qsStart:disabled, html:not([data-theme="dark"]) #usageSaveBudget:disabled, html:not([data-theme="dark"]) #usageReset:disabled, html:not([data-theme="dark"]) #syncSave:disabled,
+html:not([data-theme="dark"]) #usageClose2:disabled, html:not([data-theme="dark"]) #syncClose:disabled, html:not([data-theme="dark"]) #qsCancel:disabled, html:not([data-theme="dark"]) #quizIDK:disabled, html:not([data-theme="dark"]) #undoBtn:disabled {
+  background: #3c6e71 !important;
+  color: #ffffff !important;
+  opacity: 0.4 !important;
+  box-shadow: none !important;
+}
