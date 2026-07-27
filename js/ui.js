@@ -318,12 +318,14 @@ export async function handleAnalyzeCustom(){
     set("cw_def", obj.definition);
     set("cw_level", obj.level || "");
 
-    const exEN = document.getElementById("cw_example_en");
-    const exAI = document.getElementById("cw_example_ai");
-    const exZH = document.getElementById("cw_example_zh");
+    const exEN   = document.getElementById("cw_example_en");
+    const exENZh = document.getElementById("cw_example_en_zh");
+    const exAI   = document.getElementById("cw_example_ai");
+    const exZH   = document.getElementById("cw_example_zh");
     if (exEN) exEN.value = obj.example_in_article || "";
+    if (exENZh) exENZh.value = obj.example_in_article_zh || "";
     if (exAI) exAI.value = obj.example_ai || "";
-    if (exZH) exZH.value = obj.example_ai_zh || obj.example_in_article_zh || "";
+    if (exZH) exZH.value = obj.example_ai_zh || "";
   } catch (err) {
     console.error(err);
     alert("分析失敗，請稍後再試或換較短的片語/單字");
@@ -362,18 +364,19 @@ export function handleCustomAdd(){
   const pos  = document.getElementById("cw_pos").value.trim();
   const definition = document.getElementById("cw_def").value.trim();
   const example1   = document.getElementById("cw_example_en")?.value.trim() || "";
+  const example1_zh = document.getElementById("cw_example_en_zh")?.value.trim() || "";
   const example2   = document.getElementById("cw_example_ai")?.value.trim() || "";
   const example2_zh = document.getElementById("cw_example_zh")?.value.trim() || "";
   const level = document.getElementById("cw_level")?.value.trim() || "";
   if (!word || !pos || !definition) return alert("請至少填：英文單字、詞性、中文解釋");
 
-  const res = addWord({ word, pos, definition, example1, example2, example2_zh, level });
+  const res = addWord({ word, pos, definition, example1, example1_zh, example2, example2_zh, level });
   if (!res.added) return alert(`「${word}」已存在`);
   _fetchAndStoreRelations(word);
   alert(`已加入：${word}`);
 
   const cb = findCbByWord(word); if (cb) markRowAsAdded(cb, true);
-  ["cw_word","cw_pos","cw_def","cw_example_en","cw_example_ai","cw_example_zh","cw_level"]
+  ["cw_word","cw_pos","cw_def","cw_example_en","cw_example_en_zh","cw_example_ai","cw_example_zh","cw_level"]
     .forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
   renderSidebarLists();
 }
@@ -392,13 +395,14 @@ export function handleSaveSelected(){
 
   const doSave = () => {
     cbs.forEach(cb => {
-      const { word, pos, definition, example1, example2, example2_zh, level } = cb.detail;
+      const { word, pos, definition, example1, example1_zh, example2, example2_zh, level } = cb.detail;
       const k = (word||"").toLowerCase();
       if (exists.has(k)) { markRowAsAdded(cb, true); return; }
 
       const { added } = addWord({
         word, pos, definition,
         example1: example1 || "",
+        example1_zh: example1_zh || "",
         example2: example2 || "",
         example2_zh: example2_zh || "",
         level: level || ""
@@ -2360,9 +2364,10 @@ function _showSelectionResult(obj, term, anchorRect = null) {
   const word  = obj.word || term;
   const pos   = obj.pos || "";
   const def   = obj.definition || "";
-  const exArt = _extractSentence(obj.example_in_article || "", word);
-  const exAI  = obj.example_ai || "";
-  const exZH  = obj.example_ai_zh || obj.example_in_article_zh || "";
+  const exArt   = _extractSentence(obj.example_in_article || "", word);
+  const exArtZh = obj.example_in_article_zh || "";
+  const exAI    = obj.example_ai || "";
+  const exZH    = obj.example_ai_zh || exArtZh;
 
   const sentenceHTML = exArt ? _highlightWord(exArt, word) : "";
 
@@ -2441,8 +2446,9 @@ function _showSelectionResult(obj, term, anchorRect = null) {
       word, pos,
       definition:  obj.definition || "",
       example1:    exArt,
+      example1_zh: exArtZh,
       example2:    exAI,
-      example2_zh: exZH,
+      example2_zh: obj.example_ai_zh || "",
       level:       obj.level || "",
     });
     if (btn) {
